@@ -3,7 +3,7 @@ name: Pushing
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, develop]
 
 jobs:
   copy-file:
