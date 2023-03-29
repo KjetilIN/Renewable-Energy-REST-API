@@ -1,15 +1,52 @@
 package handlers
 
 import (
+	"assignment-2/internal/webserver/structs"
 	"encoding/csv"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
+}
+
+// rseToJSON is an internal function to use a 2D string and input it into a struct.
+func rseToJSON() ([]structs.HistoricalRSE, error) {
+	var jsonList []structs.HistoricalRSE
+	// readFromFile is a 2D string array.
+	readFromFile, readErr := readCSV("/internal/res/renewable-share-energy.csv")
+	if readErr != nil {
+		return nil, readErr
+	}
+	var lineRead []string
+	//Iterates through 1 dimension of readFromFile.
+	for i := 0; i < len(readFromFile); i++ {
+		// Stores a slice of values to be iterated through.
+		lineRead = readFromFile[i]
+
+		year, convErr := strconv.Atoi(lineRead[2]) // Converts string line to integer.
+		if convErr != nil {
+			return nil, convErr
+		}
+		percentage, convErr := strconv.ParseFloat(lineRead[3], 6) // Converts string line to float og 6 decimals.
+		if convErr != nil {
+			return nil, convErr
+		}
+		// Iterates through the lineRead slice, and appends to a new entity in HistoricalRSE slice.
+		for j := 0; j < len(lineRead); i++ {
+			jsonList[i] = structs.HistoricalRSE{
+				Name:       lineRead[0],
+				IsoCode:    lineRead[1],
+				Year:       year,
+				Percentage: percentage,
+			}
+		}
+	}
+	return jsonList, nil
 }
 
 // Function to read from a CSV file.
