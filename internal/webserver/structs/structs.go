@@ -12,7 +12,7 @@ type Status struct {
 // Struct to parse historical data into.
 type HistoricalRSE struct {
 	Name       string  `json:"name"`
-	IsoCode    string  `json:"isoCode,omitempty"`
+	IsoCode    string  `json:"isoCode"`
 	Year       int     `json:"year"`
 	Percentage float64 `json:"percentage"`
 }
