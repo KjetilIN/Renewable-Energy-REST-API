@@ -24,6 +24,8 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 // rseToJSON is an internal function to use a 2D string and input it into a struct.
 func rseToJSON() ([]structs.HistoricalRSE, error) {
 	var jsonList []structs.HistoricalRSE
+	var jsonObj structs.HistoricalRSE
+
 	// readFromFile is a 2D string array.
 	readFromFile, readErr := readCSV("./internal/res/renewable-share-energy.csv")
 	if readErr != nil {
@@ -46,14 +48,14 @@ func rseToJSON() ([]structs.HistoricalRSE, error) {
 			return nil, convErr
 		}
 		// Iterates through the lineRead slice, and appends to a new entity in HistoricalRSE slice.
-		for j := 0; j < len(lineRead); i++ {
-			jsonList[i] = structs.HistoricalRSE{
-				Name:       lineRead[0],
-				IsoCode:    lineRead[1],
-				Year:       year,
-				Percentage: percentage,
-			}
+		jsonObj = structs.HistoricalRSE{
+			Name:       lineRead[0],
+			IsoCode:    lineRead[1],
+			Year:       year,
+			Percentage: percentage,
 		}
+		jsonList = append(jsonList, jsonObj)
+
 	}
 	return jsonList, nil
 }
