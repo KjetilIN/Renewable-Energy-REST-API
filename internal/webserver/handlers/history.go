@@ -4,6 +4,7 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"encoding/csv"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +41,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
 		}
 	}
-
+	fmt.Println("Test")
 	// Checks if sortByValue query is passed.
 	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
 		listOfRSE = sortingListPercentage(listOfRSE)
@@ -186,8 +187,33 @@ func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.Historical
 }
 
 // TODO: Implement sorting of percentage.
+// Very inefficient!
 func sortingListPercentage(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSE {
-	return listToIterate
+	var sortedList []structs.HistoricalRSE
+	HighestValIndex := 0
+	HighestVal := 0.0
+	sorted := false
+	count := 0
+
+	for !sorted {
+		for i, v := range listToIterate {
+			if v.Percentage > HighestVal {
+				HighestVal = v.Percentage
+				HighestValIndex = i
+			}
+			if i == len(listToIterate)-1 {
+				sortedList = append(sortedList, listToIterate[HighestValIndex])
+				listToIterate[HighestValIndex].Percentage = 0.0
+				HighestVal = 0
+				HighestValIndex = 0
+			}
+		}
+		count = count + 1
+		if count == len(listToIterate) {
+			sorted = true
+		}
+	}
+	return sortedList
 }
 
 // Function to read from a CSV file.
