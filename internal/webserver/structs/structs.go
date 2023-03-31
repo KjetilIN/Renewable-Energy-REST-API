@@ -16,3 +16,10 @@ type HistoricalRSE struct {
 	Year       int     `json:"year"`
 	Percentage float64 `json:"percentage"`
 }
+
+// Struct to parse historical data into. Used when calculating mean percentage of countries over time.
+type HistoricalRSEMean struct {
+	Name       string  `json:"name"`
+	IsoCode    string  `json:"isoCode"`
+	Percentage float64 `json:"percentage"`
+}

@@ -43,8 +43,14 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
 		return
 	}
-	// Encodes list and prints to console.
-	utility.Encoder(w, listOfRSE)
+	// D
+	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
+		meanList := meanCalculation(listOfRSE)
+		utility.Encoder(w, meanList)
+	} else {
+		// Encodes list and prints to console.
+		utility.Encoder(w, listOfRSE)
+	}
 }
 
 // rseToJSON is an internal function to use a 2D string and input it into a struct.
@@ -88,6 +94,18 @@ func rseToJSON() ([]structs.HistoricalRSE, error) {
 	return jsonList, nil
 }
 
+// countryCodeLimiter Method to limit a list based on country code.
+func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode string) []structs.HistoricalRSE {
+	var limitedList []structs.HistoricalRSE
+	for i, v := range listToIterate { // Iterates through input list.
+		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
+			// appended to new list.
+			limitedList = append(limitedList, v)
+		}
+	}
+	return limitedList // Returns list containing all matching countries.
+}
+
 // beginEndLimiter Function to allow for searching to and from a year.
 func beginEndLimiter(begin string, end string, listToIterate []structs.HistoricalRSE) ([]structs.HistoricalRSE, error) {
 	var newlist []structs.HistoricalRSE
@@ -127,16 +145,38 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Historica
 	return newlist, nil
 }
 
-// countryCodeLimiter Method to limit a list based on country code.
-func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode string) []structs.HistoricalRSE {
-	var limitedList []structs.HistoricalRSE
-	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
-			// appended to new list.
-			limitedList = append(limitedList, v)
+// TODO: Fix method
+// meanCalculation Function to calculate the mean of percentage per country, from the inputted list.
+func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSEMean {
+	var newList []structs.HistoricalRSEMean
+	var meanList []float64
+	sum, mean := 0.0, 0.0
+
+	for i, v := range listToIterate {
+		if i > 0 && listToIterate[i-1].Name == v.Name {
+			meanList = append(meanList, v.Percentage)
+		} else {
+			for _, v := range meanList {
+				sum = sum + v
+			}
+			mean = sum / float64(len(meanList))
+
+			newEntry := structs.HistoricalRSEMean{
+				Name:       v.Name,
+				IsoCode:    v.IsoCode,
+				Percentage: mean,
+			}
+			newList = append(newList, newEntry)
+			mean = 0.0
+			meanList = nil
 		}
 	}
-	return limitedList // Returns list containing all matching countries.
+	return newList
+}
+
+// TODO: Implement sorting of percentage.
+func sortingListPercentage() {
+
 }
 
 // Function to read from a CSV file.
