@@ -4,10 +4,12 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"encoding/csv"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // HandlerHistory is a handler for the /history endpoint.
@@ -18,6 +20,13 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if jsonError != nil {
 		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
 	}
+
+	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
+	fmt.Printf("%s %s", len(params), params[5])
+	if len(params) == 6 {
+		listOfRSE = countryCodeLimiter(listOfRSE, params[5])
+	}
+
 	utility.Encoder(w, listOfRSE)
 }
 
@@ -58,6 +67,18 @@ func rseToJSON() ([]structs.HistoricalRSE, error) {
 
 	}
 	return jsonList, nil
+}
+
+// countryCodeLimiter Method to limit a list based on country code.
+func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode string) []structs.HistoricalRSE {
+	var limitedList []structs.HistoricalRSE
+	for i, v := range listToIterate { // Iterates through input list.
+		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
+			// appended to new list.
+			limitedList = append(limitedList, v)
+		}
+	}
+	return limitedList // Returns list containing all matching countries.
 }
 
 // Function to read from a CSV file.
