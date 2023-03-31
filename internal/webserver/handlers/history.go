@@ -20,6 +20,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if jsonError != nil {
 		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
 	}
+
 	// Collects parameters, separated by /
 	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
 
@@ -27,6 +28,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if len(params) == 6 {
 		listOfRSE = countryCodeLimiter(listOfRSE, params[5])
 	}
+
 	// Checks for queries.
 	if r.URL.Query().Has("begin") || r.URL.Query().Has("end") {
 		var queryError error // Initialises a potential error.
@@ -38,12 +40,19 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
 		}
 	}
-	// Checks if list is empty
+
+	// Checks if sortByValue query is passed.
+	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
+		listOfRSE = sortingListPercentage(listOfRSE)
+	}
+
+	// Checks if list is empty.
 	if len(listOfRSE) == 0 {
 		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
 		return
 	}
-	// D
+
+	// If Query: mean=true, a different struct type will be encoded to client. It calculates the mean of grouped countries.
 	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
 		meanList := meanCalculation(listOfRSE)
 		utility.Encoder(w, meanList)
@@ -145,38 +154,40 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Historica
 	return newlist, nil
 }
 
-// TODO: Fix method
 // meanCalculation Function to calculate the mean of percentage per country, from the inputted list.
 func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSEMean {
-	var newList []structs.HistoricalRSEMean
-	var meanList []float64
+	newList := []structs.HistoricalRSEMean{}
+	meanList := []float64{} // Initiates an empty float slice.
 	sum, mean := 0.0, 0.0
-
-	for i, v := range listToIterate {
-		if i > 0 && listToIterate[i-1].Name == v.Name {
-			meanList = append(meanList, v.Percentage)
-		} else {
+	// Iterates through input list to calculate mean.
+	for i := 1; i < len(listToIterate); i++ {
+		if listToIterate[i].Name == listToIterate[i-1].Name { // If name is the same as previous, add value to meanList.
+			meanList = append(meanList, listToIterate[i].Percentage)
+		} else { // If it is not the same, we have jumped to a new country. Then the mean should be calculated.
+			// Add up all floats.
 			for _, v := range meanList {
 				sum = sum + v
 			}
 			mean = sum / float64(len(meanList))
 
+			// Potential bug: duplicate names and isocode.
 			newEntry := structs.HistoricalRSEMean{
-				Name:       v.Name,
-				IsoCode:    v.IsoCode,
+				Name:       listToIterate[i-1].Name,
+				IsoCode:    listToIterate[i-1].IsoCode,
 				Percentage: mean,
 			}
+			// Resets the lists and variables.
 			newList = append(newList, newEntry)
-			mean = 0.0
-			meanList = nil
+			mean, sum = 0.0, 0.0
+			meanList = []float64{}
 		}
 	}
 	return newList
 }
 
 // TODO: Implement sorting of percentage.
-func sortingListPercentage() {
-
+func sortingListPercentage(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSE {
+	return listToIterate
 }
 
 // Function to read from a CSV file.
