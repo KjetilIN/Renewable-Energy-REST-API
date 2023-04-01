@@ -8,3 +8,14 @@ type Status struct {
 	Version        string `json:"version"`
 	Uptime         int    `json:"uptime"`
 }
+
+type Webhook struct{
+	Url string `json:"url"`
+	Country string `json:"country"`
+	Calls int `json:"calls"`
+}
+
+type WebhookID struct{
+	ID string `json:"webhook_id"`
+	Webhook
+}
