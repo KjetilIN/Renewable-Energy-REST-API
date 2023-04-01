@@ -19,3 +19,7 @@ type WebhookID struct{
 	ID string `json:"webhook_id"`
 	Webhook
 }
+
+type IdResponse struct{
+	ID string `json:"webhook_id"`
+}

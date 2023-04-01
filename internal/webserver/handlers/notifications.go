@@ -3,11 +3,15 @@ package handlers
 import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Webhooks DB
@@ -90,6 +94,51 @@ func handleGetMethod(w http.ResponseWriter, r *http.Request){
 
 }
 
+// Create a random webhook id based on the content and time of the creation 
+func createWebhookID(webhook structs.Webhook) string{
+	// Secret that the hash generation is based on
+	secret := []byte(time.Now().Local().String());
+	hashContent := []byte(webhook.Url + webhook.Country)
+	hash := hmac.New(sha256.New, secret)
+	hash.Write(hashContent);
+	return hex.EncodeToString(hash.Sum(nil));
+}
+
+func handlePostRequest(w http.ResponseWriter, r *http.Request){
+	// Expects incoming body to be in correct format, so we encode it directly to a struct 
+	givenHook := structs.Webhook{}
+	err := json.NewDecoder(r.Body).Decode(&givenHook)
+	if err != nil {
+		// Was not in the correct format
+		log.Print("Something went wrong: "+err.Error())
+		http.Error(w, "Error: given body does not fit the schema", http.StatusBadRequest)
+		return
+	}
+
+	// Create an ID and add it to the list of hooks
+	id := createWebhookID(givenHook)
+	webhook := structs.WebhookID{ID:id, Webhook: givenHook}
+	webhooks = append(webhooks, webhook)
+	
+	// Logging that a new webhook has been
+	log.Println("Webhook " + webhook.Url + " has been registered.")
+
+
+	// Encode the Response object to JSON format, and handle any errors 
+	resp := structs.IdResponse{ID: webhook.ID}
+    jsonResponse, err := json.Marshal(&resp)
+    if err != nil {
+		log.Println("Error on marshal response: " + err.Error())
+        http.Error(w, "Something went wrong when returning the webhook ID", http.StatusInternalServerError)
+        return
+    }
+
+	// Set the output to be correct
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonResponse)
+}
+
 
 
 
@@ -98,6 +147,7 @@ func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
 	//Handle request based on the methods. 
 	switch r.Method{
 		case http.MethodPost:
+			handlePostRequest(w,r);
 			break
 		case http.MethodDelete:
 			break
