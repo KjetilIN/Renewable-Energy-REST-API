@@ -23,6 +23,11 @@ func InitWebhookRegistrations(){
 	webhooks = []structs.WebhookID{};
 }
 
+//Get number of webhooks
+func GetNumberOfWebhooks() int{
+	return len(webhooks)
+}
+
 
 // Fetch a webhook using its ID
 func fetchWebhookWithID(id string) (structs.WebhookID, error) {
