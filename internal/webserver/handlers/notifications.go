@@ -91,6 +91,13 @@ func handleGetMethod(w http.ResponseWriter, r *http.Request){
 			return 
 		}
 
+		//Return message if there are no webhooks created yet
+		if(len(allWebHooks) == 0){
+			log.Println("No content in webhooks")
+			http.Error(w, "No webhooks in storage", http.StatusNoContent)
+			return
+		}
+
 
 		//Encode the result
 		w.Header().Set("Content-Type", "application/json")
