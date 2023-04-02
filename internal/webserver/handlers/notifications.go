@@ -42,27 +42,37 @@ func fetchAllWebhooks() ([]structs.WebhookID, error){
 
 // Function for handling get request for the  
 func handleGetMethod(w http.ResponseWriter, r *http.Request){
-	//Get any parameter received 
+	// Get any parameter received
 	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
+	givenParameters = strings.ReplaceAll(givenParameters, " ", "")
 	urlParts := strings.Split(givenParameters, "/")
 
+	// Remove empty strings from urlParts slice
+	var params []string
+	for _, part := range urlParts {
+		if part != "" {
+			params = append(params, part)
+		}
+	}
 	
 	//Should only be given max one parameters 
-	if (len(urlParts) > 1){
+	if (len(params) > 1){
 		log.Println("Error on get method for notification endpoint")
 		http.Error(w, "Not correct usage of getting webhook information", http.StatusBadRequest)
 		return;
-	}else if (len(urlParts) == 1){
+	}else if (len(params) != 0 ){
 		//Fetch only the webhook with 
-		fetchedWebhook, err := fetchWebhookWithID(urlParts[0])
+		fetchedWebhook, err := fetchWebhookWithID(params[0])
 		
 		//Error on fetching the webhook with the id
 		if(err != nil){
-			http.Error(w, "No existing webhook with the ID: " + urlParts[0], http.StatusNotFound)
+			http.Error(w, "No existing webhook with the ID: " + params[0], http.StatusNotFound)
 			return
 		}
 
 		//Encode the result
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		encodeError := json.NewEncoder(w).Encode(&fetchedWebhook)
 		if(encodeError != nil){
 			log.Println("Error on encoding fetched webhook with ID", encodeError.Error())
@@ -83,6 +93,8 @@ func handleGetMethod(w http.ResponseWriter, r *http.Request){
 
 
 		//Encode the result
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		encodeError := json.NewEncoder(w).Encode(&allWebHooks)
 		if(encodeError != nil){
 			log.Println("Error on encoding fetched webhooks", encodeError.Error())
