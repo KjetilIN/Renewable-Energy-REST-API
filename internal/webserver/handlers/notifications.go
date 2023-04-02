@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -41,7 +42,7 @@ func fetchAllWebhooks() ([]structs.WebhookID, error){
 
 
 // Function for handling get request for the  
-func handleGetMethod(w http.ResponseWriter, r *http.Request){
+func handleGetRequest(w http.ResponseWriter, r *http.Request){
 	// Get any parameter received
 	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
 	givenParameters = strings.ReplaceAll(givenParameters, " ", "")
@@ -158,6 +159,54 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request){
 	w.Write(jsonResponse)
 }
 
+func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
+	// Get any parameter received
+	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
+	givenParameters = strings.ReplaceAll(givenParameters, " ", "")
+	urlParts := strings.Split(givenParameters, "/")
+
+	// Remove empty strings from urlParts slice
+	var params []string
+	for _, part := range urlParts {
+		if part != "" {
+			params = append(params, part)
+		}
+	}
+
+	//Should always be one parameter left.
+	if(len(params) != 1){
+		log.Println("Error on params, should have been 1 was: " + strconv.Itoa(len(params)))
+		http.Error(w, "Bad request, please add a single ID", http.StatusBadRequest)
+		return
+	}
+
+	//Deleting the webhook with the given ID, or not doing anything. 
+	givenID := params[0]
+	newWebhooks := []structs.WebhookID{}
+	isDeleted := false
+	for _, hook := range webhooks{
+		if(hook.ID !=  givenID){
+			newWebhooks = append(newWebhooks, hook);
+		}else{
+			//Indicate that the webhook was found and deleted. 
+			isDeleted = true;
+		}
+	}
+	webhooks = newWebhooks
+
+	if(isDeleted){
+		//Tell the end user that the webhook was deleted
+		http.Error(w, "Webhook with ID: " + givenID + " is deleted", http.StatusOK)
+		return 
+	}else{
+		//No webhook was found
+		http.Error(w, "Webhook not stored, did not delete a webhook", http.StatusOK)
+		return 
+	}
+
+
+}
+
 
 
 
@@ -166,13 +215,16 @@ func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
 	//Handle request based on the methods. 
 	switch r.Method{
 		case http.MethodPost:
-			handlePostRequest(w,r);
+			//Creating a new webhook
+			handlePostRequest(w,r)
 			break
 		case http.MethodDelete:
+			//Deleting a webhook with the given ID
+			handleDeleteRequest(w,r)
 			break
 		case http.MethodGet:
 			//Handle get request to the endpoint based on given parameters 
-			handleGetMethod(w,r)
+			handleGetRequest(w,r)
 			break
 		default:
 			// Only allowed methods
