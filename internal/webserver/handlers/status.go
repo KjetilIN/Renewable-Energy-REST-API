@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 )
 
 // Webhooks DB
@@ -89,6 +90,6 @@ func getStatus() (structs.Status, error) {
 		//NotificationDB: notificationDBStatus,
 		Webhooks: numWebhooks,
 		Version:  "v1",
-		Uptime:   uptime.GetUptime(),
+		Uptime:   strconv.Itoa(uptime.GetUptime()) + " seconds",
 	}, nil
 }

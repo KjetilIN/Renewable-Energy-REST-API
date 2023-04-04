@@ -6,7 +6,7 @@ type Status struct {
 	NotificationDB int    `json:"notification_db"`
 	Webhooks       int    `json:"webhooks"`
 	Version        string `json:"version"`
-	Uptime         int    `json:"uptime"`
+	Uptime         string `json:"uptime"`
 }
 
 type Webhook struct {
