@@ -12,6 +12,6 @@ const (
 	STATUS_PATH        = "/energy/v1/status/"
 	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
 
-	COUNTRIES_API_URL  = "http://129.241.150.113:8080/v3.1"
+	COUNTRIES_API_URL  = "http://129.241.150.113:8080/v3.1/"
 	NOTIFICATIONDB_URL = ""
 )

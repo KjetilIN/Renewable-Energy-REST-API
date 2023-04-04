@@ -54,7 +54,7 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 
 func getStatus() (structs.Status, error) {
 	// Check the status of the country API.
-	url := constants.COUNTRIES_API_URL
+	url := constants.COUNTRIES_API_URL + "all"
 	countryApiRequest, _ := http.NewRequest(http.MethodHead, url, nil)
 
 	// Set the content-type header to indicate that the response contains JSON data
