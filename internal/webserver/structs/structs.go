@@ -2,7 +2,7 @@ package structs
 
 // This file defines structs to work with data.
 type Status struct {
-	CountryApi     int    `json:"countries_api"`
+	CountriesApi   int    `json:"countries_api"`
 	NotificationDB int    `json:"notification_db"`
 	Webhooks       int    `json:"webhooks"`
 	Version        string `json:"version"`
