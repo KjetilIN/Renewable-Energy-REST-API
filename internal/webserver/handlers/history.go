@@ -4,6 +4,7 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"encoding/csv"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	listOfRSE, jsonError := rseToJSON()
 	if jsonError != nil {
 		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
+		fmt.Errorf("%s", jsonError.Error())
 		return
 	}
 

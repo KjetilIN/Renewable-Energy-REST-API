@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"assignment-2/internal/constants"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -12,16 +14,21 @@ const URL = "http://localhost:" + constants.DEFAULT_PORT
 
 // TestHandlerHistory_NoParams Testing the base return from history endpoint.
 func TestHandlerHistory_NoParams(t *testing.T) {
-	// Creates a new request for history endpoint.
-	req, err := http.NewRequest("GET", URL+constants.HISTORY_PATH, nil)
-	if err != nil {
-		t.Error("Request error: " + err.Error())
+	// Changes to project
+	// TODO: Make it work with every pc.
+	changeErr := os.Chdir("C:\\Users\\sande\\GolandProjects\\assignment-2")
+	fmt.Println(os.Getwd())
+	if changeErr != nil {
+		t.Error(changeErr)
 	}
-	response := httptest.NewRecorder()
-	handler := http.HandlerFunc(HandlerHistory)
-
-	handler.ServeHTTP(response, req)
-	assert.Equal(t, nil, response.Result(), "Handler returned wrong status code.")
+	// Creates a test server on handler history.
+	server := httptest.NewServer(http.HandlerFunc(HandlerHistory))
+	resp, err := http.Get(server.URL)
+	if err != nil {
+		t.Fatal("Something went wrong: " + err.Error())
+	}
+	// Checks if the request is of status ok.
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "Handler returned wrong status code.")
 }
 
 func TestCountryCodeLimiter(t *testing.T) {
