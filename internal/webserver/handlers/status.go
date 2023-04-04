@@ -119,7 +119,7 @@ func getStatus() (structs.Status, error) {
 		//NotificationDB: 	notificationDBStatus,
 		Webhooks: numWebhooks,
 		Version:  "v1",
-		Uptime:   strconv.Itoa(uptime.GetUptime()) + " seconds",
+		Uptime:   uptime.ConvertUptime(uptime.GetUptime()),
 		//AverageSystemLoad: loadAvg + " in the last minute",
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
