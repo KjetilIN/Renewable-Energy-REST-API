@@ -7,6 +7,8 @@ type Status struct {
 	Webhooks       int    `json:"webhooks"`
 	Version        string `json:"version"`
 	Uptime         string `json:"uptime"`
+	//AverageSystemLoad string `json:"average_system_load"`
+	TotalMemoryUsage string `json:"total_memory_usage"`
 }
 
 type Webhook struct {

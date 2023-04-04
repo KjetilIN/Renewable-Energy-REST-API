@@ -6,6 +6,7 @@ import (
 	"assignment-2/internal/webserver/uptime"
 	"encoding/json"
 	"errors"
+	"github.com/shirou/gopsutil/mem"
 	"net/http"
 	"strconv"
 )
@@ -81,15 +82,30 @@ func getStatus() (structs.Status, error) {
 		notificationDBStatus := res.StatusCode
 	*/
 
+	// Get system load and memory usage.
+	memory, err := mem.VirtualMemory()
+	if err != nil {
+		return structs.Status{}, err
+	}
+	memUsage := memory.UsedPercent
+
+	/*avg, err := load.Avg()
+	if err != nil {
+		return structs.Status{}, err
+	}
+	loadAvg := avg.Load1*/
+
 	// get number of registered webhooks
 	numWebhooks := GetNumberOfWebhooks()
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
 		CountriesApi: countriesApiStatus,
-		//NotificationDB: notificationDBStatus,
+		//NotificationDB: 	notificationDBStatus,
 		Webhooks: numWebhooks,
 		Version:  "v1",
 		Uptime:   strconv.Itoa(uptime.GetUptime()) + " seconds",
+		//AverageSystemLoad: strconv.Itoa(int(loadAvg)) + " in the last minute",
+		TotalMemoryUsage: strconv.Itoa(int(memUsage)) + "%",
 	}, nil
 }
