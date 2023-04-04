@@ -19,6 +19,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	listOfRSE, jsonError := rseToJSON()
 	if jsonError != nil {
 		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	// Collects parameters, separated by /
