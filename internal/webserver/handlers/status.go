@@ -22,6 +22,9 @@ func GetNumberOfWebhooks() int {
 	return len(webhooks)
 }
 
+// HTTP client
+var client = &http.Client{}
+
 // HandlerStatus is a handler for the /status endpoint.
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	// Set the content-type header to indicate that the response contains JSON data
@@ -50,8 +53,6 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func getStatus() (structs.Status, error) {
-	client := &http.Client{}
-
 	// Check the status of the country API.
 	url := constants.COUNTRIES_API_URL
 	countryApiRequest, _ := http.NewRequest(http.MethodHead, url, nil)
@@ -66,13 +67,26 @@ func getStatus() (structs.Status, error) {
 
 	countriesApiStatus := res.StatusCode
 
+	/*
+		// Check the status of the notification db.
+		url = constants.NOTIFICATIONDB_URL
+		notificationDBRequest, _ := http.NewRequest(http.MethodHead, url, nil)
+
+		res, err = client.Do(notificationDBRequest)
+		if err != nil {
+			return structs.Status{}, err
+		}
+
+		notificationDBStatus := res.StatusCode
+	*/
+
 	// get number of registered webhooks
 	numWebhooks := GetNumberOfWebhooks()
 
-	// Return a status struct containing information about the uptime and status of the universities and countries APIs.
+	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
 		CountriesApi: countriesApiStatus,
-		//NotificationDB:  fmt.Sprintf("%d", notificationDBStatus),
+		//NotificationDB: notificationDBStatus,
 		Webhooks: numWebhooks,
 		Version:  "v1",
 		Uptime:   uptime.GetUptime(),
