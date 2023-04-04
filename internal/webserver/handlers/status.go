@@ -82,18 +82,33 @@ func getStatus() (structs.Status, error) {
 		notificationDBStatus := res.StatusCode
 	*/
 
-	// Get system load and memory usage.
+	var memUsage string
+	defer func() {
+		if r := recover(); r != nil {
+			memUsage = "N/A"
+		}
+	}()
+
+	// Get the memory usage in percent.
 	memory, err := mem.VirtualMemory()
 	if err != nil {
-		return structs.Status{}, err
+		panic(err)
 	}
-	memUsage := memory.UsedPercent
+	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-	/*avg, err := load.Avg()
+	/*var loadAvg string
+	// Get the average system load for the last minute.
+	defer func() {
+		if r := recover(); r != nil {
+			loadAvg = "N/A"
+		}
+	}()
+
+	avg, err := load.Avg()
 	if err != nil {
-		return structs.Status{}, err
+		panic(err)
 	}
-	loadAvg := avg.Load1*/
+	loadAvg = strconv.Itoa(int(avg.Load1))*/
 
 	// get number of registered webhooks
 	numWebhooks := GetNumberOfWebhooks()
@@ -105,7 +120,7 @@ func getStatus() (structs.Status, error) {
 		Webhooks: numWebhooks,
 		Version:  "v1",
 		Uptime:   strconv.Itoa(uptime.GetUptime()) + " seconds",
-		//AverageSystemLoad: strconv.Itoa(int(loadAvg)) + " in the last minute",
-		TotalMemoryUsage: strconv.Itoa(int(memUsage)) + "%",
+		//AverageSystemLoad: loadAvg + " in the last minute",
+		TotalMemoryUsage: memUsage + "%",
 	}, nil
 }
