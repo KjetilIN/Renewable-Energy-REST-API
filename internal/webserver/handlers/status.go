@@ -5,6 +5,7 @@ import (
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -22,49 +23,58 @@ func GetNumberOfWebhooks() int {
 }
 
 // HandlerStatus is a handler for the /status endpoint.
-// TODO: fill in notification_db URL
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
-	// define dependent services and their URLs
-	services := map[string]string{
-		"country_api":     constants.COUNTRIES_API,
-		"notification_db": "fill in firebase project url",
+	// Set the content-type header to indicate that the response contains JSON data
+	w.Header().Add("content-type", "application/json")
+
+	// Return an error if the HTTP method is not GET.
+	if r.Method != http.MethodGet {
+		http.Error(w, errors.New("method is not supported. Currently only GET are supported").Error(), http.StatusMethodNotAllowed)
+		return
 	}
 
-	// check the status of each service
-	status := make(map[string]int)
-	for name, url := range services {
-		resp, err := http.Get(url)
-		if err != nil {
-			status[name] = http.StatusInternalServerError
-		} else {
-			status[name] = resp.StatusCode
-		}
+	// Get status information.
+	status, err := getStatus()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	// Encode the status information as JSON and send it in the response.
+	encoder := json.NewEncoder(w)
+	err = encoder.Encode(status)
+	if err != nil {
+		http.Error(w, errors.New("there were an error during encoding").Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func getStatus() (structs.Status, error) {
+	client := &http.Client{}
+
+	// Check the status of the country API.
+	url := constants.COUNTRIES_API_URL
+	countryApiRequest, _ := http.NewRequest(http.MethodHead, url, nil)
+
+	// Set the content-type header to indicate that the response contains JSON data
+	countryApiRequest.Header.Add("content-type", "application/json")
+
+	res, err := client.Do(countryApiRequest)
+	if err != nil {
+		return structs.Status{}, err
+	}
+
+	countriesApiStatus := res.StatusCode
 
 	// get number of registered webhooks
 	numWebhooks := GetNumberOfWebhooks()
 
-	// get uptime in seconds since service restart
-	serviceUptime := uptime.GetUptime()
-
-	// build response JSON
-	response := structs.Status{
-		CountryApi:     status["countries_api"],
-		NotificationDB: status["notification_db"],
-		Webhooks:       numWebhooks,
-		Version:        "v1",
-		Uptime:         serviceUptime,
-	}
-
-	// encode and send response JSON
-	w.Header().Set("Content-Type", "application/json")
-	if response.CountryApi != http.StatusOK || response.NotificationDB != http.StatusOK {
-		w.WriteHeader(http.StatusServiceUnavailable)
-	} else {
-		w.WriteHeader(http.StatusOK)
-	}
-	err := json.NewEncoder(w).Encode(response)
-	if err != nil {
-		return
-	}
+	// Return a status struct containing information about the uptime and status of the universities and countries APIs.
+	return structs.Status{
+		CountriesApi: countriesApiStatus,
+		//NotificationDB:  fmt.Sprintf("%d", notificationDBStatus),
+		Webhooks: numWebhooks,
+		Version:  "v1",
+		Uptime:   uptime.GetUptime(),
+	}, nil
 }
