@@ -10,11 +10,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 )
 
-const URL = "http://localhost:" + constants.DEFAULT_PORT
-
+// BeforeEach Function to run before all test functions.
+// Creates a new server to be tested on, using default handler.
 func BeforeEach(query string) (*http.Response, error) {
 	// Changes to project
 	// TODO: Make it work with every pc.
@@ -33,6 +34,19 @@ func BeforeEach(query string) (*http.Response, error) {
 	return resp, nil
 }
 
+// getBody a function which decodes body into a template.
+func getBody(response *http.Response, template interface{}) error {
+	body, ioReadErr := io.ReadAll(response.Body)
+	if ioReadErr != nil {
+		return ioReadErr
+	}
+	unmarshallErr := json.Unmarshal(body, &template)
+	if unmarshallErr != nil {
+		return unmarshallErr
+	}
+	return nil
+}
+
 // TestHandlerHistory_NoParams Testing the base return from history endpoint.
 func TestHandlerHistory_NoParams(t *testing.T) {
 	resp, error := BeforeEach(constants.HISTORY_PATH)
@@ -45,28 +59,52 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "Handler returned wrong status code.")
 }
 
+// TestCountryCodeLimiter Test function which tests the country code limiter from history endpoint.
 func TestCountryCodeLimiter(t *testing.T) {
-	resp, error := BeforeEach(constants.HISTORY_PATH + "nor")
-	if error != nil {
-		t.Fatal(error.Error())
+	// Retrieves a response from a newly created server.
+	resp, err := BeforeEach(constants.HISTORY_PATH + "/nor")
+	if err != nil {
+		t.Fatal(err.Error())
 	}
-	body, ioReadErr := io.ReadAll(resp.Body)
+
+	var list []structs.HistoricalRSE
+	ioReadErr := getBody(resp, list)
 	if ioReadErr != nil {
 		t.Fatal("Body read error: " + ioReadErr.Error())
 	}
-	var list []structs.HistoricalRSE
-	json.Unmarshal(body, &list)
-
 	// Waits for the body to close.
 	defer resp.Body.Close()
 
+	// Checks if all country codes is the same in the return list.
 	for i := 1; i < len(list); i++ {
 		assert.Equal(t, list[i-1].IsoCode, list[i].IsoCode, "Country codes does not match.")
 	}
 }
 
+// TestBeginEndQuery Test function which tests the queries for getting data between certain years.
 func TestBeginEndQuery(t *testing.T) {
+	// Constants for testing.
+	begin := 2010
+	end := 2011
+	// Retrieves a response from a newly created server.
+	resp, err := BeforeEach(constants.HISTORY_PATH + "?begin=" + strconv.Itoa(begin) + "&end=" + strconv.Itoa(end))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	var list []structs.HistoricalRSE
+	// Unmarshalls the response body into the list using referencing.
+	ioReadErr := getBody(resp, list)
+	if ioReadErr != nil {
+		t.Fatal("Body read error: " + ioReadErr.Error())
+	}
+	// Waits for the body to close.
+	defer resp.Body.Close()
 
+	// Checks if year is between the specified in query.
+	for i := 0; i < len(list); i++ {
+		assert.GreaterOrEqualf(t, begin, list[i].Year, "Year is lower than begin query.")
+		assert.Less(t, end, list[i].Year, "Year is greater than end query.")
+	}
 }
 
 func TestBeginQuery(t *testing.T) {
