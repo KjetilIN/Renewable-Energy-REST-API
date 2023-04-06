@@ -23,7 +23,7 @@ func BeforeEach(query string) (*http.Response, error) {
 		return nil, changeErr
 	}
 	// Creates a test server on handler history.
-	server := httptest.NewServer(http.HandlerFunc(HandlerHistory))
+	server := httptest.NewServer(http.HandlerFunc(HandlerDefault))
 	server.URL = server.URL + query
 	fmt.Println(server.URL)
 	resp, getReqErr := http.Get(server.URL + query)
@@ -35,7 +35,7 @@ func BeforeEach(query string) (*http.Response, error) {
 
 // TestHandlerHistory_NoParams Testing the base return from history endpoint.
 func TestHandlerHistory_NoParams(t *testing.T) {
-	resp, error := BeforeEach("")
+	resp, error := BeforeEach(constants.HISTORY_PATH)
 	if error != nil {
 		t.Fatal(error.Error())
 	}
@@ -46,7 +46,7 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 }
 
 func TestCountryCodeLimiter(t *testing.T) {
-	resp, error := BeforeEach(constants.HISTORY_PATH + "/nor")
+	resp, error := BeforeEach(constants.HISTORY_PATH + "nor")
 	if error != nil {
 		t.Fatal(error.Error())
 	}
