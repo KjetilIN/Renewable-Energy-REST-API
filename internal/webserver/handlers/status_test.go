@@ -26,7 +26,23 @@ func TestHandlerStatus_ValidMethod(t *testing.T) {
 	}
 }
 
+// TestHandlerStatus_InvalidMethod checks the handlers behaviour when an invalid HTTP method is used to access the endpoint.
+// Returns: http.StatusMethodNotAllowed, or an error message.
 func TestHandlerStatus_InvalidMethod(t *testing.T) {
+	InitWebhookRegistrations()
+
+	req, err := http.NewRequest("POST", "/status", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(HandlerStatus)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusMethodNotAllowed {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusMethodNotAllowed)
+	}
 }
 
 func TestHandlerStatus_GetStatusError(t *testing.T) {
