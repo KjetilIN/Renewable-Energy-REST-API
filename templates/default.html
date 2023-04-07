@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome</title>
+    <style>
+        .link {
+            background-color: lightblue;
+            width: 250px;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Welcome to the Renewable Energy REST Web Application!</h1>
+<p>
+    This project consists of a REST web application that provides the client with the ability to retrieve
+    information about developments related to renewable energy production for and across countries.
+    The application uses an existing webservice and an own data-centric webservice to gather and expose data via endpoints.
+    The service allows for notification registration using webhooks and is dockerized and deployed using an IaaS system.
+</p>
+<p>
+    This service does not provide any functionality on the root path level. Please try one of the paths below:
+</p>
+<div class="link">
+    <a href="{{.CurrentPath}}">Current percentage of renewables</a>
+</div>
+<div class="link">
+    <a href="{{.HistoryPath}}">Historical percentages of renewables</a>
+</div>
+<div class="link">
+    <a href="{{.NotificationsPath}}">Notification for webhooks</a>
+</div>
+<div class="link">
+    <a href="{{.StatusPath}}">For status</a>
+</div>
+</body>
+</html>
