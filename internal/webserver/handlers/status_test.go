@@ -77,7 +77,36 @@ func TestHandlerStatus_GetStatusError(t *testing.T) {
 	}
 }
 
+// TestHandlerStatus_GetStatusSuccess checks if the getStatus function returns the correct status
+// code when accessing the country API succeeds.
+// Returns: a successful status code and no errors, or an error message.
 func TestHandlerStatus_GetStatusSuccess(t *testing.T) {
+	InitWebhookRegistrations()
+
+	// Create a mock http client that returns a 200 status code when accessing the country API
+	mockOKClient := &http.Client{
+		Transport: &mockRoundTripper{
+			roundTripFunc: func(*http.Request) (*http.Response, error) {
+				res := &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       http.NoBody,
+				}
+				return res, nil
+			},
+		},
+	}
+
+	// Replace the global client with the mock client for this test case
+	client = mockOKClient
+
+	status, err := getStatus()
+	if err != nil {
+		t.Errorf("getStatus() returned an error: %v", err)
+	}
+
+	if status.CountriesApi != http.StatusOK {
+		t.Errorf("getStatus() returned wrong status for country API: got %v want %v", status.CountriesApi, http.StatusOK)
+	}
 }
 
 func TestHandlerStatus_JSONEncoding(t *testing.T) {
