@@ -4,6 +4,7 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
+	"strings"
 )
 
 // HandlerCurrent is a handler for the /current endpoint.
@@ -25,6 +26,15 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 			currentList = append(currentList, v)
 		}
 	}
+
+	// Collects parameters, separated by /
+	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
+
+	// Checks if an optional parameter is passed.
+	if len(params) == 6 {
+		currentList = countryCodeLimiter(currentList, params[5])
+	}
+
 	// Encodes currentList to the client.
 	utility.Encoder(w, currentList)
 }
