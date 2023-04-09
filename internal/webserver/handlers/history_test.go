@@ -9,12 +9,28 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
+	"runtime"
 	"strconv"
 	"testing"
 )
 
 const ORIGINAL_LENGTH = 1
 const SHORTER = 2
+
+// dirChanger Changes the directory to project root.
+func dirChanger() error {
+	// Gets the filepath of history_test.go.
+	_, filename, _, _ := runtime.Caller(0)
+	// Jumps back 3 folders.
+	dir := path.Join(path.Dir(filename), "..", "..", "..")
+	// Changes to the new dir structure.
+	err := os.Chdir(dir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // getBody a function which decodes body into a template.
 func getBody(response *http.Response, template interface{}) error {
@@ -29,7 +45,7 @@ func getBody(response *http.Response, template interface{}) error {
 // TestHandlerHistory_NoParams Testing the base return from history endpoint.
 func TestHandlerHistory_NoParams(t *testing.T) {
 	// Changes the working directory to the project directory.
-	changeErr := os.Chdir("C:\\Users\\sande\\GolandProjects\\assignment-2")
+	changeErr := dirChanger()
 	if changeErr != nil {
 		t.Fatal(changeErr.Error())
 	}
@@ -55,7 +71,7 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 // prepareList Function which prepares the lists for testing.
 func prepareList(setting int) ([]structs.HistoricalRSE, error) {
 	// Changes the working directory to the project directory.
-	changeErr := os.Chdir("C:\\Users\\sande\\GolandProjects\\assignment-2")
+	changeErr := dirChanger()
 	if changeErr != nil {
 		return nil, changeErr
 	}
