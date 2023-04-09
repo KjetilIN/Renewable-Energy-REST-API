@@ -11,4 +11,6 @@ const (
 	HISTORY_PATH       = "/energy/v1/renewables/history/"
 	STATUS_PATH        = "/energy/v1/status/"
 	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
+
+	COUNTRY_API_ADDRESS = "https://restcountries.com/v3/alpha/"
 )

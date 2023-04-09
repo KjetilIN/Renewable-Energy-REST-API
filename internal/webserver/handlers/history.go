@@ -60,8 +60,8 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 }
 
 // countryCodeLimiter Method to limit a list based on country code.
-func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode string) []structs.HistoricalRSE {
-	var limitedList []structs.HistoricalRSE
+func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
+	var limitedList []structs.RenewableShareEnergyElement
 	for i, v := range listToIterate { // Iterates through input list.
 		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
 			// appended to new list.
@@ -72,8 +72,8 @@ func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode strin
 }
 
 // beginEndLimiter Function to allow for searching to and from a year.
-func beginEndLimiter(begin string, end string, listToIterate []structs.HistoricalRSE) ([]structs.HistoricalRSE, error) {
-	var newlist []structs.HistoricalRSE
+func beginEndLimiter(begin string, end string, listToIterate []structs.RenewableShareEnergyElement) ([]structs.RenewableShareEnergyElement, error) {
+	var newlist []structs.RenewableShareEnergyElement
 	var convErr error // Potential error.
 	var convBegin int // Variable to store str turned to int.
 	var convEnd int   // Variable to store str turned to int.
@@ -111,8 +111,8 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Historica
 }
 
 // meanCalculation Function to calculate the mean of percentage per country, from the inputted list.
-func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSEMean {
-	newList := []structs.HistoricalRSEMean{}
+func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElementMean {
+	newList := []structs.RenewableShareEnergyElementMean{}
 	meanList := []float64{} // Initiates an empty float slice.
 	sum, mean := 0.0, 0.0
 	// Iterates through input list to calculate mean.
@@ -127,7 +127,7 @@ func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.Historical
 			mean = sum / float64(len(meanList))
 
 			// Potential bug: duplicate names and isocode.
-			newEntry := structs.HistoricalRSEMean{
+			newEntry := structs.RenewableShareEnergyElementMean{
 				Name:       listToIterate[i-1].Name,
 				IsoCode:    listToIterate[i-1].IsoCode,
 				Percentage: mean,
@@ -143,8 +143,8 @@ func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.Historical
 
 // sortingListPercentage a function which sorts a json list based on percentage. The function is not very
 // efficient.
-func sortingListPercentage(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSE {
-	var sortedList []structs.HistoricalRSE
+func sortingListPercentage(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
+	var sortedList []structs.RenewableShareEnergyElement
 	HighestValIndex := 0
 	HighestVal := 0.0
 	sorted := false

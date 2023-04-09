@@ -9,9 +9,9 @@ import (
 )
 
 // rseToJSON is an internal function to use a 2D string and input it into a struct.
-func RSEToJSON() ([]structs.HistoricalRSE, error) {
-	var jsonList []structs.HistoricalRSE
-	var jsonObj structs.HistoricalRSE
+func RSEToJSON() ([]structs.RenewableShareEnergyElement, error) {
+	var jsonList []structs.RenewableShareEnergyElement
+	var jsonObj structs.RenewableShareEnergyElement
 
 	// readFromFile is a 2D string array.
 	readFromFile, readErr := readCSV("./internal/res/renewable-share-energy.csv")
@@ -36,8 +36,8 @@ func RSEToJSON() ([]structs.HistoricalRSE, error) {
 			log.Fatal(convErr)
 			return nil, convErr
 		}
-		// Iterates through the lineRead slice, and appends to a new entity in HistoricalRSE slice.
-		jsonObj = structs.HistoricalRSE{
+		// Iterates through the lineRead slice, and appends to a new entity in RenewableShareEnergyElement slice.
+		jsonObj = structs.RenewableShareEnergyElement{
 			Name:       lineRead[0],
 			IsoCode:    lineRead[1],
 			Year:       year,

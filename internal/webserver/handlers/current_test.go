@@ -49,7 +49,7 @@ func TestHandlerCurrent_NoParams(t *testing.T) {
 	if getReqErr != nil {
 		t.Fatal("Error when requesting: " + getReqErr.Error())
 	}
-	var testList []structs.HistoricalRSE
+	var testList []structs.RenewableShareEnergyElement
 	err := getBody(resp, &testList)
 	if err != nil {
 		t.Fatal("Error when getting body: " + err.Error())
