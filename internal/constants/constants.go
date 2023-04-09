@@ -8,7 +8,7 @@ const (
 	// The paths that will be handled by each handler
 	DEFAULT_PATH       = "/energy/"
 	CURRENT_PATH       = "/energy/v1/renewables/current/"
-	HISTORY_PATH       = "/energy/v1/renewables/history"
+	HISTORY_PATH       = "/energy/v1/renewables/history/"
 	STATUS_PATH        = "/energy/v1/status/"
 	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
 )

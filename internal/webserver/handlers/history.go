@@ -106,8 +106,8 @@ func rseToJSON() ([]structs.HistoricalRSE, error) {
 // countryCodeLimiter Method to limit a list based on country code.
 func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode string) []structs.HistoricalRSE {
 	var limitedList []structs.HistoricalRSE
-	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
+	for _, v := range listToIterate { // Iterates through input list.
+		if strings.Contains(strings.ToLower(v.IsoCode), strings.ToLower(countryCode)) { // If country code match it is
 			// appended to new list.
 			limitedList = append(limitedList, v)
 		}
@@ -162,7 +162,7 @@ func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.Historical
 	// Iterates through input list to calculate mean.
 	for i := 1; i < len(listToIterate); i++ {
 		if listToIterate[i].Name == listToIterate[i-1].Name { // If name is the same as previous, add value to meanList.
-			meanList = append(meanList, listToIterate[i].Percentage)
+			meanList = append(meanList, listToIterate[i-1].Percentage)
 		} else { // If it is not the same, we have jumped to a new country. Then the mean should be calculated.
 			// Add up all floats.
 			for _, v := range meanList {
