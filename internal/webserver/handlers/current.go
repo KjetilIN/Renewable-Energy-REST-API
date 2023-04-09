@@ -10,15 +10,13 @@ import (
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
-	// Current year.
-	currentYear := 2021
-
 	// Collects the CSV list into JSON.
 	originalList, err := utility.RSEToJSON()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
+	// Current year.
+	currentYear := getCurrentYear(originalList)
 	var currentList []structs.HistoricalRSE
 
 	// Iterates through the original list to collect current year elements.
@@ -29,4 +27,15 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 	// Encodes currentList to the client.
 	utility.Encoder(w, currentList)
+}
+
+// getCurrentYear Retrieves the latest year.
+func getCurrentYear(list []structs.HistoricalRSE) int {
+	currentYear := 0
+	for _, v := range list {
+		if currentYear < v.Year { // If year is lower than current year it will be replaced.
+			currentYear = v.Year
+		}
+	}
+	return currentYear // Returns the current year.
 }
