@@ -37,7 +37,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		filteredList := countryCodeLimiter(currentList, countryCode)
 
 		// Checks if query neighbours is presented.
-		if strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
+		if len(filteredList) > 0 && strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
 			// Retrieves the neighbour countries using country code.
 			neighbourList, neighbourErr := retrieveNeighbours(currentList, countryCode)
 			if neighbourErr != nil {
