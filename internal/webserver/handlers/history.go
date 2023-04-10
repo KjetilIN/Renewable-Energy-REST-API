@@ -118,7 +118,7 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 	// Iterates through input list to calculate mean.
 	for i := 1; i < len(listToIterate); i++ {
 		if listToIterate[i].Name == listToIterate[i-1].Name { // If name is the same as previous, add value to meanList.
-			meanList = append(meanList, listToIterate[i].Percentage)
+			meanList = append(meanList, listToIterate[i-1].Percentage)
 		} else { // If it is not the same, we have jumped to a new country. Then the mean should be calculated.
 			// Add up all floats.
 			for _, v := range meanList {
