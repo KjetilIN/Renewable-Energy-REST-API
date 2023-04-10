@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+const COUNTRY_CODE_RETRIVAL = 0
+const COUNTRY_NAME_RETRIVAL = 1
+
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
@@ -33,13 +36,27 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
 	// Checks if an optional parameter is passed.
 	if len(params) == 6 {
-		countryCode := params[5]
-		filteredList := countryCodeLimiter(currentList, countryCode)
+		countryIdentifier := params[5]
+		var filteredList []structs.RenewableShareEnergyElement
+
+		// Checks if countryIdentifier is not empty, and then if it is less or more than 3 characters,
+		// if so it is not a country code.
+		if len(countryIdentifier) > 0 && len([]byte(countryIdentifier)) != 3 {
+			// Parses country name to country code.
+			countryCode, getError := parseCCToCountryName(countryIdentifier)
+			if getError != nil {
+				http.Error(w, "Error when parsing country name to country code: "+getError.Error(), http.StatusBadRequest)
+				return
+			}
+			countryIdentifier = countryCode
+		}
+		// Gets the countries based on country code, uses api.
+		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
 		// Checks if query neighbours is presented.
 		if len(filteredList) > 0 && strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
 			// Retrieves the neighbour countries using country code.
-			neighbourList, neighbourErr := retrieveNeighbours(currentList, countryCode)
+			neighbourList, neighbourErr := retrieveNeighbours(currentList, countryIdentifier)
 			if neighbourErr != nil {
 				http.Error(w, "Error:"+neighbourErr.Error(), http.StatusInternalServerError)
 				return
@@ -60,7 +77,6 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No search results matching your parameters.", http.StatusNotFound)
 		return
 	}
-
 	// Encodes currentList to the client.
 	utility.Encoder(w, currentList)
 }
@@ -79,7 +95,7 @@ func getCurrentYear(list []structs.RenewableShareEnergyElement) int {
 // retrieveNeighbours Checks the neighbouring countries and includes them in output list.
 func retrieveNeighbours(list []structs.RenewableShareEnergyElement, countryCode string) ([]structs.RenewableShareEnergyElement, error) {
 	// Collects country from API.
-	country, countryGetErr := getCountryFromAPI(countryCode)
+	country, countryGetErr := getCountryFromAPI(countryCode, COUNTRY_CODE_RETRIVAL)
 	if countryGetErr != nil {
 		return nil, countryGetErr
 	}
@@ -96,14 +112,31 @@ func retrieveNeighbours(list []structs.RenewableShareEnergyElement, countryCode 
 	return neighbourList, nil
 }
 
+// parseCCToCountryName Function which finds the country code based on name of country.
+func parseCCToCountryName(countryName string) (string, error) {
+	// Retrieve country code based on struct.
+	country, retrievalErr := getCountryFromAPI(countryName, COUNTRY_NAME_RETRIVAL)
+	if retrievalErr != nil {
+		return "", retrievalErr
+	}
+	return country.CountryCode, nil
+}
+
 // getCountryFromAPI Function which gets data as byte slice based on country code search parameter.
-func getCountryFromAPI(countryCode string) (structs.Country, error) {
+func getCountryFromAPI(countryIdentifier string, retrievalSetting int) (structs.Country, error) {
 	// Declare variables used.
 	var client http.Client
 	var countryFromAPI []structs.Country
+	var resp *http.Response
+	var getError error
 
+	// One method to retrieve based on country name and code.
+	if retrievalSetting == COUNTRY_NAME_RETRIVAL {
+		resp, getError = client.Get(constants.COUNTRYNAME_API_ADDRESS + countryIdentifier)
+	} else {
+		resp, getError = client.Get(constants.COUNTRYCODE_API_ADDRESS + countryIdentifier)
+	}
 	// Performs a get request to country api using country code search parameter.
-	resp, getError := client.Get(constants.COUNTRY_API_ADDRESS + countryCode)
 	if getError != nil {
 		return structs.Country{}, getError
 	}

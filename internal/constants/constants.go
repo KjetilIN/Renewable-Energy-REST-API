@@ -12,5 +12,6 @@ const (
 	STATUS_PATH        = "/energy/v1/status/"
 	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
 
-	COUNTRY_API_ADDRESS = "https://restcountries.com/v3/alpha/"
+	COUNTRYCODE_API_ADDRESS = "https://restcountries.com/v3/alpha/"
+	COUNTRYNAME_API_ADDRESS = "https://restcountries.com/v3/name/"
 )

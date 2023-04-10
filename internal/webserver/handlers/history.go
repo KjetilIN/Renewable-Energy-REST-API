@@ -63,7 +63,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
 	var limitedList []structs.RenewableShareEnergyElement
 	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
+		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), strings.ToLower(countryCode)) { // If country code match it is
 			// appended to new list.
 			limitedList = append(limitedList, v)
 		}
