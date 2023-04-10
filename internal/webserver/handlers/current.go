@@ -9,7 +9,10 @@ import (
 	"strings"
 )
 
+// COUNTRY_CODE_RETRIVAL Constant used in api retrieval function.
 const COUNTRY_CODE_RETRIVAL = 0
+
+// COUNTRY_NAME_RETRIVAL Constant used in api retrieval function.
 const COUNTRY_NAME_RETRIVAL = 1
 
 // HandlerCurrent is a handler for the /current endpoint.
@@ -21,16 +24,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	// Current year.
-	currentYear := getCurrentYear(originalList)
-	var currentList []structs.RenewableShareEnergyElement
-
-	// Iterates through the original list to collect current year elements.
-	for _, v := range originalList {
-		if v.Year == currentYear {
-			currentList = append(currentList, v)
-		}
-	}
+	currentList := getCurrentList(originalList)
 
 	// Collects parameters, separated by /
 	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
@@ -90,6 +84,21 @@ func getCurrentYear(list []structs.RenewableShareEnergyElement) int {
 		}
 	}
 	return currentYear // Returns the current year.
+}
+
+// getCurrentList Retrieves the list of element corresponding to the current year.
+func getCurrentList(originalList []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
+	// Current year.
+	currentYear := getCurrentYear(originalList)
+	var currentList []structs.RenewableShareEnergyElement
+
+	// Iterates through the original list to collect current year elements.
+	for _, v := range originalList {
+		if v.Year == currentYear {
+			currentList = append(currentList, v)
+		}
+	}
+	return currentList
 }
 
 // retrieveNeighbours Checks the neighbouring countries and includes them in output list.
