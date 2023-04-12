@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +56,7 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 	if getReqErr != nil {
 		t.Fatal("Error when requesting: " + getReqErr.Error())
 	}
-	var testList []structs.HistoricalRSE
+	var testList []structs.RenewableShareEnergyElement
 	err := getBody(resp, &testList)
 	if err != nil {
 		t.Fatal("Error when getting body: " + err.Error())
@@ -69,14 +70,14 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 }
 
 // prepareList Function which prepares the lists for testing.
-func prepareList(setting int) ([]structs.HistoricalRSE, error) {
+func prepareList(setting int) ([]structs.RenewableShareEnergyElement, error) {
 	// Changes the working directory to the project directory.
 	changeErr := dirChanger()
 	if changeErr != nil {
 		return nil, changeErr
 	}
 	// Collects CSV file into a list of JSON structs.
-	list, err := rseToJSON()
+	list, err := utility.RSEToJSON()
 	if err != nil {
 		return nil, err
 	}

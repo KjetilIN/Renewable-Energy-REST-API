@@ -3,45 +3,16 @@ package handlers
 import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
-	"runtime"
 	"testing"
 )
-
-// dirChanger Changes the directory to project root.
-func dirChanger() error {
-	// Gets the filepath of history_test.go.
-	_, filename, _, _ := runtime.Caller(0)
-	// Jumps back 3 folders.
-	dir := path.Join(path.Dir(filename), "..", "..", "..")
-	// Changes to the new dir structure.
-	err := os.Chdir(dir)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// getBody a function which decodes body into a template.
-func getBody(response *http.Response, template interface{}) error {
-	body, ioReadErr := io.ReadAll(response.Body)
-	if ioReadErr != nil {
-		return ioReadErr
-	}
-	json.Unmarshal(body, template)
-	return nil
-}
 
 // TestHandlerCurrent_NoParams Tests the base handler without any params.
 func TestHandlerCurrent_NoParams(t *testing.T) {
 	// Changes working directory to root directory.
-	dirChangeErr := dirChanger()
+	dirChangeErr := dirChanger() // Function in history test.
 	if dirChangeErr != nil {
 		t.Fatal("Error switching working directory: " + dirChangeErr.Error())
 	}
@@ -51,7 +22,7 @@ func TestHandlerCurrent_NoParams(t *testing.T) {
 		t.Fatal("Error when requesting: " + getReqErr.Error())
 	}
 	var testList []structs.RenewableShareEnergyElement
-	err := getBody(resp, &testList)
+	err := getBody(resp, &testList) // Function in history test.
 	if err != nil {
 		t.Fatal("Error when getting body: " + err.Error())
 	}
@@ -76,7 +47,7 @@ func TestHandlerCurrent_NoParams(t *testing.T) {
 // Tests API retrieval at the same time.
 func TestNeighbourRetrieval(t *testing.T) {
 	// Changes directory.
-	dirChangeErr := dirChanger()
+	dirChangeErr := dirChanger() // Function in history test.
 	if dirChangeErr != nil {
 		t.Fatal("Error changing directory: " + dirChangeErr.Error())
 	}

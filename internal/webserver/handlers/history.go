@@ -73,7 +73,7 @@ func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, cou
 
 // beginEndLimiter Function to allow for searching to and from a year.
 func beginEndLimiter(begin string, end string, listToIterate []structs.RenewableShareEnergyElement) ([]structs.RenewableShareEnergyElement, error) {
-	var newlist []structs.RenewableShareEnergyElement
+	var newList []structs.RenewableShareEnergyElement
 	var convErr error // Potential error.
 	var convBegin int // Variable to store str turned to int.
 	var convEnd int   // Variable to store str turned to int.
@@ -96,24 +96,24 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Renewable
 	if convErr != nil {
 		return nil, convErr
 	}
-	// Append json objects fitting conditions to newlist.
+	// Append json objects fitting conditions to newList.
 	for i, v := range listToIterate {
 		relevantYear := listToIterate[i].Year
 		if toFromOr == 3 && relevantYear <= convEnd && convBegin <= relevantYear {
-			newlist = append(newlist, v)
+			newList = append(newList, v)
 		} else if toFromOr == 1 && convBegin <= relevantYear {
-			newlist = append(newlist, v)
+			newList = append(newList, v)
 		} else if toFromOr == 2 && relevantYear <= convEnd {
-			newlist = append(newlist, v)
+			newList = append(newList, v)
 		}
 	}
-	return newlist, nil
+	return newList, nil
 }
 
 // meanCalculation Function to calculate the mean of percentage per country, from the inputted list.
 func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElementMean {
-	newList := []structs.RenewableShareEnergyElementMean{}
-	meanList := []float64{} // Initiates an empty float slice.
+	var newList []structs.RenewableShareEnergyElementMean
+	var meanList []float64 // Initiates an empty float slice.
 	sum, mean := 0.0, 0.0
 	// Iterates through input list to calculate mean.
 	for i := 1; i < len(listToIterate); i++ {

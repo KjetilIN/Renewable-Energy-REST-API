@@ -1,6 +1,6 @@
 package structs
 
-// This file defines structs to work with data.
+// Status This file defines structs to work with data.
 type Status struct {
 	CasesApi       int    `json:"countries_api"`
 	NotificationDB int    `json:"notification_db"`
@@ -9,7 +9,7 @@ type Status struct {
 	Uptime         int    `json:"uptime"`
 }
 
-// Struct to parse historical data into.
+// RenewableShareEnergyElement Struct to parse historical data into.
 type RenewableShareEnergyElement struct {
 	Name       string  `json:"name"`
 	IsoCode    string  `json:"isoCode"`
@@ -17,7 +17,7 @@ type RenewableShareEnergyElement struct {
 	Percentage float64 `json:"percentage"`
 }
 
-// Struct to parse historical data into. Used when calculating mean percentage of countries over time.
+// RenewableShareEnergyElementMean Struct to parse historical data into. Used when calculating mean percentage of countries over time.
 type RenewableShareEnergyElementMean struct {
 	Name       string  `json:"name"`
 	IsoCode    string  `json:"isoCode"`
