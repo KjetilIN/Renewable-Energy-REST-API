@@ -10,7 +10,7 @@ type Status struct {
 }
 
 // Struct to parse historical data into.
-type HistoricalRSE struct {
+type RenewableShareEnergyElement struct {
 	Name       string  `json:"name"`
 	IsoCode    string  `json:"isoCode"`
 	Year       int     `json:"year"`
@@ -18,8 +18,15 @@ type HistoricalRSE struct {
 }
 
 // Struct to parse historical data into. Used when calculating mean percentage of countries over time.
-type HistoricalRSEMean struct {
+type RenewableShareEnergyElementMean struct {
 	Name       string  `json:"name"`
 	IsoCode    string  `json:"isoCode"`
 	Percentage float64 `json:"percentage"`
+}
+
+// Country Struct to collect information about countries.
+type Country struct {
+	Name        map[string]interface{} `json:"name"`
+	CountryCode string                 `json:"cca3"`
+	Borders     []string               `json:"borders"`
 }
