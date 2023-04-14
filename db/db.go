@@ -1,6 +1,7 @@
 package db
 
 import (
+	"assignment-2/internal/constants"
 	"context"
 	"log"
 	"net/http"
@@ -39,7 +40,7 @@ func CheckFirestoreConnection() int {
 	}
 
 	// Test the connection by querying a collection
-	docRef := client.Collection("testCollection")
+	docRef := client.Collection(constants.FIRESTORE_COLLECTION)
 	if docRef == nil {
 		// If there was an error querying the webhook collection, return a 500 status code
 		log.Fatal("No collection for the webhooks was found")
