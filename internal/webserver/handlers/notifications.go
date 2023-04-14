@@ -27,9 +27,38 @@ func InitWebhookRegistrations(){
 	webhooks = []structs.WebhookID{};
 }
 
-//Get number of webhooks
+//Get number of webhooks. 
+// Note that if the service is down there will be not handled this function. 
+// The user has to see the status endpoint
 func GetNumberOfWebhooks() int{
-	return len(webhooks)
+	//Create a client for the 
+	client, err := db.GetFirestoreClient()
+	defer client.Close()
+	if err != nil{
+		return 0;
+	}
+
+	// Init a iterator
+	docsIter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background())
+
+	// Initialize a counter variable
+	count := 0
+
+	// Iterate over the documents and increment the counter
+	for {
+		// Ignore the document itself
+		_, err := docsIter.Next()
+		if err == iterator.Done {
+			break
+		}
+		// If there is now error we add 1
+		if err == nil {
+			count++
+		}
+
+	}
+	// Return the count
+	return count
 }
 
 
