@@ -33,19 +33,48 @@ func GetNumberOfWebhooks() int{
 }
 
 
-// Fetch a webhook using its ID
+// Fetch a webhook using its ID. The webhook id has to be the same as the document id
 func fetchWebhookWithID(id string) (structs.WebhookID, error) {
-	for _, hook := range webhooks{
-		if(hook.ID == id){
-			return hook, nil;
+	//Create a client for the 
+	client, err := db.GetFirestoreClient()
+	defer client.Close()
+	if err != nil{
+		return structs.WebhookID{}, err;
+	}
+
+	var webhook structs.WebhookID
+	iter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background());
+
+	//Loop through each document 
+	for{
+		//Get the document and check if it is done 
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			// Break if no more docs to get
+			break
+		}
+
+		//if the ID is the same as the docs 
+		if doc.Ref.ID == id {
+			log.Println("Webhook found: " + id)
+			err := doc.DataTo(&webhook);
+			if err != nil{
+				log.Println("Webhook with id: " + id + " was found but not decodable")
+				return structs.WebhookID{}, err
+			}
+			//No error on decoding and webhook that matched the id was returned
+			return webhook, nil
+
 		}
 	}
-	return structs.WebhookID{}, errors.New("Fetch with id: could not find")
+
+	// Correctly went through the method but did not find a webhook
+	return structs.WebhookID{}, errors.New("No webhook was found in that matched the id: " + id) 
 }
 
 //Fetch all webhooks
 func fetchAllWebhooks() ([]structs.WebhookID, error){
-	//Create a client for the 
+	//Create a client
 	client, err := db.GetFirestoreClient()
 	defer client.Close()
 	if err != nil{
@@ -114,6 +143,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		
 		//Error on fetching the webhook with the id
 		if(err != nil){
+			log.Println("Error on fetching webhook with id: " + err.Error())
 			http.Error(w, "No existing webhook with the ID: " + params[0], http.StatusNotFound)
 			return
 		}
