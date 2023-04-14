@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -13,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"google.golang.org/api/iterator"
 )
 
 // Webhooks DB
@@ -41,9 +45,47 @@ func fetchWebhookWithID(id string) (structs.WebhookID, error) {
 
 //Fetch all webhooks
 func fetchAllWebhooks() ([]structs.WebhookID, error){
-	// At this stage we already have all the webhooks 
+	//Create a client for the 
+	client, err := db.GetFirestoreClient()
+	defer client.Close()
+	if err != nil{
+		return nil, err;
+	}
+
+	//Iterate through all docs and decode them into the list of structs
+	var webhooks []structs.WebhookID
+	iter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background())
+	for{
+		//Get the document and check if it is done 
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			// Break if now more docs to get
+			break
+		}
+
+		//Check for errors on iterator 
+		if err != nil {
+			//Log the error if any
+			log.Println("Failed to iterate: " + err.Error())
+		}
+
+
+		// Decode the webhook into a struct if possible 
+		var webhook structs.WebhookID
+		if err := doc.DataTo(&webhook); err != nil {
+			log.Println("Error during data decoding")
+		}else{
+			// No error so we append the webhook
+			webhooks = append(webhooks, webhook);
+		}
+
+	}
+	
+	// Returns either an empty list or a list of webhooks
 	return webhooks, nil
+
 }
+	
 
 
 // Function for handling get request for the  

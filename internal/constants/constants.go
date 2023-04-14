@@ -12,4 +12,5 @@ const (
 	STATUS_PATH        = "/energy/v1/status/"
 	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
 	FIRESTORE_COLLECTION = "webhooks"
+	FIREBASE_CREDENTIALS_FILE = "cloud-assigment-2-36e8e-5557620affae.json"
 )
