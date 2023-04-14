@@ -2,6 +2,9 @@ package db
 
 import (
 	"context"
+	"log"
+	"net/http"
+
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
@@ -21,4 +24,28 @@ func GetFirestoreClient() (*firestore.Client, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+//Function for getting status code of the connection to the firestore 
+func CheckFirestoreConnection() int {
+	// Connect to to the firestore with the client
+	client, err := GetFirestoreClient();
+	defer client.Close()
+
+	//check for errors on connection 
+	if err != nil{
+		log.Fatal("Error on creating the connection: " + err.Error())
+		return http.StatusInternalServerError
+	}
+
+	// Test the connection by querying a collection
+	docRef := client.Collection("testCollection")
+	if docRef == nil {
+		// If there was an error querying the webhook collection, return a 500 status code
+		log.Fatal("No collection for the webhooks was found")
+		return http.StatusInternalServerError
+	}
+
+	// If everything worked, return a 200 status code
+	return http.StatusOK
 }
