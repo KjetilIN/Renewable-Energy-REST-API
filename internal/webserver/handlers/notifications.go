@@ -194,7 +194,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		//Handle error 
 		if(fetchError != nil){
 			log.Println("Error on fetching all webhooks: ", fetchError.Error())
-			http.Error(w, "Could not fetch all webhooks", http.StatusInternalServerError)
+			http.Error(w, "Could not fetch all webhooks. \nSee status endpoint to the status of webhook database...", http.StatusInternalServerError)
 			return 
 		}
 
