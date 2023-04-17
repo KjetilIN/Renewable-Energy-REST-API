@@ -14,14 +14,6 @@ import (
 	"strings"
 	"time"
 )
-
-// Webhooks DB
-var webhooks []structs.WebhookID;
-
-// Init empty list of webhooks 
-func InitWebhookRegistrations(){
-	webhooks = []structs.WebhookID{};
-}
 	
 
 
@@ -183,9 +175,6 @@ func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
 
 
 }
-
-
-
 
 // HandlerNotifications is a handler for the /notifications endpoint.
 func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
