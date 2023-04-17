@@ -167,25 +167,17 @@ func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
 
 	//Deleting the webhook with the given ID, or not doing anything. 
 	givenID := params[0]
-	newWebhooks := []structs.WebhookID{}
-	isDeleted := false
-	for _, hook := range webhooks{
-		if(hook.ID !=  givenID){
-			newWebhooks = append(newWebhooks, hook);
-		}else{
-			//Indicate that the webhook was found and deleted. 
-			isDeleted = true;
-		}
-	}
-	webhooks = newWebhooks
+	
+	deletedError := db.DeleteWebhook(givenID)
 
-	if(isDeleted){
+	if(deletedError == nil){
 		//Tell the end user that the webhook was deleted
-		http.Error(w, "Webhook with ID: " + givenID + " is deleted", http.StatusOK)
+		http.Error(w, "Webhook with ID: " + givenID + " has been deleted", http.StatusOK)
 		return 
 	}else{
 		//No webhook was found
-		http.Error(w, "Webhook not stored, did not delete a webhook", http.StatusOK)
+		log.Print("Error on deletion of webhook: " + deletedError.Error())
+		http.Error(w, "Webhook was not deleted. Internal error...", http.StatusInternalServerError)
 		return 
 	}
 

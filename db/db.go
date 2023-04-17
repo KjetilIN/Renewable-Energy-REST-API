@@ -191,3 +191,22 @@ func FetchAllWebhooks() ([]structs.WebhookID, error){
 	return webhooks, nil
 
 }
+
+// Delete a webhook from a given webhook id
+// No error returns indicates that the process was okay 
+func DeleteWebhook(webhookID string) error{
+	// Get the client
+	client, clientError := GetFirestoreClient()
+	if clientError != nil{
+		return clientError
+	}
+
+
+	// Delete the document based on the id given
+	_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhookID).Delete(context.Background())
+	if err != nil{
+		return err
+	}
+	// No error and we return nil 
+	return nil
+}
