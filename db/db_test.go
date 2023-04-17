@@ -132,3 +132,47 @@ func TestGetNumberOfWebhooks(t *testing.T) {
     }
 }
 
+
+func TestFetchWebhookWithID(t *testing.T) {
+
+	// Get the Firestore client
+    client, err := getFirestoreClient()
+    if err != nil {
+        t.Fatalf("Failed to get Firestore client: %v", err)
+    }
+    defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+
+
+	// Add a webhook to Firestore
+	testWebhook := structs.WebhookID{
+		ID: "test-webhook-id",
+		Webhook: structs.Webhook{},
+		Created: time.Now(),
+	}
+	err = AddWebhook(testWebhook, constants.FIRESTORE_COLLECTION_TEST)
+	if err != nil {
+		t.Error("AddWebHook test failure caused FetchWebhookWithID to fail....")
+		t.Fatal("Failed to add webhook for testing: ", err)
+	}
+
+	// Fetch the webhook using its ID
+	fetchedWebhook, err := FetchWebhookWithID("test-webhook-id",constants.FIRESTORE_COLLECTION_TEST)
+	if err != nil {
+		t.Fatal("Failed to fetch webhook: ", err)
+	}
+
+	// Check that the fetched webhook matches the added webhook
+	if fetchedWebhook.ID != testWebhook.ID || fetchedWebhook.Webhook != testWebhook.Webhook {
+		t.Fatalf("Fetched webhook does not match added webhook.\nAdded: %v\nFetched: %v", testWebhook, fetchedWebhook)
+	}
+
+	// Try to fetch a non-existent webhook
+	_, err = FetchWebhookWithID("non-existent-webhook-id", constants.FIRESTORE_COLLECTION_TEST)
+	if err == nil {
+		t.Fatal("Expected an error when fetching non-existent webhook, but no error was returned.")
+	}
+}
+

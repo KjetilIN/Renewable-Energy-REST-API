@@ -37,7 +37,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		return;
 	}else if (len(params) != 0 ){
 		//Fetch only the webhook with 
-		fetchedWebhook, err := db.FetchWebhookWithID(params[0])
+		fetchedWebhook, err := db.FetchWebhookWithID(params[0], constants.FIRESTORE_COLLECTION)
 		
 		//Error on fetching the webhook with the id
 		if(err != nil){

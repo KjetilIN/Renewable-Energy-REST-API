@@ -103,7 +103,7 @@ func GetNumberOfWebhooks(collection string) int{
 
 
 // Fetch a webhook using its ID. The webhook id has to be the same as the document id
-func FetchWebhookWithID(id string) (structs.WebhookID, error) {
+func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error) {
 	//Create a client for the 
 	client, err := getFirestoreClient()
 	defer client.Close()
@@ -112,7 +112,7 @@ func FetchWebhookWithID(id string) (structs.WebhookID, error) {
 	}
 
 	var webhook structs.WebhookID
-	iter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background());
+	iter := client.Collection(collection).Documents(context.Background());
 
 	//Loop through each document 
 	for{
