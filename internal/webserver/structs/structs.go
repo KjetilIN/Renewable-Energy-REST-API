@@ -1,5 +1,7 @@
 package structs
 
+import "time"
+
 // This file defines structs to work with data.
 type Status struct {
 	CasesApi       int    `json:"countries_api"`
@@ -18,6 +20,7 @@ type Webhook struct{
 type WebhookID struct{
 	ID string `json:"webhook_id"`
 	Webhook
+	Created time.Time `json:"created_timestamp"`
 }
 
 type IdResponse struct{

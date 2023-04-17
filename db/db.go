@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"sort"
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
@@ -15,7 +16,7 @@ import (
 )
 
 // Function for getting the Firestore client
-// Private for security reasons 
+// Private for security reasons
 func getFirestoreClient() (*firestore.Client, error) {
 	// Use a service account
 	ctx := context.Background()
@@ -208,5 +209,57 @@ func DeleteWebhook(webhookID string) error{
 		return err
 	}
 	// No error and we return nil 
+	return nil
+}
+
+
+func PurgeWebhooks() error{
+	// Get the client
+	client, clientError := getFirestoreClient()
+	if clientError != nil{
+		return clientError
+	}
+	
+	// Get the amount of webhooks
+	numberOfWebhooks := GetNumberOfWebhooks()
+
+	// Check if we need to purge 
+	if numberOfWebhooks <= constants.MAX_WEBHOOK_COUNT{
+		return nil
+	}
+
+	// Calculate how many of the webhooks we can delete 
+	numberOfWebhooksToDelete := numberOfWebhooks - constants.MAX_WEBHOOK_COUNT
+
+	// Get all the webhooks
+	querySnapshot, err := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background()).GetAll()
+    if err != nil {
+        return err
+    }
+
+	// Add the webhooks to a list and sort them by the timestamp
+	var webhooks []*structs.WebhookID
+	for _, doc := range querySnapshot {
+		var webhook structs.WebhookID
+		if err := doc.DataTo(&webhook); err != nil {
+			return err
+		}
+		webhooks = append(webhooks, &webhook)
+	}
+
+	// Sort based on the oldest first by using indexes to compare the created time
+	sort.Slice(webhooks, func(i, j int) bool {
+		return webhooks[i].Created.Before(webhooks[j].Created)
+	})
+
+	// Use the sorted list of webhooks to delete webhooks from the firestore 
+	for i:= 0; i < numberOfWebhooksToDelete; i++{
+		_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhooks[i].ID).Delete(context.Background())
+		if err != nil{
+			log.Println("Error on purging mechanism: " + err.Error())
+			return err
+		}
+	}
+	
 	return nil
 }

@@ -13,4 +13,5 @@ const (
 	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
 	FIRESTORE_COLLECTION = "webhooks"
 	FIREBASE_CREDENTIALS_FILE = "cloud-assigment-2-36e8e-5557620affae.json"
+	MAX_WEBHOOK_COUNT = 40 // The number of max webhooks that are allowed
 )
