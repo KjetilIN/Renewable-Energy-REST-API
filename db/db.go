@@ -78,7 +78,7 @@ func AddWebhook(webhook structs.WebhookID) error{
 
 
 //Get number of webhooks. 
-// Note that if the service is down there will be not handled this function. 
+// Note that if the service is down there will be not handled this function, and 0 wil be returned
 // The user has to see the status endpoint
 func GetNumberOfWebhooks() int{
 	//Create a client for the 
@@ -88,27 +88,15 @@ func GetNumberOfWebhooks() int{
 		return 0;
 	}
 
-	// Init a iterator
-	docsIter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background())
-
-	// Initialize a counter variable
-	count := 0
-
-	// Iterate over the documents and increment the counter
-	for {
-		// Ignore the document itself
-		_, err := docsIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		// If there is now error we add 1
-		if err == nil {
-			count++
-		}
-
+	// Get the number of webhooks in the collection.
+	allWebHooks, err := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background()).GetAll()
+	if err != nil {
+		// There was an error but we return 0
+		log.Println("Error on getting all webhooks in the GetNumberOfWebhooks method: " + err.Error())
+		return 0
 	}
-	// Return the count
-	return count
+	// Return the length of the retrieved given webhooks
+	return len(allWebHooks)
 }
 
 
@@ -260,6 +248,6 @@ func PurgeWebhooks() error{
 			return err
 		}
 	}
-	
+
 	return nil
 }
