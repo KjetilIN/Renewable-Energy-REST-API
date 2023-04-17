@@ -82,7 +82,7 @@ func AddWebhook(webhook structs.WebhookID, collection string) error{
 //Get number of webhooks. 
 // Note that if the service is down there will be not handled this function, and 0 wil be returned
 // The user has to see the status endpoint
-func GetNumberOfWebhooks() int{
+func GetNumberOfWebhooks(collection string) int{
 	//Create a client for the 
 	client, err := getFirestoreClient()
 	defer client.Close()
@@ -91,7 +91,7 @@ func GetNumberOfWebhooks() int{
 	}
 
 	// Get the number of webhooks in the collection.
-	allWebHooks, err := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background()).GetAll()
+	allWebHooks, err := client.Collection(collection).Documents(context.Background()).GetAll()
 	if err != nil {
 		// There was an error but we return 0
 		log.Println("Error on getting all webhooks in the GetNumberOfWebhooks method: " + err.Error())
@@ -211,7 +211,7 @@ func PurgeWebhooks() error{
 	}
 	
 	// Get the amount of webhooks
-	numberOfWebhooks := GetNumberOfWebhooks()
+	numberOfWebhooks := GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION)
 
 	// Check if we need to purge 
 	if numberOfWebhooks <= constants.MAX_WEBHOOK_COUNT{

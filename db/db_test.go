@@ -4,6 +4,7 @@ import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
 	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 	"testing"
@@ -95,3 +96,39 @@ func TestAddWebhook(t *testing.T) {
     }
 
 }
+
+
+func TestGetNumberOfWebhooks(t *testing.T) {
+    // Get the Firestore client
+    client, err := getFirestoreClient()
+    if err != nil {
+        t.Fatalf("Failed to get Firestore client: %v", err)
+    }
+    defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+
+    // Add some 5 test documents to the collection
+    for i := 0; i < 5; i++ {
+        webhook := structs.WebhookID{
+            ID:   fmt.Sprintf("test-%d", i),
+            Webhook: structs.Webhook{},
+			Created: time.Now(),
+        }
+        err = AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
+        if err != nil {
+			t.Error("AddWebHook test failure caused GetNumberOfWebhooks to fail....")
+            t.Fatalf("Error adding test webhook: %v", err)
+        }
+    }
+
+    // Get the number of webhooks in the collection
+    numWebhooks := GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION_TEST)
+
+    // Verify that the number of webhooks is correct
+    if numWebhooks != 5 {
+        t.Fatalf("Expected 5 webhooks, but got %d", numWebhooks)
+    }
+}
+
