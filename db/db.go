@@ -23,8 +23,10 @@ func getFirestoreClient() (*firestore.Client, error) {
 	sa := option.WithCredentialsFile(constants.FIREBASE_CREDENTIALS_FILE)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
+		log.Println("Error on getting the application")
 		return nil, err
 	}
+
 	client, err := app.Firestore(ctx)
 	if err != nil {
 		return nil, err
