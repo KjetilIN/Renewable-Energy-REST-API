@@ -15,7 +15,8 @@ import (
 )
 
 // Function for getting the Firestore client
-func GetFirestoreClient() (*firestore.Client, error) {
+// Private for security reasons 
+func getFirestoreClient() (*firestore.Client, error) {
 	// Use a service account
 	ctx := context.Background()
 	sa := option.WithCredentialsFile("cloud-assigment-2-36e8e-5557620affae.json")
@@ -33,7 +34,7 @@ func GetFirestoreClient() (*firestore.Client, error) {
 //Function for getting status code of the connection to the firestore 
 func CheckFirestoreConnection() int {
 	// Connect to to the firestore with the client
-	client, err := GetFirestoreClient();
+	client, err := getFirestoreClient();
 	defer client.Close()
 
 	//check for errors on connection 
@@ -59,7 +60,7 @@ func CheckFirestoreConnection() int {
 //Return an error if it could not add the webhook, returns nil if everything went okay 
 func AddWebhook(webhook structs.WebhookID) error{
 	// Get the client for the firestore
-	client, clientErr := GetFirestoreClient()
+	client, clientErr := getFirestoreClient()
 	defer client.Close()
 	if clientErr != nil{
 		return clientErr
@@ -80,7 +81,7 @@ func AddWebhook(webhook structs.WebhookID) error{
 // The user has to see the status endpoint
 func GetNumberOfWebhooks() int{
 	//Create a client for the 
-	client, err := GetFirestoreClient()
+	client, err := getFirestoreClient()
 	defer client.Close()
 	if err != nil{
 		return 0;
@@ -113,7 +114,7 @@ func GetNumberOfWebhooks() int{
 // Fetch a webhook using its ID. The webhook id has to be the same as the document id
 func FetchWebhookWithID(id string) (structs.WebhookID, error) {
 	//Create a client for the 
-	client, err := GetFirestoreClient()
+	client, err := getFirestoreClient()
 	defer client.Close()
 	if err != nil{
 		return structs.WebhookID{}, err;
@@ -152,7 +153,7 @@ func FetchWebhookWithID(id string) (structs.WebhookID, error) {
 //Fetch all webhooks
 func FetchAllWebhooks() ([]structs.WebhookID, error){
 	//Create a client
-	client, err := GetFirestoreClient()
+	client, err := getFirestoreClient()
 	defer client.Close()
 	if err != nil{
 		return nil, err;
@@ -196,11 +197,10 @@ func FetchAllWebhooks() ([]structs.WebhookID, error){
 // No error returns indicates that the process was okay 
 func DeleteWebhook(webhookID string) error{
 	// Get the client
-	client, clientError := GetFirestoreClient()
+	client, clientError := getFirestoreClient()
 	if clientError != nil{
 		return clientError
 	}
-
 
 	// Delete the document based on the id given
 	_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhookID).Delete(context.Background())

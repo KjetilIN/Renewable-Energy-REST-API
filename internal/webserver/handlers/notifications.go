@@ -17,7 +17,7 @@ import (
 	
 
 
-// Function for handling get request for the  
+// Function for handling get request for the  notification endpoint
 func handleGetRequest(w http.ResponseWriter, r *http.Request){
 	// Get any parameter received
 	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
@@ -136,6 +136,7 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request){
 	w.Write(jsonResponse)
 }
 
+// Function for handling the get request 
 func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
 	// Get any parameter received
 	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
