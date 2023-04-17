@@ -59,8 +59,9 @@ func CheckFirestoreConnection() int {
 }
 
 
-//Function that adds a webhook to the firestore, using the given webhook struct and a generated ID.
-//Return an error if it could not add the webhook, returns nil if everything went okay 
+// Function that adds a webhook to the firestore, using the given webhook struct and a generated ID.
+// Takes the webhook struct and the collection name as parameters. 
+// Return an error if it could not add the webhook, returns nil if everything went okay .
 func AddWebhook(webhook structs.WebhookID, collection string) error{
 	// Get the client for the firestore
 	client, clientErr := getFirestoreClient()
@@ -79,9 +80,10 @@ func AddWebhook(webhook structs.WebhookID, collection string) error{
 }
 
 
-//Get number of webhooks. 
+// Get number of webhooks. 
 // Note that if the service is down there will be not handled this function, and 0 wil be returned
 // The user has to see the status endpoint
+// Takes the name of the collection as a parameter
 func GetNumberOfWebhooks(collection string) int{
 	//Create a client for the 
 	client, err := getFirestoreClient()
@@ -102,7 +104,10 @@ func GetNumberOfWebhooks(collection string) int{
 }
 
 
-// Fetch a webhook using its ID. The webhook id has to be the same as the document id
+// Fetch a webhook using its ID. 
+// The webhook id has to be the same as the document id.
+// Takes the id and collection name as parameters.
+// Return an error if something went wrong.
 func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error) {
 	//Create a client for the 
 	client, err := getFirestoreClient()
@@ -141,7 +146,10 @@ func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error)
 	return structs.WebhookID{}, errors.New("No webhook was found in that matched the id: " + id) 
 }
 
-//Fetch all webhooks
+// Fetch all webhooks
+// Returns a list of webhooks with id from the database.
+// Takes the name of the collection as parameter. 
+// Returns an error if something went wrong
 func FetchAllWebhooks(collection string) ([]structs.WebhookID, error){
 	//Create a client
 	client, err := getFirestoreClient()
@@ -185,8 +193,9 @@ func FetchAllWebhooks(collection string) ([]structs.WebhookID, error){
 }
 
 // Delete a webhook from a given webhook id
+// Takes the given webhook as id and the name of the collection
 // No error returns indicates that the process was okay 
-func DeleteWebhook(webhookID string) error{
+func DeleteWebhook(webhookID string, collection string) error{
 	// Get the client
 	client, clientError := getFirestoreClient()
 	if clientError != nil{
@@ -194,7 +203,7 @@ func DeleteWebhook(webhookID string) error{
 	}
 
 	// Delete the document based on the id given
-	_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhookID).Delete(context.Background())
+	_ , err := client.Collection(collection).Doc(webhookID).Delete(context.Background())
 	if err != nil{
 		return err
 	}
@@ -202,8 +211,10 @@ func DeleteWebhook(webhookID string) error{
 	return nil
 }
 
-
-func PurgeWebhooks() error{
+// Function that removes webhook when we have stored over a set limit
+// Takes a collection name as argument.
+// Optionally takes the max amount of webhooks, else uses the predefined limit
+func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 	// Get the client
 	client, clientError := getFirestoreClient()
 	if clientError != nil{
@@ -213,16 +224,24 @@ func PurgeWebhooks() error{
 	// Get the amount of webhooks
 	numberOfWebhooks := GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION)
 
+	// Determine the maximum webhook count
+	var webhookLimit int
+	if len(maxWebhookCount) > 0 {
+		webhookLimit = maxWebhookCount[0]
+	} else {
+		webhookLimit = constants.MAX_WEBHOOK_COUNT
+	}
+
 	// Check if we need to purge 
-	if numberOfWebhooks <= constants.MAX_WEBHOOK_COUNT{
+	if numberOfWebhooks <= webhookLimit{
 		return nil
 	}
 
 	// Calculate how many of the webhooks we can delete 
-	numberOfWebhooksToDelete := numberOfWebhooks - constants.MAX_WEBHOOK_COUNT
+	numberOfWebhooksToDelete := numberOfWebhooks - webhookLimit
 
 	// Get all the webhooks
-	querySnapshot, err := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background()).GetAll()
+	querySnapshot, err := client.Collection(collection).Documents(context.Background()).GetAll()
     if err != nil {
         return err
     }
@@ -244,7 +263,7 @@ func PurgeWebhooks() error{
 
 	// Use the sorted list of webhooks to delete webhooks from the firestore 
 	for i:= 0; i < numberOfWebhooksToDelete; i++{
-		_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhooks[i].ID).Delete(context.Background())
+		_ , err := client.Collection(collection).Doc(webhooks[i].ID).Delete(context.Background())
 		if err != nil{
 			log.Println("Error on purging mechanism: " + err.Error())
 			return err

@@ -158,7 +158,7 @@ func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
 	//Deleting the webhook with the given ID, or not doing anything. 
 	givenID := params[0]
 	
-	deletedError := db.DeleteWebhook(givenID)
+	deletedError := db.DeleteWebhook(givenID, constants.FIRESTORE_COLLECTION)
 
 	if(deletedError == nil){
 		//Tell the end user that the webhook was deleted
