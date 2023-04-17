@@ -241,17 +241,17 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	// Create an ID and add it to the list of hooks
+	// Format the webhook for the firestore and add it to the database as a new document 
 	id := createWebhookID(givenHook)
-	webhook := structs.WebhookID{ID:id, Webhook: givenHook}
-	webhooks = append(webhooks, webhook)
+	formattedWebhook := structs.WebhookID{ID: id, Webhook: givenHook}
+	db.AddWebhook(formattedWebhook)
 	
 	// Logging that a new webhook has been
-	log.Println("Webhook " + webhook.Url + " has been registered.")
+	log.Println("Webhook " + formattedWebhook.Url + " has been registered.")
 
 
 	// Encode the Response object to JSON format, and handle any errors 
-	resp := structs.IdResponse{ID: webhook.ID}
+	resp := structs.IdResponse{ID: formattedWebhook.ID}
     jsonResponse, err := json.Marshal(&resp)
     if err != nil {
 		log.Println("Error on marshal response: " + err.Error())

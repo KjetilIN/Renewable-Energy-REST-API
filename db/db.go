@@ -2,6 +2,7 @@ package db
 
 import (
 	"assignment-2/internal/constants"
+	"assignment-2/internal/webserver/structs"
 	"context"
 	"log"
 	"net/http"
@@ -49,4 +50,24 @@ func CheckFirestoreConnection() int {
 
 	// If everything worked, return a 200 status code
 	return http.StatusOK
+}
+
+
+//Function that adds a webhook to the firestore, using the given webhook struct and a generated ID.
+//Return an error if it could not add the webhook, returns nil if everything went okay 
+func AddWebhook(webhook structs.WebhookID) error{
+	// Get the client for the firestore
+	client, clientErr := GetFirestoreClient()
+	defer client.Close()
+	if clientErr != nil{
+		return clientErr
+	}
+
+	// Create a new doc in the 
+	_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhook.ID).Set(context.Background(),webhook)
+	if err != nil{
+		return err
+	}
+
+	return nil
 }
