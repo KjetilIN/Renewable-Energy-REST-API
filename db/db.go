@@ -61,7 +61,7 @@ func CheckFirestoreConnection() int {
 
 //Function that adds a webhook to the firestore, using the given webhook struct and a generated ID.
 //Return an error if it could not add the webhook, returns nil if everything went okay 
-func AddWebhook(webhook structs.WebhookID) error{
+func AddWebhook(webhook structs.WebhookID, collection string) error{
 	// Get the client for the firestore
 	client, clientErr := getFirestoreClient()
 	defer client.Close()
@@ -70,7 +70,7 @@ func AddWebhook(webhook structs.WebhookID) error{
 	}
 
 	// Create a new doc in the 
-	_ , err := client.Collection(constants.FIRESTORE_COLLECTION).Doc(webhook.ID).Set(context.Background(),webhook)
+	_ , err := client.Collection(collection).Doc(webhook.ID).Set(context.Background(),webhook)
 	if err != nil{
 		return err
 	}

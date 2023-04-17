@@ -113,7 +113,7 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request){
 	// Format the webhook for the firestore and add it to the database as a new document 
 	id := createWebhookID(givenHook)
 	formattedWebhook := structs.WebhookID{ID: id, Webhook: givenHook, Created: time.Now()}
-	db.AddWebhook(formattedWebhook)
+	db.AddWebhook(formattedWebhook, constants.FIRESTORE_COLLECTION)
 	
 	// Logging that a new webhook has been
 	log.Println("Request for adding webhook with url: " + formattedWebhook.Url)
