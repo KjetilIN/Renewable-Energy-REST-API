@@ -142,7 +142,7 @@ func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error)
 }
 
 //Fetch all webhooks
-func FetchAllWebhooks() ([]structs.WebhookID, error){
+func FetchAllWebhooks(collection string) ([]structs.WebhookID, error){
 	//Create a client
 	client, err := getFirestoreClient()
 	defer client.Close()
@@ -152,7 +152,7 @@ func FetchAllWebhooks() ([]structs.WebhookID, error){
 
 	//Iterate through all docs and decode them into the list of structs
 	var webhooks []structs.WebhookID
-	iter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background())
+	iter := client.Collection(collection).Documents(context.Background())
 	for{
 		//Get the document and check if it is done 
 		doc, err := iter.Next()

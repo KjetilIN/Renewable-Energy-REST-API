@@ -58,7 +58,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 			
 	}else{
 		// Fetch all webhooks 
-		allWebHooks, fetchError := db.FetchAllWebhooks();
+		allWebHooks, fetchError := db.FetchAllWebhooks(constants.FIRESTORE_COLLECTION);
 
 		//Handle error 
 		if(fetchError != nil){

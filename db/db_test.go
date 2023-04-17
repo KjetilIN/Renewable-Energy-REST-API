@@ -176,3 +176,65 @@ func TestFetchWebhookWithID(t *testing.T) {
 	}
 }
 
+func TestFetchAllWebhooks(t *testing.T) {
+
+	// Get the Firestore client
+    client, err := getFirestoreClient()
+    if err != nil {
+        t.Fatalf("Failed to get Firestore client: %v", err)
+    }
+    defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+
+
+    // Create a list of mock webhooks to add to Firestore
+	 webhook1 := structs.WebhookID{
+        ID: "12345",
+        Webhook: structs.Webhook{},
+        Created: time.Now(),
+    }
+    webhook2 := structs.WebhookID{
+        ID: "67890",
+        Webhook: structs.Webhook{},
+        Created: time.Now(),
+    }
+    expectedWebhooks := []structs.WebhookID{webhook1, webhook2}
+
+    // Add the webhooks to Firestore
+    for _, webhook := range expectedWebhooks {
+        _, err = client.Collection(constants.FIRESTORE_COLLECTION_TEST).Doc(webhook.ID).Set(context.Background(), webhook)
+        if err != nil {
+            t.Fatalf("Error adding webhook to Firestore: %v", err)
+        }
+    }
+
+    // Fetch all webhooks from Firestore
+    webhooksFromFirestore, err := FetchAllWebhooks(constants.FIRESTORE_COLLECTION_TEST)
+    if err != nil {
+        t.Fatalf("Error fetching webhooks from Firestore: %v", err)
+    }
+
+    // Check that at least one of the expected webhooks is in the database
+    found := false
+	expectedWebhook := expectedWebhooks[0]
+	for _, actualWebhook := range webhooksFromFirestore {
+		if expectedWebhook.ID == actualWebhook.ID {
+			found = true
+			break
+		}
+	}
+    
+	// Check if the a single webhook was found
+    if !found {
+        t.Fatalf("Expected webhook not found in database")
+    }
+	
+	// Check if the length of the webhooks list match
+	if len(expectedWebhooks) != len(webhooksFromFirestore){
+		t.Fatal("Expected the length of all webhooks to be the same as the one list given, but they were not")
+	}
+	
+
+}
