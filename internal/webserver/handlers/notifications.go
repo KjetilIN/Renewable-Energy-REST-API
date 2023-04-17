@@ -4,18 +4,16 @@ import (
 	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
-	"log"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
-	
-
 
 // Function for handling get request for the  notification endpoint
 func handleGetRequest(w http.ResponseWriter, r *http.Request){
@@ -114,12 +112,11 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request){
 
 	// Format the webhook for the firestore and add it to the database as a new document 
 	id := createWebhookID(givenHook)
-	formattedWebhook := structs.WebhookID{ID: id, Webhook: givenHook}
+	formattedWebhook := structs.WebhookID{ID: id, Webhook: givenHook, Created: time.Now()}
 	db.AddWebhook(formattedWebhook)
 	
 	// Logging that a new webhook has been
-	log.Println("Webhook " + formattedWebhook.Url + " has been registered.")
-
+	log.Println("Request for adding webhook with url: " + formattedWebhook.Url)
 
 	// Encode the Response object to JSON format, and handle any errors 
 	resp := structs.IdResponse{ID: formattedWebhook.ID}
