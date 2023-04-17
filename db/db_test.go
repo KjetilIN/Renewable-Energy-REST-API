@@ -8,7 +8,32 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	firestore "cloud.google.com/go/firestore"
+	"google.golang.org/api/iterator"
 )
+
+// Function for the test package to clear the collection
+// Used before each test
+func clearFirestoreCollection(t *testing.T, client *firestore.Client) {
+    iter := client.Collection(constants.FIRESTORE_COLLECTION_TEST).Documents(context.Background())
+    for {
+		// If there is a new document, get it
+        doc, err := iter.Next()
+        if err == iterator.Done {
+            break
+        }
+        if err != nil {
+            t.Fatalf("Failed to iterate over Firestore documents: %v", err)
+        }
+
+		// Delete the document 
+        _, err = doc.Ref.Delete(context.Background())
+        if err != nil {
+            t.Fatalf("Failed to delete Firestore document %s: %v", doc.Ref.ID, err)
+        }
+    }
+}
 
 func TestCheckFirestoreConnection(t *testing.T) {
 	// Call the function to check the Firestore connection.
@@ -39,6 +64,10 @@ func TestAddWebhook(t *testing.T) {
         t.Fatalf("Failed to get Firestore client: %v", err)
     }
     defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+    
 
     // Add the webhook to Firestore test collection
     err = AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
