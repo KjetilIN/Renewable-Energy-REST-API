@@ -4,19 +4,15 @@ import (
 	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
-	"context"
+	"log"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"google.golang.org/api/iterator"
 )
 
 // Webhooks DB
@@ -25,123 +21,6 @@ var webhooks []structs.WebhookID;
 // Init empty list of webhooks 
 func InitWebhookRegistrations(){
 	webhooks = []structs.WebhookID{};
-}
-
-//Get number of webhooks. 
-// Note that if the service is down there will be not handled this function. 
-// The user has to see the status endpoint
-func GetNumberOfWebhooks() int{
-	//Create a client for the 
-	client, err := db.GetFirestoreClient()
-	defer client.Close()
-	if err != nil{
-		return 0;
-	}
-
-	// Init a iterator
-	docsIter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background())
-
-	// Initialize a counter variable
-	count := 0
-
-	// Iterate over the documents and increment the counter
-	for {
-		// Ignore the document itself
-		_, err := docsIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		// If there is now error we add 1
-		if err == nil {
-			count++
-		}
-
-	}
-	// Return the count
-	return count
-}
-
-
-// Fetch a webhook using its ID. The webhook id has to be the same as the document id
-func fetchWebhookWithID(id string) (structs.WebhookID, error) {
-	//Create a client for the 
-	client, err := db.GetFirestoreClient()
-	defer client.Close()
-	if err != nil{
-		return structs.WebhookID{}, err;
-	}
-
-	var webhook structs.WebhookID
-	iter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background());
-
-	//Loop through each document 
-	for{
-		//Get the document and check if it is done 
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			// Break if no more docs to get
-			break
-		}
-
-		//if the ID is the same as the docs 
-		if doc.Ref.ID == id {
-			log.Println("Webhook found: " + id)
-			err := doc.DataTo(&webhook);
-			if err != nil{
-				log.Println("Webhook with id: " + id + " was found but not decodable")
-				return structs.WebhookID{}, err
-			}
-			//No error on decoding and webhook that matched the id was returned
-			return webhook, nil
-
-		}
-	}
-
-	// Correctly went through the method but did not find a webhook
-	return structs.WebhookID{}, errors.New("No webhook was found in that matched the id: " + id) 
-}
-
-//Fetch all webhooks
-func fetchAllWebhooks() ([]structs.WebhookID, error){
-	//Create a client
-	client, err := db.GetFirestoreClient()
-	defer client.Close()
-	if err != nil{
-		return nil, err;
-	}
-
-	//Iterate through all docs and decode them into the list of structs
-	var webhooks []structs.WebhookID
-	iter := client.Collection(constants.FIRESTORE_COLLECTION).Documents(context.Background())
-	for{
-		//Get the document and check if it is done 
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			// Break if now more docs to get
-			break
-		}
-
-		//Check for errors on iterator 
-		if err != nil {
-			//Log the error if any
-			log.Println("Failed to iterate: " + err.Error())
-		}
-
-
-		// Decode the webhook into a struct if possible 
-		var webhook structs.WebhookID
-		if err := doc.DataTo(&webhook); err != nil {
-			log.Println("Error during data decoding")
-		}else{
-			// No error so we append the webhook
-			webhooks = append(webhooks, webhook);
-		}
-
-	}
-	
-	// Returns either an empty list or a list of webhooks
-	return webhooks, nil
-
 }
 	
 
@@ -168,7 +47,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		return;
 	}else if (len(params) != 0 ){
 		//Fetch only the webhook with 
-		fetchedWebhook, err := fetchWebhookWithID(params[0])
+		fetchedWebhook, err := db.FetchWebhookWithID(params[0])
 		
 		//Error on fetching the webhook with the id
 		if(err != nil){
@@ -189,7 +68,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 			
 	}else{
 		// Fetch all webhooks 
-		allWebHooks, fetchError := fetchAllWebhooks();
+		allWebHooks, fetchError := db.FetchAllWebhooks();
 
 		//Handle error 
 		if(fetchError != nil){
