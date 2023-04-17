@@ -20,7 +20,7 @@ import (
 func getFirestoreClient() (*firestore.Client, error) {
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("cloud-assigment-2-36e8e-5557620affae.json")
+	sa := option.WithCredentialsFile(constants.FIREBASE_CREDENTIALS_FILE)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		return nil, err
