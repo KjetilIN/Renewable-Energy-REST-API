@@ -1,6 +1,8 @@
 package structs
 
-// Status This file defines structs to work with data.
+import "time"
+
+// This file defines structs to work with data.
 type Status struct {
 	CountriesApi   int    `json:"countries_api"`
 	NotificationDB int    `json:"notification_db"`
@@ -9,21 +11,6 @@ type Status struct {
 	Uptime         string `json:"uptime"`
 	//AverageSystemLoad string `json:"average_system_load"`
 	TotalMemoryUsage string `json:"total_memory_usage"`
-}
-
-type Webhook struct {
-	Url     string `json:"url"`
-	Country string `json:"country"`
-	Calls   int    `json:"calls"`
-}
-
-type WebhookID struct {
-	ID string `json:"webhook_id"`
-	Webhook
-}
-
-type IdResponse struct {
-	ID string `json:"webhook_id"`
 }
 
 // RenewableShareEnergyElement Struct to parse historical data into.
@@ -46,4 +33,20 @@ type Country struct {
 	Name        map[string]interface{} `json:"name"`
 	CountryCode string                 `json:"cca3"`
 	Borders     []string               `json:"borders"`
+}
+
+type Webhook struct{
+	Url string `json:"url"`
+	Country string `json:"country"`
+	Calls int `json:"calls"`
+}
+
+type WebhookID struct{
+	ID string `json:"webhook_id"`
+	Webhook
+	Created time.Time `json:"created_timestamp"`
+}
+
+type IdResponse struct{
+	ID string `json:"webhook_id"`
 }
