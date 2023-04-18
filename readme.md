@@ -144,12 +144,12 @@ If there is a webhook with the given ID, the response could look like this:
 
 ```json
 {
-    "webhook_id": <ID of the webhook>,
-    "url": <Url of the registration>,
-    "country": <Alpha code of the country>,
-    "calls": <The amount of calls that needs to be for invoking>,
-    "created_timestamp": <Server timestamp when the webhook was created>,
-    "invocations": <The amount of times the country with the given alpha code has been invoked>
+    "webhook_id": <ID_of_the_webhook>,
+    "url": <Url_of_the_registration>,
+    "country": <Alpha_code_of_the_country>,
+    "calls": <The_amount_of_calls_that_needs_to_be_for_invoking>,
+    "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
+    "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
 }
 
 ```
@@ -171,12 +171,12 @@ Should return a list of all webhooks. Could also be empty if non are registered 
 ```json
 [
     {
-        "webhook_id": <ID of the webhook>,
-        "url": <Url of the registration>,
-        "country": <Alpha code of the country>,
-        "calls": <The amount of calls that needs to be for invoking>,
-        "created_timestamp": <Server timestamp when the webhook was created>,
-        "invocations": <The amount of times the country with the given alpha code has been invoked>
+        "webhook_id": <ID_of_the_webhook>,
+        "url": <Url_of_the_registration>,
+        "country": <Alpha_code_of_the_country>,
+        "calls": <The_amount_of_calls_that_needs_to_be_for_invoking>,
+        "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
+        "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
     },
     ...
 ]
