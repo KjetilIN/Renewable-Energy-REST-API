@@ -110,7 +110,7 @@ Provide the following details to get notifications to the given url. The standar
 The response should be **201 Created** if all went well. See the error message for more details. <br> 
 You should also the the webhook ID in the body of the response. This ID is important, so save it for either deletion or retrieving details about it. Here is an example response: <br>
 
-```
+```json
     {
         "webhook_id": "OIdksUDwveiwe"
     }
@@ -124,5 +124,61 @@ There is not hard to delete a webhook. Simply use the Webhook ID in the url as s
 REQUEST: DELETE
 PATH: /energy/v1/notifications/{id_of_the_webhook}
 ```
+<br>
+Look at the status code for how the request for deletion went. If the status was: <br>
+-  400: Please make sure that you added a id the the url. <br>
+-  200: Webhook was either found and deleted, or not found (so nothing happend) <br>
+-  500: Internal error while trying to delete the webhook. See the status endpoint to check if all services are running
 
-Look at the status code for how the 
+### **To get a notification (with an ID):** <br>
+
+To get only information for a single given notification, use the id in the request: 
+
+```
+REQUEST: GET
+PATH: /energy/v1/notifications/{id_of_the_webhook}
+```
+
+Look at the status code and message if no webhook was received. <br>
+If there is a webhook with the given ID, the response could look like this:
+
+```json
+{
+    "webhook_id": <ID of the webhook>,
+    "url": <Url of the registration>,
+    "country": <Alpha code of the country>,
+    "calls": <The amount of calls that needs to be for invoking>,
+    "created_timestamp": <Server timestamp when the webhook was created>,
+    "invocations": <The amount of times the country with the given alpha code has been invoked>
+}
+
+```
+
+
+
+
+### **To get all notifications:** <br>
+
+To get all the notifications that are stored in the register: 
+
+```
+REQUEST: GET
+PATH: /energy/v1/notifications/
+```
+
+Should return a list of all webhooks. Could also be empty if non are registered yet. Expected response would look like this; <br>
+
+```json
+[
+    {
+        "webhook_id": <ID of the webhook>,
+        "url": <Url of the registration>,
+        "country": <Alpha code of the country>,
+        "calls": <The amount of calls that needs to be for invoking>,
+        "created_timestamp": <Server timestamp when the webhook was created>,
+        "invocations": <The amount of times the country with the given alpha code has been invoked>
+    },
+    ...
+]
+```
+
