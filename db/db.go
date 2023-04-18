@@ -7,8 +7,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"sort"
-
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
@@ -20,16 +20,19 @@ import (
 func getFirestoreClient() (*firestore.Client, error) {
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile(constants.FIREBASE_CREDENTIALS_FILE)
+	credentialsPath := os.Getenv("CREDENTIALS_PATH")
+	
+	sa := option.WithCredentialsFile("../cloud-assignment-2.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
+		log.Println("Credentials not found: " + credentialsPath)
 		log.Println("Error on getting the application")
-		return nil, err
+		return nil, errors.New("Credentials not found: " + credentialsPath)
 	}
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Credentials not found: " + credentialsPath)
 	}
 	return client, nil
 }
