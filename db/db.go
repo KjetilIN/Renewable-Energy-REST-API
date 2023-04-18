@@ -222,7 +222,7 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 	}
 	
 	// Get the amount of webhooks
-	numberOfWebhooks := GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION)
+	numberOfWebhooks := GetNumberOfWebhooks(collection)
 
 	// Determine the maximum webhook count
 	var webhookLimit int

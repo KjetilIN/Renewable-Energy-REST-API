@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -279,7 +280,7 @@ func TestDeleteWebhook(t *testing.T) {
 
     // Loop until the webhook is no longer found in Firestore or the maximum number of attempts is reached
     // We do this because the webhook could still be in the collection when we do the get request for the deleted document
-    // However, it should still be deleted after some moments after. This is why we do get request until we dont find it.
+    // However, it should still be deleted after some moments after. This is why we do get request until we don't find it.
     // Limit is set to make sure that we don't over 
     maxAttempts := 10
     attempts := 0
@@ -316,4 +317,104 @@ func TestDeleteWebhook(t *testing.T) {
 	if keptDoc == nil {
 		t.Error("Webhook that was not supposed to be deleted was deleted")
 	}
+}
+
+
+func TestPurgeWebhooks(t *testing.T) {
+    // Get the Firestore client
+    client, err := getFirestoreClient()
+    if err != nil {
+        t.Fatalf("Failed to get Firestore client: %v", err)
+    }
+    defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+
+
+    // Add more than the maximum allowed webhooks to the collection
+    maxWebhookCount := 3
+    for i := 0; i < maxWebhookCount+1; i++ {
+        webhook := structs.WebhookID{
+            ID: "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i),
+            Webhook: structs.Webhook{},
+            Created: time.Now(),
+        }
+        err := AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
+        if err != nil {
+            t.Errorf("Error adding webhook to test collection: %s", err)
+        }
+    }
+
+    // Purge the webhooks in the collection
+    err = PurgeWebhooks(constants.FIRESTORE_COLLECTION_TEST, maxWebhookCount)
+    if err != nil {
+        t.Errorf("Error purging webhooks from test collection: %s", err)
+    }
+
+    // Do 5 attempt at getting the amount. 
+    // Same error as deletion test, were you need to redo the get request, in this case the amount of webhooks
+    var numberOfWebhooks int
+    attempts := 15
+    for i := 0; i < attempts; i++ {
+        // Get the number of webhooks and check 
+        numberOfWebhooks = GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION_TEST)
+        if numberOfWebhooks == maxWebhookCount {
+            break
+        }
+        // Sleep before next attempt 
+        time.Sleep(time.Second)
+    }
+    // After the attempts, check if we have the expected amount of webhooks
+    if numberOfWebhooks != maxWebhookCount {
+        // Fatal error so we return to make it easier to decode
+        t.Errorf("Expected %d webhooks, got %d", maxWebhookCount, numberOfWebhooks)
+        return 
+    }
+
+
+    // Try again but this time we go under the limit 
+    // First we clear the database with webhooks:
+    clearFirestoreCollection(t, client)
+
+
+    // Then we add less webhooks than the limit. 
+    // The limit is set to 3, but we add 2 webhooks
+    for i := 0; i < maxWebhookCount-1; i++ {
+        webhook := structs.WebhookID{
+            ID: "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i),
+            Webhook: structs.Webhook{},
+            Created: time.Now(),
+        }
+        err := AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
+        if err != nil {
+            t.Errorf("Error adding webhook to test collection: %s", err)
+        }
+    }
+
+    // Purge the webhooks in the collection
+    err = PurgeWebhooks(constants.FIRESTORE_COLLECTION_TEST, maxWebhookCount)
+    if err != nil {
+        t.Errorf("Error purging webhooks from test collection: %s", err)
+    }
+
+
+    // Do 10 attempts at getting the amount, same as before
+    // This time we check if there is the same amount of webhooks in the collection
+    expectedAmountOfWebhooks := maxWebhookCount - 1 
+    for i := 0; i < attempts; i++ {
+        // Get the number of webhooks and check 
+        numberOfWebhooks = GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION_TEST)
+        if numberOfWebhooks == expectedAmountOfWebhooks {
+            break
+        }
+        // Sleep before next attempt 
+        time.Sleep(time.Second)
+    }
+    // After the attempts, check if we have the expected amount of webhooks
+    if numberOfWebhooks != expectedAmountOfWebhooks {
+        t.Errorf("Expected %d webhooks, got %d", expectedAmountOfWebhooks, numberOfWebhooks)
+        return
+    }
+
 }
