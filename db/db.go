@@ -19,30 +19,20 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Load credentials from env files
-// Private method for security reasons.
-// Return an error if any
-func loadCredentials() error{
-	filesToLoad := []string{"./db/TEST_ENV.env", "PROD_ENV.env"}
-	for _, cred := range filesToLoad{
-		// Load env file
-		err := godotenv.Load(cred)
-		if err != nil {
-			log.Fatalf("Error loading .env file: %v", err)
-			return  err
-		}
-	}
-	return nil
-}
-
 // Function for getting the Firestore client
 // Private for security reasons
 func getFirestoreClient() (*firestore.Client, error) {
+	// Load cred
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+		return  nil, err
+	}
+
 	// Use a service account
 	ctx := context.Background()
 	credentialsPath := os.Getenv("CREDENTIALS_PATH")
-	
-	sa := option.WithCredentialsFile("../cloud-assignment-2.json")
+	sa := option.WithCredentialsFile(credentialsPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Println("Credentials not found: " + credentialsPath)
@@ -52,6 +42,7 @@ func getFirestoreClient() (*firestore.Client, error) {
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
+		log.Println("Credentials file: '" + credentialsPath + "'" )
 		return nil, err
 	}
 	return client, nil
@@ -362,6 +353,10 @@ func CallUrl(webhook structs.WebhookID) error{
 		log.Println("Error on creating a request")
 		return err
 	}
+
+	// Set the ID as a signature in the request and the application type 
+	request.Header.Set("Signature-x", webhook.ID)
+	request.Header.Add("Content-Type", "application/text")
 
 	// Creating a client and executing the request
 	client := http.Client{}
