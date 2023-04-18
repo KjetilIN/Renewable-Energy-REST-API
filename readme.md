@@ -84,3 +84,45 @@ There is created a test class for the history endpoint.
 
 To use the test, print into command line when in root project folder:
 > go test .\internal\webserver\handlers\history_test.go
+
+# Notification Endpoint #
+
+To get notified by a given amount of calls a country has, register a webhook with this service.
+To the body make sure to add: <br>
+    - the url that should be invoked<br>
+    - the alpha code of the country that you want to be notified by<br>
+    - the number of calls to be notified for. See _How are notifications sent?_ for more details <br>
+<br>
+### **To setup a new notification subscription:** <br>
+Provide the following details to get notifications to the given url. The standard way is that the user will receive a GET request for the given url in the body. Here is how you register a notification: 
+
+```
+    REQUEST: Post
+    PATH: "/energy/v1/notification" 
+    BODY: 
+    {
+        "url": <The given url for the webhook to call>,
+        "country": <Alpha code of the country>,
+        "calls": <Number of calls for notification>
+    }
+```
+
+The response should be **201 Created** if all went well. See the error message for more details. <br> 
+You should also the the webhook ID in the body of the response. This ID is important, so save it for either deletion or retrieving details about it. Here is an example response: <br>
+
+```
+    {
+        "webhook_id": "OIdksUDwveiwe"
+    }
+```
+
+### **To Delete a notification:** <br>
+
+There is not hard to delete a webhook. Simply use the Webhook ID in the url as shown below. ID has to be given to be able to delete. Do this by sending a DELETE request; 
+
+```
+REQUEST: DELETE
+PATH: /energy/v1/notifications/{id_of_the_webhook}
+```
+
+Look at the status code for how the 

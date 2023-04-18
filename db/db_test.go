@@ -438,7 +438,7 @@ func TestInvocate(t *testing.T) {
             webhook := structs.WebhookID{
                 ID: "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i) + country,
                 Webhook: structs.Webhook{
-                    Url:     "https://webhook.site/b8502f74-399b-4342-9400-56be87615694",
+                    Url:     "https://exsample.no",
                     Country: country, // add webhook to one of three countries
                     Calls: 1,
                 },
