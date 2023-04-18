@@ -40,7 +40,7 @@ func getFirestoreClient() (*firestore.Client, error) {
 	ctx := context.Background()
 	credentialsPath := os.Getenv("CREDENTIALS_PATH")
 	
-	sa := option.WithCredentialsFile("cloud-assignment-2.json")
+	sa := option.WithCredentialsFile("../cloud-assignment-2.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Println("Credentials not found: " + credentialsPath)
@@ -292,4 +292,39 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 	}
 
 	return nil
+}
+
+func Invocate(alphaCode string, collection string) error{
+	// Get the client
+	client, clientError := getFirestoreClient()
+	if clientError != nil{
+		return clientError
+	}
+
+	// Create a query that filters documents based on the specified alpha code
+    query := client.Collection(collection).Where("Country", "==", alphaCode).Documents(context.Background())
+
+	//Iterate thought each document 
+	for {
+		// Get the next document or quit 
+		doc, err := query.Next()
+		if err == iterator.Done{
+			break
+		}
+		if err != nil{
+			log.Println("Error on iterating a doc")
+			return err
+		}
+
+		// Increment the invocations field of the retrieved document by one
+        _, err = doc.Ref.Update(context.Background(), []firestore.Update{
+            {
+				Path: "Invocations", 
+				Value: firestore.Increment(1)},
+        })
+        if err != nil {
+            return errors.New("Error on trying to increment the invocations number")
+        }
+	}
+	return nil;
 }
