@@ -265,7 +265,7 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 	for i:= 0; i < numberOfWebhooksToDelete; i++{
 		_ , err := client.Collection(collection).Doc(webhooks[i].ID).Delete(context.Background())
 		if err != nil{
-			log.Println("Error on purging mechanism: " + err.Error())
+			log.Println("Error on deleting in purging mechanism: " + err.Error())
 			return err
 		}
 	}
