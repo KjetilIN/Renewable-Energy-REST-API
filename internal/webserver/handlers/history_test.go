@@ -161,16 +161,21 @@ func TestEndQuery(t *testing.T) {
 // TestSortedByPercentage Testing the sorting function from history.
 func TestSortedByPercentage(t *testing.T) {
 	// Prepares a shorter list for testing. This is due to the sorting method being slow.
-	list, err := prepareList(SHORTER)
+	list, err := prepareList(ORIGINAL_LENGTH)
 	if err != nil {
 		t.Fatal("Error when getting list: " + err.Error())
 	}
 	// Sorts the list by percentage.
-	sortedList := sortingListPercentage(list)
+	sortedList := sliceSortingByValue(list, 1) // Ascending sorting.
 
 	// Checks if list is sorted by percentage.
 	for i := 1; i < len(sortedList); i++ {
 		assert.GreaterOrEqualf(t, sortedList[i-1].Percentage, sortedList[i].Percentage, "List is not sorted.")
+	}
+
+	sortedList = sliceSortingByValue(list, 2) // Descending value.
+	for i := 1; i < len(sortedList); i++ {
+		assert.LessOrEqualf(t, sortedList[i-1].Percentage, sortedList[i].Percentage, "List is not sorted correctly.")
 	}
 }
 

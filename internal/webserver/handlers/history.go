@@ -4,9 +4,16 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+// ASCENDING Used in sorting method to sort ascending.
+const ASCENDING = 1
+
+// DESCENDING Used in sorting method to sort descending.
+const DESCENDING = 2
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
@@ -38,9 +45,15 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
 		}
 	}
+
 	// Checks if sortByValue query is passed.
 	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		listOfRSE = sortingListPercentage(listOfRSE)
+		// Sorts percentage descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			listOfRSE = sliceSortingByValue(listOfRSE, DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			listOfRSE = sliceSortingByValue(listOfRSE, ASCENDING)
+		}
 	}
 
 	// Checks if list is empty.
@@ -126,7 +139,7 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 			}
 			mean = sum / float64(len(meanList))
 
-			// Potential bug: duplicate names and isocode.
+			// Potential bug: duplicate names and iso code.
 			newEntry := structs.RenewableShareEnergyElementMean{
 				Name:       listToIterate[i-1].Name,
 				IsoCode:    listToIterate[i-1].IsoCode,
@@ -141,8 +154,23 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 	return newList
 }
 
-// sortingListPercentage a function which sorts a json list based on percentage. The function is not very
-// efficient.
+// sliceSortingByValue A function which sorts a json list based on value, using inbuilt sort method.
+func sliceSortingByValue(listToIterate []structs.RenewableShareEnergyElement, sortingMethod int) []structs.RenewableShareEnergyElement {
+	// Sorts list, based on sortingMethods value.
+	if sortingMethod == ASCENDING {
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[j].Percentage < listToIterate[i].Percentage
+		})
+	} else if sortingMethod == DESCENDING {
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[i].Percentage < listToIterate[j].Percentage
+		})
+	}
+	return listToIterate
+}
+
+// sortingListPercentage a function which sorts a json list based on percentage. The function is not very efficient.
+// @Deprecated  This method performs poorly.
 func sortingListPercentage(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
 	var sortedList []structs.RenewableShareEnergyElement
 	HighestValIndex := 0
