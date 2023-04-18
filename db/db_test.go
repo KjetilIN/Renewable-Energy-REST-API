@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"testing"
@@ -437,8 +438,9 @@ func TestInvocate(t *testing.T) {
             webhook := structs.WebhookID{
                 ID: "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i) + country,
                 Webhook: structs.Webhook{
-                    Url:     "https://example.com/webhook",
+                    Url:     "https://webhook.site/b8502f74-399b-4342-9400-56be87615694",
                     Country: country, // add webhook to one of three countries
+                    Calls: 1,
                 },
                 Created: time.Now(),
                 Invocations: 0,
@@ -494,3 +496,30 @@ func TestInvocate(t *testing.T) {
     }
 
 }
+
+
+func TestCallUrl(t *testing.T) {
+    // Create a mock server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Respond with a 200 status code and a message
+        w.WriteHeader(http.StatusOK)
+        fmt.Fprintln(w, "This is a test response")
+    }))
+    defer server.Close()
+
+    // Create a webhook with the mock server's URL
+    webhook := structs.WebhookID{
+        ID: "test-webhook-id",
+        Webhook: structs.Webhook{
+            Url: server.URL,
+        },
+        Created: time.Now(),
+    }
+
+    // Call the URL
+    err := CallUrl(webhook)
+    if err != nil {
+        t.Error("Error calling URL: " +  err.Error())
+    }
+}
+
