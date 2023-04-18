@@ -21,10 +21,10 @@ import (
 // Private method for security reasons. 
 // Return an error if any
 func loadCredentials() error{
-	filesToLoad := []string{"TEST_ENV.env", "PROD_ENV.env"}
+	filesToLoad := []string{"./db/TEST_ENV.env", "PROD_ENV.env"}
 	for _, cred := range filesToLoad{
 		// Load env file
-		err := godotenv.Load("../" + cred)
+		err := godotenv.Load(cred)
 		if err != nil {
 			log.Fatalf("Error loading .env file: %v", err)
 			return  err
@@ -36,18 +36,11 @@ func loadCredentials() error{
 // Function for getting the Firestore client
 // Private for security reasons
 func getFirestoreClient() (*firestore.Client, error) {
-	// Load env file
-	err := loadCredentials()
-	if err != nil {
-		log.Fatal("Error loading .env file:" +  err.Error())
-		return nil,  err
-	}
-
 	// Use a service account
 	ctx := context.Background()
 	credentialsPath := os.Getenv("CREDENTIALS_PATH")
 	
-	sa := option.WithCredentialsFile(credentialsPath)
+	sa := option.WithCredentialsFile("cloud-assignment-2.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Println("Credentials not found: " + credentialsPath)
