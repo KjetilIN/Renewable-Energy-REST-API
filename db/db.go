@@ -9,30 +9,55 @@ import (
 	"net/http"
 	"os"
 	"sort"
+
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	"github.com/joho/godotenv"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
+// Load credentials from env files
+// Private method for security reasons. 
+// Return an error if any
+func loadCredentials() error{
+	filesToLoad := []string{"TEST_ENV.env", "PROD_ENV.env"}
+	for _, cred := range filesToLoad{
+		// Load env file
+		err := godotenv.Load("../" + cred)
+		if err != nil {
+			log.Fatalf("Error loading .env file: %v", err)
+			return  err
+		}
+	}
+	return nil
+}
+
 // Function for getting the Firestore client
 // Private for security reasons
 func getFirestoreClient() (*firestore.Client, error) {
+	// Load env file
+	err := loadCredentials()
+	if err != nil {
+		log.Fatal("Error loading .env file:" +  err.Error())
+		return nil,  err
+	}
+
 	// Use a service account
 	ctx := context.Background()
 	credentialsPath := os.Getenv("CREDENTIALS_PATH")
 	
-	sa := option.WithCredentialsFile("../cloud-assignment-2.json")
+	sa := option.WithCredentialsFile(credentialsPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Println("Credentials not found: " + credentialsPath)
 		log.Println("Error on getting the application")
-		return nil, errors.New("Credentials not found: " + credentialsPath)
+		return nil, err
 	}
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		return nil, errors.New("Credentials not found: " + credentialsPath)
+		return nil, err
 	}
 	return client, nil
 }
