@@ -129,6 +129,7 @@ Look at the status code for how the request for deletion went. If the status was
 -  400: Please make sure that you added a id the the url. <br>
 -  200: Webhook was either found and deleted, or not found (so nothing happend) <br>
 -  500: Internal error while trying to delete the webhook. See the status endpoint to check if all services are running
+<br><br>
 
 ### **To get a notification (with an ID):** <br>
 
