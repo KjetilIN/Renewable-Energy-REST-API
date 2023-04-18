@@ -10,13 +10,13 @@ import (
 
 // InitServer sets up handler endpoints and starts the HTTP-server
 func InitServer() {
-
 	// Points the different URL-paths to the correct handler
 	http.HandleFunc(constants.DEFAULT_PATH, handlers.HandlerDefault)
 	http.HandleFunc(constants.CURRENT_PATH, handlers.HandlerCurrent)
 	http.HandleFunc(constants.HISTORY_PATH, handlers.HandlerHistory)
 	http.HandleFunc(constants.STATUS_PATH, handlers.HandlerStatus)
 	http.HandleFunc(constants.NOTIFICATIONS_PATH, handlers.HandlerNotifications)
+	http.Handle("/", http.FileServer(http.Dir("./templates")))
 
 	// Starting HTTP-server
 	log.Println("Starting server on port " + constants.DEFAULT_PORT + " ...")
