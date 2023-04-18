@@ -2,89 +2,32 @@
 <html>
 <head>
     <title>Renewable Energy REST Web Application</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #3f51b5;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .project-info {
-            padding: 20px;
-            background-color: #f2f2f2;
-        }
-        .project-info h2 {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .endpoints {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 20px;
-        }
-        .endpoint {
-            width: 300px;
-            height: 200px;
-            margin: 10px;
-            padding: 20px;
-            box-sizing: border-box;
-            background-color: #e0e0e0;
-            cursor: pointer;
-            transition: background-color 0.3s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .endpoint:hover {
-            background-color: #bdbdbd;
-        }
-        .endpoint h3 {
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .endpoint p {
-            font-size: 14px;
-            margin-top: 0;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
-<body>
-<header>Welcome to the Renewable Energy REST Web Application!</header>
-<div class="project-info">
-    <h2>Project Information</h2>
-    <p>This project consists of a REST web application that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. The application uses an existing webservice and an own data-centric webservice to gather and expose data via endpoints. The service allows for notification registration using webhooks and is dockerized and deployed using an IaaS system.</p>
-    <p>This service does not provide any functionality on the root path level. Please try one of the paths below:</p>
-</div>
-<section class="endpoints">
-    <div class="endpoint" onclick="location.href='/energy/v1/status/'">
-        <h3>Status</h3>
-        <p>Indicates the availability of all individual services this service depends on. Also, information about the registered webhooks and the uptime of the service.</p>
-    </div>
-    <div class="endpoint" onclick="location.href='/energy/v1/notifications/'">
-        <h3>Notifications</h3>
-        <p>Users can register webhooks (single or multiple) that are triggered by the service based on specified events.</p>
-    </div>
-    <div class="endpoint" onclick="location.href='/energy/v1/renewables/history'">
-        <h3>History</h3>
-        <p>This endpoint returns historical percentages of renewables in the energy mix, including individual levels, and mean values for individual or selections of countries.</p>
-    </div>
-    <div class="endpoint" onclick="location.href='/energy/v1/renewables/current'">
-        <h3>Current</h3>
-        <p>This endpoint returns the latest percentages of renewables in the energy mix.</p>
-    </div>
-</section>
-</body>
+    <body>
+        <header>Welcome to the Renewable Energy REST Web Application!</header>
+        <div class="project-info">
+            <h2>Project Information</h2>
+            <p>This project consists of a REST web application that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. The application uses an existing webservice and an own data-centric webservice to gather and expose data via endpoints. The service allows for notification registration using webhooks and is dockerized and deployed using an IaaS system.</p>
+            <p>This service does not provide any functionality on the root path level. Please try one of the paths below:</p>
+        </div>
+        <section class="endpoints">
+            <div class="endpoint" onclick="location.href='/energy/v1/status/'">
+                <h3>Status</h3>
+                <p>Indicates the availability of all individual services this service depends on. Also, information about the registered webhooks and the uptime of the service.</p>
+            </div>
+            <div class="endpoint" onclick="location.href='/energy/v1/notifications/'">
+                <h3>Notifications</h3>
+                <p>Users can register webhooks (single or multiple) that are triggered by the service based on specified events.</p>
+            </div>
+            <div class="endpoint" onclick="location.href='/energy/v1/renewables/history'">
+                <h3>History</h3>
+                <p>This endpoint returns historical percentages of renewables in the energy mix, including individual levels, and mean values for individual or selections of countries.</p>
+            </div>
+            <div class="endpoint" onclick="location.href='/energy/v1/renewables/current'">
+                <h3>Current</h3>
+                <p>This endpoint returns the latest percentages of renewables in the energy mix.</p>
+            </div>
+        </section>
+    </body>
 </html>

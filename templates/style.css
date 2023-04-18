@@ -1,0 +1,56 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+header {
+    background-color: #3f51b5;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+.project-info {
+    padding: 20px;
+    background-color: #f2f2f2;
+}
+.project-info h2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.endpoints {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+}
+.endpoint {
+    width: 300px;
+    height: 200px;
+    margin: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.endpoint:hover {
+    background-color: #bdbdbd;
+}
+.endpoint h3 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.endpoint p {
+    font-size: 14px;
+    margin-top: 0;
+    text-align: center;
+}
