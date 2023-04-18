@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"testing"
@@ -418,3 +419,107 @@ func TestPurgeWebhooks(t *testing.T) {
     }
 
 }
+
+func TestInvocate(t *testing.T) {
+    // Get the Firestore client
+    client, err := getFirestoreClient()
+    if err != nil {
+        t.Fatalf("Failed to get Firestore client: %v", err)
+    }
+    defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+
+    // Add information to test on. Two of every Country 
+    countries := []string{"USA", "NOR", "SWE"}
+    for _, country := range countries {
+        for i := 0; i < 2; i++ {
+            webhook := structs.WebhookID{
+                ID: "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i) + country,
+                Webhook: structs.Webhook{
+                    Url:     "https://webhook.site/b8502f74-399b-4342-9400-56be87615694",
+                    Country: country, // add webhook to one of three countries
+                    Calls: 1,
+                },
+                Created: time.Now(),
+                Invocations: 0,
+            }
+            err := AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
+            if err != nil {
+                t.Errorf("Error adding webhook to test collection: %s", err)
+            }
+        }
+    }
+
+    //Invocate USA 2 times, NOR 1 time and SWE 0 times
+    Invocate("USA", constants.FIRESTORE_COLLECTION_TEST)
+    Invocate("USA", constants.FIRESTORE_COLLECTION_TEST)
+    Invocate("NOR", constants.FIRESTORE_COLLECTION_TEST)
+
+
+    
+    // Fetch all webhooks from Firestore
+    webhooksFromFirestore, err := FetchAllWebhooks(constants.FIRESTORE_COLLECTION_TEST)
+    if err != nil {
+        t.Fatalf("Error fetching webhooks from Firestore in the testing of log invocation: %v", err)
+    }
+
+   
+    // Check if each country has the correct amount of invocations 
+    for _, webhook := range webhooksFromFirestore{
+        switch(webhook.Country){
+            case "NOR":
+                if webhook.Invocations != 1{
+                    t.Errorf("Error in webhooks given: NOR was expected to have %v invocations but had %v", 1 , webhook.Invocations)
+                    return
+                }
+                break;
+            case "USA":
+                if webhook.Invocations != 2{
+                    t.Errorf("Error in webhooks given: USA was expected to have %v invocations but had %v", 2 , webhook.Invocations)
+                    return
+                }
+                break;
+            case "SWE":
+                if webhook.Invocations != 0{
+                    t.Errorf("Error in webhooks given: NOR was expected to have %v invocations but had %v", 0 , webhook.Invocations)
+                    return
+                }
+                break;
+
+            default:
+                t.Errorf("Found a webhook that was not supposed to be here: %s", webhook.Country)
+                return 
+
+        }
+    }
+
+}
+
+
+func TestCallUrl(t *testing.T) {
+    // Create a mock server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Respond with a 200 status code and a message
+        w.WriteHeader(http.StatusOK)
+        fmt.Fprintln(w, "This is a test response")
+    }))
+    defer server.Close()
+
+    // Create a webhook with the mock server's URL
+    webhook := structs.WebhookID{
+        ID: "test-webhook-id",
+        Webhook: structs.Webhook{
+            Url: server.URL,
+        },
+        Created: time.Now(),
+    }
+
+    // Call the URL
+    err := CallUrl(webhook)
+    if err != nil {
+        t.Error("Error calling URL: " +  err.Error())
+    }
+}
+

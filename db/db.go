@@ -3,12 +3,14 @@ package db
 import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
+	"bytes"
 	"context"
 	"errors"
 	"log"
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
@@ -17,30 +19,20 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Load credentials from env files
-// Private method for security reasons. 
-// Return an error if any
-func loadCredentials() error{
-	filesToLoad := []string{"./db/TEST_ENV.env", "PROD_ENV.env"}
-	for _, cred := range filesToLoad{
-		// Load env file
-		err := godotenv.Load(cred)
-		if err != nil {
-			log.Fatalf("Error loading .env file: %v", err)
-			return  err
-		}
-	}
-	return nil
-}
-
 // Function for getting the Firestore client
 // Private for security reasons
 func getFirestoreClient() (*firestore.Client, error) {
+	// Load cred
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+		return  nil, err
+	}
+
 	// Use a service account
 	ctx := context.Background()
 	credentialsPath := os.Getenv("CREDENTIALS_PATH")
-	
-	sa := option.WithCredentialsFile("cloud-assignment-2.json")
+	sa := option.WithCredentialsFile(credentialsPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Println("Credentials not found: " + credentialsPath)
@@ -50,6 +42,7 @@ func getFirestoreClient() (*firestore.Client, error) {
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
+		log.Println("Credentials file: '" + credentialsPath + "'" )
 		return nil, err
 	}
 	return client, nil
@@ -291,5 +284,89 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 		}
 	}
 
+	return nil
+}
+
+// Function to call when a alpha code of a country has been used. 
+// Returns an error if something went wrong 
+func Invocate(alphaCode string, collection string) error{
+	// Get the client
+	client, clientError := getFirestoreClient()
+	if clientError != nil{
+		return clientError
+	}
+
+	// Create a query that filters documents based on the specified alpha code
+    query := client.Collection(collection).Where("Country", "==", alphaCode).Documents(context.Background())
+
+	//Iterate thought each document 
+	for {
+		// Get the next document or quit 
+		doc, err := query.Next()
+		if err == iterator.Done{
+			break
+		}
+		if err != nil{
+			log.Println("Error on iterating a doc")
+			return err
+		}
+
+		// Increment the invocations field of the retrieved document by one
+        _, err = doc.Ref.Update(context.Background(), []firestore.Update{
+            {
+				Path: "Invocations", 
+				Value: firestore.Increment(1)},
+        })
+        if err != nil {
+            return errors.New("Error on trying to increment the invocations number")
+        }
+
+		// Check if we need to call a webhook...
+		var webhook structs.WebhookID
+		err = doc.DataTo(&webhook)
+		if err != nil{
+			log.Println("Error on deconstruct the webhook")
+			return err
+		}
+		webhook.Invocations++ // Increment the local version 
+
+		// Invocation that has been updated is multiple of two
+		if webhook.Calls != 0  && webhook.Invocations % webhook.Calls == 0{
+			// Using the call url method as a go routine
+			go CallUrl(webhook)
+
+		}
+	}
+	return nil;
+}
+
+// Function using for calling a url
+// Takes a webhook and uses its information when calling
+// Return an error if something went wrong
+func CallUrl(webhook structs.WebhookID) error{
+	// Log the attempt for calling an url 
+	log.Println("Calling the url: " + webhook.Url + "...")
+
+	// Creating a new request;
+	request, err := http.NewRequest(http.MethodGet, webhook.Url, bytes.NewReader([]byte(webhook.ID)))
+	if err != nil {
+		log.Println("Error on creating a request")
+		return err
+	}
+
+	// Set the ID as a signature in the request and the application type 
+	request.Header.Set("Signature-x", webhook.ID)
+	request.Header.Add("Content-Type", "application/text")
+
+	// Creating a client and executing the request
+	client := http.Client{}
+	response, err:= client.Do(request)
+	if err != nil{
+		log.Println("Error while trying to execute the request")
+		return err
+	}
+
+	// Logging that a webhook has been invocated 
+	log.Println("Webhook with ID: " + webhook.ID + " was invoked. Status code for response is " + strconv.Itoa(response.StatusCode))
 	return nil
 }

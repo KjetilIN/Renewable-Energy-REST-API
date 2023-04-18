@@ -23,6 +23,7 @@ type WebhookID struct{
 	ID string `json:"webhook_id"`
 	Webhook
 	Created time.Time `json:"created_timestamp"`
+	Invocations int `json:"invocations"`
 }
 
 // RenewableShareEnergyElement Struct to parse historical data into.
