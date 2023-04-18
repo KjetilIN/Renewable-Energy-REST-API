@@ -12,6 +12,8 @@ import (
 
 	firestore "cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Function for the test package to clear the collection
@@ -177,7 +179,6 @@ func TestFetchWebhookWithID(t *testing.T) {
 }
 
 func TestFetchAllWebhooks(t *testing.T) {
-
 	// Get the Firestore client
     client, err := getFirestoreClient()
     if err != nil {
@@ -235,6 +236,84 @@ func TestFetchAllWebhooks(t *testing.T) {
 	if len(expectedWebhooks) != len(webhooksFromFirestore){
 		t.Fatal("Expected the length of all webhooks to be the same as the one list given, but they were not")
 	}
-	
+}
 
+
+func TestDeleteWebhook(t *testing.T) {
+	// Get the Firestore client
+    client, err := getFirestoreClient()
+    if err != nil {
+        t.Fatalf("Failed to get Firestore client: %v", err)
+    }
+    defer client.Close()
+
+	// Clear the collection before the test
+    clearFirestoreCollection(t, client)
+
+    // Create a list of mock webhooks to add to Firestore
+	webhookToDelete := structs.WebhookID{
+        ID: "ID_TO_BE_DELETED",
+        Webhook: structs.Webhook{},
+        Created: time.Now(),
+    }
+    webhookToKeep := structs.WebhookID{
+        ID: "ID_TO_KEEP",
+        Webhook: structs.Webhook{},
+        Created: time.Now(),
+    }
+    expectedWebhooks := []structs.WebhookID{webhookToDelete, webhookToKeep}
+
+    // Add the webhooks to Firestore
+    for _, webhook := range expectedWebhooks {
+        _, err = client.Collection(constants.FIRESTORE_COLLECTION_TEST).Doc(webhook.ID).Set(context.Background(), webhook)
+        if err != nil {
+            t.Fatalf("Error adding webhook to Firestore: %v", err)
+        }
+    }
+
+	// Delete the webhook from the firestore
+	deletionError := DeleteWebhook(webhookToDelete.ID, constants.FIRESTORE_COLLECTION_TEST)
+	if deletionError != nil {
+		t.Errorf("Unexpected error while deleting webhook: %s", err)
+	}
+
+    // Loop until the webhook is no longer found in Firestore or the maximum number of attempts is reached
+    // We do this because the webhook could still be in the collection when we do the get request for the deleted document
+    // However, it should still be deleted after some moments after. This is why we do get request until we dont find it.
+    // Limit is set to make sure that we don't over 
+    maxAttempts := 10
+    attempts := 0
+    for {
+        // Do a attempt at retrieving the document 
+        _, err := client.Collection(constants.FIRESTORE_COLLECTION_TEST).Doc(webhookToDelete.ID).Get(context.Background())
+        if err != nil {
+            // There was no error but we still need to check if the status is okay
+            // Use the gRPC package to execute this 
+            status, ok := status.FromError(err)
+            if ok && status.Code() == codes.NotFound {
+                // The document has been successfully deleted
+                break
+            } else {
+                // An unexpected error occurred, return an error and fail the test
+                t.Errorf("Unexpected error while retrieving webhook: %s", err)
+                return
+            }
+        }
+
+        // Sleep for a short time before checking again
+        time.Sleep(time.Second)
+        attempts++
+
+        // If we have gone over the limit of attempts, then the document was not deleted correctly 
+        if attempts >= maxAttempts {
+            t.Errorf("Webhook was not deleted after %d attempts", maxAttempts)
+            return
+        }
+    }
+
+    // Check if the webhook that was not deleted is still in the collection
+	keptDoc, err := client.Collection(constants.FIRESTORE_COLLECTION_TEST).Doc(webhookToKeep.ID).Get(context.Background())
+	if keptDoc == nil {
+		t.Error("Webhook that was not supposed to be deleted was deleted")
+	}
 }
