@@ -93,7 +93,7 @@ To the body make sure to add: <br>
     - the alpha code of the country that you want to be notified by<br>
     - the number of calls to be notified for. See _How are notifications sent?_ for more details <br>
 <br>
-### **To setup a new notification subscription:** <br>
+## Setting up a new notification subscription: <br>
 Provide the following details to get notifications to the given url. The standard way is that the user will receive a GET request for the given url in the body. Here is how you register a notification: 
 
 ```
@@ -116,13 +116,12 @@ You should also the the webhook ID in the body of the response. This ID is impor
     }
 ```
 
-### **To Delete a notification:** <br>
-
-There is not hard to delete a webhook. Simply use the Webhook ID in the url as shown below. ID has to be given to be able to delete. Do this by sending a DELETE request; 
+## Deleting a notification subscription: <br>
+To delete a webhook, send a DELETE request to the following endpoint, including the ID of the webhook in the URL:
 
 ```
 REQUEST: DELETE
-PATH: /energy/v1/notifications/{id_of_the_webhook}
+PATH: /energy/v1/notifications/{webhook_id}
 ```
 <br>
 Look at the status code for how the request for deletion went. If the status was: <br>
@@ -131,13 +130,13 @@ Look at the status code for how the request for deletion went. If the status was
 -  500: Internal error while trying to delete the webhook. See the status endpoint to check if all services are running
 <br><br>
 
-### **To get a notification (with an ID):** <br>
+## Retrieving information about a notification subscription: <br>
 
 To get only information for a single given notification, use the id in the request: 
 
 ```
 REQUEST: GET
-PATH: /energy/v1/notifications/{id_of_the_webhook}
+PATH: /energy/v1/notifications/{webhook_id}
 ```
 
 Look at the status code and message if no webhook was received. <br>
@@ -158,7 +157,7 @@ If there is a webhook with the given ID, the response could look like this:
 
 
 
-### **To get all notifications:** <br>
+## Retrieving information about all notification subscriptions <br>
 
 To get all the notifications that are stored in the register: 
 
@@ -183,3 +182,18 @@ Should return a list of all webhooks. Could also be empty if non are registered 
 ]
 ```
 
+## When are you notified? 
+
+You will receive a notification if the number of API calls made to a country's endpoint is divisible by the number of calls set for the notification. For example, if you set the number of calls to be notified for a country to 100 and 1000 API calls are made to that country's endpoint, you will be notified since 1000 % 100 = 0. In simpler terms, if you set **call** to be **5**, every 5th time the country have been called, you get notified.  
+
+Here is an example of the JSON response you will receive when a notification is triggered:
+
+```json
+    {
+        "webhook_id": "OIdksUDwveiwe",
+        "country": "USA",
+        "calls": 100,
+        "invocations": 1000,
+        "message": "Notification triggered: 1000 invocations made to USA endpoint."
+    }
+```    
