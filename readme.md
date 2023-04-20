@@ -230,3 +230,21 @@ const (
 
 ```
 
+## Notification endpoint and firebase tests.
+
+The notification test are highly coupled with the firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the firebase test should have no issue if Firestore is correctly setup. From this if: <br>
+
+1) **FIRESTORE && NOTIFICATION ENDPOINT TEST FAIL** -> Most likely just incorrectly setup the firestore 
+2) **ONLY NOTIFICATION ENDPOINT FAIL** -> Logical error in the code in **notification.go** 
+
+To test the firebase methods only: <br>
+
+```terminal
+go test ./db
+```
+
+To test the endpoints only: <br>
+
+```terminal
+go test ./internal/webserver/handlers/
+```
