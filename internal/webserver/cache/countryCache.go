@@ -27,6 +27,25 @@ func AddCountryToCache(country structs.Country) error {
 	return nil
 }
 
+// ExistInCache Used to check if object is in cache.
+func ExistInCache(countryIdentifier string, countryCode bool) bool {
+	if !countryCode {
+		_, err := GetCachedCountryByName(countryIdentifier)
+		if err != nil {
+			return false
+		} else {
+			return true
+		}
+	} else {
+		_, err := GetCountryByIsoCodeFromCache(countryIdentifier)
+		if err != nil {
+			return false
+		} else {
+			return true
+		}
+	}
+}
+
 // GetCountryFromCache Retrieves a cached country.
 func GetCountryFromCache(cachedCountryName string) (structs.Country, error) {
 	cachedCountryName = strings.ToUpper(cachedCountryName)

@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// rseToJSON is an internal function to use a 2D string and input it into a struct.
+// RSEToJSON is an internal function to use a 2D string and input it into a struct.
 func RSEToJSON() ([]structs.RenewableShareEnergyElement, error) {
 	var jsonList []structs.RenewableShareEnergyElement
 	var jsonObj structs.RenewableShareEnergyElement

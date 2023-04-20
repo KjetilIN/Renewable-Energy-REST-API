@@ -32,6 +32,10 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	// Checks if an optional parameter is passed.
 	if len(params) == 6 {
 		listOfRSE = countryCodeLimiter(listOfRSE, params[5])
+
+		if len(listOfRSE) == 0 {
+
+		}
 	}
 
 	// Checks for queries.

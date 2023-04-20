@@ -1,4 +1,4 @@
-package handlers
+package utility
 
 import (
 	"assignment-2/internal/constants"
@@ -7,18 +7,8 @@ import (
 	"net/http"
 )
 
-// parseCCToCountryName Function which finds the country code based on name of country.
-func parseCCToCountryName1(countryName string) (string, error) {
-	// Retrieve country code based on struct.
-	country, retrievalErr := getCountryFromAPI1(countryName)
-	if retrievalErr != nil {
-		return "", retrievalErr
-	}
-	return country.CountryCode, nil
-}
-
-// getCountryFromAPI Function which gets data as byte slice based on country code search parameter.
-func getCountryFromAPI1(countryIdentifier string) (structs.Country, error) {
+// GetCountryFromAPI Function which gets data as byte slice based on country code search parameter.
+func GetCountryFromAPI(countryIdentifier string, countryCode bool) (structs.Country, error) {
 	// Declare variables used.
 	var client http.Client
 	var countryFromAPI []structs.Country
@@ -26,8 +16,11 @@ func getCountryFromAPI1(countryIdentifier string) (structs.Country, error) {
 	var getError error
 
 	// One method to retrieve based on country name and code.
-	resp, getError = client.Get(constants.COUNTRYNAME_API_ADDRESS + countryIdentifier)
-
+	if !countryCode {
+		resp, getError = client.Get(constants.COUNTRYNAME_API_ADDRESS + countryIdentifier)
+	} else {
+		resp, getError = client.Get(constants.COUNTRYCODE_API_ADDRESS + countryIdentifier)
+	}
 	// Performs a get request to country api using country code search parameter.
 	if getError != nil {
 		return structs.Country{}, getError

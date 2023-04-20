@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
-	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -37,12 +35,12 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		// if so it is not a country code.
 		if len(countryIdentifier) > 0 && len([]byte(countryIdentifier)) != 3 {
 			// Parses country name to country code.
-			countryCode, getError := parseCCToCountryName(countryIdentifier)
+			countryCode, getError := utility.GetCountry(countryIdentifier, false)
 			if getError != nil {
 				http.Error(w, "Error when parsing country name to country code: "+getError.Error(), http.StatusBadRequest)
 				return
 			}
-			countryIdentifier = countryCode
+			countryIdentifier = countryCode.CountryCode
 		}
 		// Gets the countries based on country code, uses api.
 		filteredList = countryCodeLimiter(currentList, countryIdentifier)
@@ -104,7 +102,7 @@ func getCurrentList(originalList []structs.RenewableShareEnergyElement) []struct
 // retrieveNeighbours Checks the neighbouring countries and includes them in output list.
 func retrieveNeighbours(list []structs.RenewableShareEnergyElement, countryCode string) ([]structs.RenewableShareEnergyElement, error) {
 	// Collects country from API.
-	country, countryGetErr := getCountryFromAPI(countryCode, COUNTRY_CODE_RETRIVAL)
+	country, countryGetErr := utility.GetCountry(countryCode, true)
 	if countryGetErr != nil {
 		return nil, countryGetErr
 	}
@@ -121,40 +119,14 @@ func retrieveNeighbours(list []structs.RenewableShareEnergyElement, countryCode 
 	return neighbourList, nil
 }
 
+/*
 // parseCCToCountryName Function which finds the country code based on name of country.
 func parseCCToCountryName(countryName string) (string, error) {
 	// Retrieve country code based on struct.
-	country, retrievalErr := getCountryFromAPI(countryName, COUNTRY_NAME_RETRIVAL)
+	country, retrievalErr := utility.GetCountryFromAPI(countryName)
 	if retrievalErr != nil {
 		return "", retrievalErr
 	}
 	return country.CountryCode, nil
 }
-
-// getCountryFromAPI Function which gets data as byte slice based on country code search parameter.
-func getCountryFromAPI(countryIdentifier string, retrievalSetting int) (structs.Country, error) {
-	// Declare variables used.
-	var client http.Client
-	var countryFromAPI []structs.Country
-	var resp *http.Response
-	var getError error
-
-	// One method to retrieve based on country name and code.
-	if retrievalSetting == COUNTRY_NAME_RETRIVAL {
-		resp, getError = client.Get(constants.COUNTRYNAME_API_ADDRESS + countryIdentifier)
-	} else {
-		resp, getError = client.Get(constants.COUNTRYCODE_API_ADDRESS + countryIdentifier)
-	}
-	// Performs a get request to country api using country code search parameter.
-	if getError != nil {
-		return structs.Country{}, getError
-	}
-	defer resp.Body.Close() //Waits for the body to return, then closes the request.
-	// Decodes body into countryFromAPI struct.
-	err := json.NewDecoder(resp.Body).Decode(&countryFromAPI)
-	if err != nil {
-		return structs.Country{}, err
-	}
-	// Only one country returned, therefore first index is the correct country.
-	return countryFromAPI[0], nil
-}
+*/
