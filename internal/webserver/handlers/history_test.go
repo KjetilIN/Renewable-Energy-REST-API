@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -116,16 +115,18 @@ func TestBeginEndQuery(t *testing.T) {
 	begin := 2010
 	end := 2011
 
-	originalList, err := prepareList(ORIGINAL_LENGTH)
+	// Creates list and filters it.
+	originalList, err := prepareList(SHORTER)
 	filteredList, err := beginEndLimiter(strconv.Itoa(begin), strconv.Itoa(end), originalList)
 	if err != nil {
 		t.Fatal("Error when filtering list: " + err.Error())
 	}
+	// Calculated by hand.
+	calculatedMeanAfrica := 7.1637459
 
-	// Checks if year is between the specified in query.
+	// Checks if mean is correct for the test years.
 	for i := 0; i < len(filteredList); i++ {
-		assert.GreaterOrEqual(t, end, filteredList[i].Year, "Year is lower than begin query.")
-		assert.LessOrEqual(t, begin, filteredList[i].Year, "Year is greater than end query.")
+		assert.Equal(t, calculatedMeanAfrica, filteredList[0].Percentage)
 	}
 }
 
@@ -202,9 +203,9 @@ func TestMeanCalculated(t *testing.T) {
 		t.Fatal("Error getting list: " + err.Error())
 	}
 	// Calculated mean.
-	meanAfrica := 7.436156868
+	meanAfrica := 7.436156868421055
 	meanList := meanCalculation(shortList)
 
 	// Checks if the average of first country is correct.
-	assert.Equal(t, math.Round(meanAfrica), math.Round(meanList[0].Percentage), "The average is wrong.")
+	assert.Equal(t, meanAfrica, meanList[0].Percentage, "The average is wrong.")
 }

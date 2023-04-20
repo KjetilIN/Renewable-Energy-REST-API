@@ -19,25 +19,18 @@ type Webhook struct {
 	Calls   int    `json:"calls"`
 }
 
-type WebhookID struct{
+type WebhookID struct {
 	ID string `json:"webhook_id"`
 	Webhook
-	Created time.Time `json:"created_timestamp"`
-	Invocations int `json:"invocations"`
+	Created     time.Time `json:"created_timestamp"`
+	Invocations int       `json:"invocations"`
 }
 
 // RenewableShareEnergyElement Struct to parse historical data into.
 type RenewableShareEnergyElement struct {
 	Name       string  `json:"name"`
 	IsoCode    string  `json:"isoCode"`
-	Year       int     `json:"year"`
-	Percentage float64 `json:"percentage"`
-}
-
-// RenewableShareEnergyElementMean Struct to parse historical data into. Used when calculating mean percentage of countries over time.
-type RenewableShareEnergyElementMean struct {
-	Name       string  `json:"name"`
-	IsoCode    string  `json:"isoCode"`
+	Year       int     `json:"year,omitempty"`
 	Percentage float64 `json:"percentage"`
 }
 
@@ -48,6 +41,6 @@ type Country struct {
 	Borders     []string               `json:"borders"`
 }
 
-type IdResponse struct{
+type IdResponse struct {
 	ID string `json:"webhook_id"`
 }
