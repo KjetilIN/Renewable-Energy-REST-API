@@ -154,9 +154,6 @@ If there is a webhook with the given ID, the response could look like this:
 
 ```
 
-
-
-
 ## Retrieving information about all notification subscriptions <br>
 
 To get all the notifications that are stored in the register: 
@@ -197,3 +194,39 @@ Here is an example of the JSON response you will receive when a notification is 
         "message": "Notification triggered: 1000 invocations made to USA endpoint."
     }
 ```    
+
+## Purging mechanism
+
+When the user adds a notification, a method called PurgeWebhooks is called. It checks if the amount of webhooks is now over the limit. If it is, then it starts removing the oldest notifications. It only removes enough webhooks so that the total amount of notifications are stored is under the limit. By default, the total amount of webhooks allowed is **40**. This could also be changed in the `constants` file. 
+
+- Did not choose to delete webhooks that has the least amount of invocations, because new notifications would be deleted. 
+- Improvements could be to update the creation time, whenever information has changed. Disregarded this due to conflict of naming: creation does not imply last updated, and also another field to keep track on would lead to unnecessary storage of data.
+
+## When is invocations incremented?
+
+Whenever there is a request to the third party api, `restcounties`, we increment all the webhooks for that country with one. In the same function we notify the user, if the condition of being notified is met. See paragraph above for more details. 
+
+## How are notifications stored?
+
+Using the firebase cloud storage called: Firestore. The application uses firestore to store webhooks in form of documents. See document databases for more information on how this works. The technical aspects for getting this to work is; <br>
+
+> 1) Having a firestore credentials file in the root folder. (Note that the `.env` files are for loading this file) <br>
+> 2) The credentials file MUST be called **cloud-assignment-2.json**
+> 3) Manually created two collections called: **test_collection** and **webhooks**
+
+<br>
+<b>Note:</b> changes might lead to errors, so don't. <br>
+This is also located in the constant code: <br>
+
+```go
+// This file defines constants used throughout the program.
+const (
+	....
+	FIRESTORE_COLLECTION = "webhooks" 
+	FIRESTORE_COLLECTION_TEST = "test_collection" 
+	FIREBASE_CREDENTIALS_FILE = "cloud-assignment-2.json" 
+    ...
+)
+
+```
+
