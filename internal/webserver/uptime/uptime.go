@@ -3,7 +3,7 @@ package uptime
 // This file contains provides the functionality for tracking the uptime of a service.
 // Was made with inspiration from https://go.dev/play/p/by_nkvhzqD
 import (
-	"assignment-2/internal/webserver/utility"
+	"assignment-2/internal/utility"
 	"fmt"
 	"time"
 )
