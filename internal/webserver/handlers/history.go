@@ -18,6 +18,8 @@ const DESCENDING = 2
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
+	// Boolean if all countries are to be shown.
+	allCountries := true
 
 	// Reads from csv and returns json list.
 	listOfRSE, jsonError := utility.RSEToJSON()
@@ -30,7 +32,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
 
 	// Checks if an optional parameter is passed.
-	if len(params) == 6 {
+	if len(params) == 6 && params[5] != "" {
 		countryIdentifier := params[5]
 		var filteredList []structs.RenewableShareEnergyElement
 		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
@@ -49,9 +51,11 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		listOfRSE = filteredList
+		// No longer printing all countries.
+		allCountries = false
 	}
 
-	// Checks for queries.
+	// Checks for begin and end queries.
 	if r.URL.Query().Has("begin") || r.URL.Query().Has("end") {
 		var queryError error // Initialises a potential error.
 		beginQuery := r.URL.Query().Get("begin")
@@ -61,9 +65,25 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		if queryError != nil {
 			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
 		}
+		// Mean of each country should not be calculated.
+		allCountries = false
 	}
 
-	// If Query: mean=true, a different struct type will be encoded to client. It calculates the mean of grouped countries.
+	// Year query, which returns a specific year.
+	if r.URL.Query().Has("year") {
+		year := r.URL.Query().Get("year")
+		var queryErr error
+		if year != "" {
+			listOfRSE, queryErr = beginEndLimiter(year, year, listOfRSE)
+			if queryErr != nil {
+				http.Error(w, "Error using queries: "+queryErr.Error(), http.StatusBadRequest)
+			}
+		}
+		// Mean of each country should not be calculated.
+		allCountries = false
+	}
+
+	// Overrides allCountries. Calculates the mean of grouped countries.
 	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
 		listOfRSE = meanCalculation(listOfRSE)
 	}
@@ -92,6 +112,11 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if len(listOfRSE) == 0 {
 		http.Error(w, "Nothing matching your search terms.", http.StatusNoContent)
 		return
+	}
+	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
+	if allCountries {
+		listOfRSE = meanCalculation(listOfRSE)
+		listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
 	}
 
 	// Encodes list and prints to console.
@@ -146,8 +171,8 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Renewable
 			newList = append(newList, v)
 		}
 	}
-	// Returns mean of years between.
-	if toFromOr == 3 {
+	// Returns mean of years between, as long as begin and end is not the same.
+	if toFromOr == 3 && convBegin != convEnd {
 		newList = meanCalculation(newList)
 	}
 	return newList, nil
