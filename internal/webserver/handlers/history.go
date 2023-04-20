@@ -31,7 +31,24 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 
 	// Checks if an optional parameter is passed.
 	if len(params) == 6 {
-		listOfRSE = countryCodeLimiter(listOfRSE, params[5])
+		countryIdentifier := params[5]
+		var filteredList []structs.RenewableShareEnergyElement
+		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
+
+		// If list is empty, could not find country by country code.
+		if len(filteredList) == 0 {
+			// Checks if country searched for is a full common name.
+			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
+			if countryConversionErr != nil {
+				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusNoContent)
+				return
+			}
+			// Checks if country code is empty.
+			if country.CountryCode != "" {
+				filteredList = countryCodeLimiter(listOfRSE, country.CountryCode)
+			}
+		}
+		listOfRSE = filteredList
 	}
 
 	// Checks for queries.
@@ -73,7 +90,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 
 	// Checks if list is empty.
 	if len(listOfRSE) == 0 {
-		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
+		http.Error(w, "Nothing matching your search terms.", http.StatusNoContent)
 		return
 	}
 

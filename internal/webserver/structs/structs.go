@@ -39,6 +39,7 @@ type Country struct {
 	Name        map[string]interface{} `json:"name"`
 	CountryCode string                 `json:"cca3"`
 	Borders     []string               `json:"borders"`
+	Cache       time.Time              // Time in cache.
 }
 
 type IdResponse struct {
