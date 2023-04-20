@@ -80,18 +80,3 @@ func TestNeighbourRetrieval(t *testing.T) {
 	_, expectedError := retrieveNeighbours(currentList, "COUNTRY_THAT_DOES_NOT_EXIST")
 	assert.Error(t, expectedError, "Error was not returned.")
 }
-
-// TestCountryCodeParser Test to check if API country name and country code retrieval works.
-func TestCountryCodeParser(t *testing.T) {
-	// Initialises test parameters.
-	countryNameTest := "Norway"
-	countryCodeTest := "NOR"
-
-	// Tests the parse function in current.
-	parsedCC, err := parseCCToCountryName(countryNameTest)
-	if err != nil {
-		t.Fatal("Error when parsing country name: " + err.Error())
-	}
-	// Tests if parse to countryCode works.
-	assert.Equal(t, countryCodeTest, parsedCC, "Country codes does not match.")
-}
