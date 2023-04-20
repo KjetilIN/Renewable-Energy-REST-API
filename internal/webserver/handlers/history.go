@@ -4,9 +4,16 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+// ASCENDING Used in sorting method to sort ascending.
+const ASCENDING = 1
+
+// DESCENDING Used in sorting method to sort descending.
+const DESCENDING = 2
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
@@ -38,9 +45,25 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
 		}
 	}
+
 	// Checks if sortByValue query is passed.
 	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		listOfRSE = sortingListPercentage(listOfRSE)
+		// Sorts percentage descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			listOfRSE = sliceSortingByValue(listOfRSE, false, DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			listOfRSE = sliceSortingByValue(listOfRSE, false, ASCENDING)
+		}
+	}
+
+	// Checks if sortAlphabetically query is passed.
+	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
+		// Sorts list descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			listOfRSE = sliceSortingByValue(listOfRSE, true, DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
+		}
 	}
 
 	// Checks if list is empty.
@@ -126,7 +149,7 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 			}
 			mean = sum / float64(len(meanList))
 
-			// Potential bug: duplicate names and isocode.
+			// Potential bug: duplicate names and iso code.
 			newEntry := structs.RenewableShareEnergyElementMean{
 				Name:       listToIterate[i-1].Name,
 				IsoCode:    listToIterate[i-1].IsoCode,
@@ -141,39 +164,30 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 	return newList
 }
 
-// sortingListPercentage a function which sorts a json list based on percentage. The function is not very
-// efficient.
-func sortingListPercentage(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
-	var sortedList []structs.RenewableShareEnergyElement
-	HighestValIndex := 0
-	HighestVal := 0.0
-	sorted := false
-	count := 0
-
-	// Loop which iterates until sorted is true.
-	for !sorted {
-		// Iterates through all elements in listToIterate.
-		for i, v := range listToIterate {
-			// If the current percentage is highest.
-			if v.Percentage > HighestVal {
-				HighestVal = v.Percentage
-				HighestValIndex = i
-			}
-			// Checks if i is at the end of the list.
-			if i == len(listToIterate)-1 {
-				sortedList = append(sortedList, listToIterate[HighestValIndex])
-				// Resets values for another loop.
-				listToIterate[HighestValIndex].Percentage = 0.0
-				HighestVal = 0
-				HighestValIndex = 0
-			}
-		}
-		// Counts amount of times iterated through list.
-		count = count + 1
-		// If count is as long as the passed list, the sorting is done.
-		if count == len(listToIterate) {
-			sorted = true
-		}
+// sliceSortingByValue A function which sorts a json list based on value, using inbuilt sort method.
+func sliceSortingByValue(listToIterate []structs.RenewableShareEnergyElement, alphabetical bool, sortingMethod int) []structs.RenewableShareEnergyElement {
+	// Sorts list, based on alphabetical boolean and sortingMethods value.
+	switch {
+	// Sorts by percentage, ascending.
+	case sortingMethod == ASCENDING && !alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[j].Percentage < listToIterate[i].Percentage
+		})
+	// Sorts by percentage, descending.
+	case sortingMethod == DESCENDING && !alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[i].Percentage < listToIterate[j].Percentage
+		})
+	// Sorts alphabetically, ascending.
+	case sortingMethod == ASCENDING && alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[i].Name < listToIterate[j].Name
+		})
+	// Sorts alphabetically, descending.
+	case sortingMethod == DESCENDING && alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[j].Name < listToIterate[i].Name
+		})
 	}
-	return sortedList
+	return listToIterate
 }
