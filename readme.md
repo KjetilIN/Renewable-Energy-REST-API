@@ -49,7 +49,7 @@ These can also be combined, using "&" after "?". Begin and end query combined wi
 
 Example request:
 /energy/v1/renewables/history/nor?begin=2011&end=2014&sortbyvalue=true
-`
+```json
 [
 {
 "name": "Norway",
@@ -76,7 +76,7 @@ Example request:
 "percentage": 66.30012
 }
 ]
-`
+```
 
 # History test #
 

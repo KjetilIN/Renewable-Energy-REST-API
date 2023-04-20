@@ -46,6 +46,11 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// If Query: mean=true, a different struct type will be encoded to client. It calculates the mean of grouped countries.
+	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
+		listOfRSE = meanCalculation(listOfRSE)
+	}
+
 	// Checks if sortByValue query is passed.
 	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
 		// Sorts percentage descending if descending query is true.
@@ -72,14 +77,8 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If Query: mean=true, a different struct type will be encoded to client. It calculates the mean of grouped countries.
-	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
-		meanList := meanCalculation(listOfRSE)
-		utility.Encoder(w, meanList)
-	} else {
-		// Encodes list and prints to console.
-		utility.Encoder(w, listOfRSE)
-	}
+	// Encodes list and prints to console.
+	utility.Encoder(w, listOfRSE)
 }
 
 // countryCodeLimiter Method to limit a list based on country code.
@@ -120,8 +119,8 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Renewable
 		return nil, convErr
 	}
 	// Append json objects fitting conditions to newList.
-	for i, v := range listToIterate {
-		relevantYear := listToIterate[i].Year
+	for _, v := range listToIterate {
+		relevantYear := v.Year
 		if toFromOr == 3 && relevantYear <= convEnd && convBegin <= relevantYear {
 			newList = append(newList, v)
 		} else if toFromOr == 1 && convBegin <= relevantYear {
@@ -130,38 +129,61 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Renewable
 			newList = append(newList, v)
 		}
 	}
+	// Returns mean of years between.
+	if toFromOr == 3 {
+		newList = meanCalculation(newList)
+	}
 	return newList, nil
 }
 
 // meanCalculation Function to calculate the mean of percentage per country, from the inputted list.
-func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElementMean {
-	var newList []structs.RenewableShareEnergyElementMean
-	var meanList []float64 // Initiates an empty float slice.
-	sum, mean := 0.0, 0.0
-	// Iterates through input list to calculate mean.
-	for i := 1; i < len(listToIterate); i++ {
-		if listToIterate[i].Name == listToIterate[i-1].Name { // If name is the same as previous, add value to meanList.
-			meanList = append(meanList, listToIterate[i-1].Percentage)
-		} else { // If it is not the same, we have jumped to a new country. Then the mean should be calculated.
-			// Add up all floats.
-			for _, v := range meanList {
-				sum = sum + v
-			}
-			mean = sum / float64(len(meanList))
-
-			// Potential bug: duplicate names and iso code.
-			newEntry := structs.RenewableShareEnergyElementMean{
-				Name:       listToIterate[i-1].Name,
-				IsoCode:    listToIterate[i-1].IsoCode,
-				Percentage: mean,
-			}
-			// Resets the lists and variables.
-			newList = append(newList, newEntry)
-			mean, sum = 0.0, 0.0
-			meanList = []float64{}
-		}
+func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
+	// If listToIterate is empty, nothing is done.
+	if len(listToIterate) == 0 {
+		return []structs.RenewableShareEnergyElement{}
 	}
-	return newList
+	// Creates a map for counting and collecting percentages.
+	meanMap := make(map[string]structs.RenewableShareEnergyElement)
+	countMap := make(map[string]int)
+
+	// Loops through listToIterate and inserts into newly created maps.
+	for _, v := range listToIterate {
+		key := v.Name
+		// Value returned is not relevant, exits is a bool if it exists in map.
+		_, exists := meanMap[key]
+		// Adds new entry if it does not exist.
+		if !exists {
+			meanMap[key] = structs.RenewableShareEnergyElement{
+				Name:       v.Name,
+				IsoCode:    v.IsoCode,
+				Percentage: 0,
+			}
+		}
+		// Cannot modify map values directly, has to extract and then reassign.
+		mapValueExtracted := meanMap[key]
+		mapValueExtracted.Percentage = mapValueExtracted.Percentage + v.Percentage
+		meanMap[key] = mapValueExtracted
+		// Increments count to be used to calculate mean.
+		countMap[key]++
+	}
+
+	// Create a new listToIterate to be appended to.
+	resultCalc := make([]structs.RenewableShareEnergyElement, len(meanMap))
+	i := 0
+	for _, v := range meanMap {
+		amount := countMap[v.Name]
+		// Removes the possibility for division by 0.
+		if amount == 0 {
+			continue
+		}
+		// Calculates the mean.
+		v.Percentage /= float64(amount)
+		resultCalc[i] = v
+		// Increments, to append to next index.
+		i++
+	}
+	// Returns the results, year is not added to result list and therefore omitted.
+	return resultCalc
 }
 
 // sliceSortingByValue A function which sorts a json list based on value, using inbuilt sort method.
