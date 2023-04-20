@@ -7,12 +7,6 @@ import (
 	"strings"
 )
 
-// COUNTRY_CODE_RETRIVAL Constant used in api retrieval function.
-const COUNTRY_CODE_RETRIVAL = 0
-
-// COUNTRY_NAME_RETRIVAL Constant used in api retrieval function.
-const COUNTRY_NAME_RETRIVAL = 1
-
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
@@ -118,15 +112,3 @@ func retrieveNeighbours(list []structs.RenewableShareEnergyElement, countryCode 
 	}
 	return neighbourList, nil
 }
-
-/*
-// parseCCToCountryName Function which finds the country code based on name of country.
-func parseCCToCountryName(countryName string) (string, error) {
-	// Retrieve country code based on struct.
-	country, retrievalErr := utility.GetCountryFromAPI(countryName)
-	if retrievalErr != nil {
-		return "", retrievalErr
-	}
-	return country.CountryCode, nil
-}
-*/

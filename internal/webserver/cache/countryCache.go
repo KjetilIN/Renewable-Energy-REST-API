@@ -27,31 +27,6 @@ func AddCountryToCache(country structs.Country) error {
 	return nil
 }
 
-// ExistInCache Used to check if object is in cache.
-func ExistInCache(countryIdentifier string, countryCode bool) bool {
-	if !countryCode {
-		_, err := GetCachedCountryByName(countryIdentifier)
-		if err != nil {
-			return false
-		} else {
-			return true
-		}
-	} else {
-		_, err := GetCountryByIsoCodeFromCache(countryIdentifier)
-		if err != nil {
-			return false
-		} else {
-			return true
-		}
-	}
-}
-
-// GetCountryFromCache Retrieves a cached country.
-func GetCountryFromCache(cachedCountryName string) (structs.Country, error) {
-	cachedCountryName = strings.ToUpper(cachedCountryName)
-	return GetCachedCountryByName(cachedCountryName)
-}
-
 // GetCountryByIsoCodeFromCache Retrieves a cached country by its isoCode.
 func GetCountryByIsoCodeFromCache(isoCode string) (structs.Country, error) {
 	isoCode = strings.ToUpper(isoCode)
@@ -61,6 +36,12 @@ func GetCountryByIsoCodeFromCache(isoCode string) (structs.Country, error) {
 		}
 	}
 	return structs.Country{}, errors.New(fmt.Sprintf("%s is not cached.", isoCode))
+}
+
+// GetCountryFromCache Get a country by name.
+func GetCountryFromCache(cachedCountryName string) (structs.Country, error) {
+	cachedCountryName = strings.ToUpper(cachedCountryName)
+	return GetCachedCountryByName(cachedCountryName)
 }
 
 // GetCachedCountryByName  Retrieves a cached country from the cache by its common name.
