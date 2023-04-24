@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
@@ -40,11 +41,20 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			// Checks if country code is empty.
 			if country.CountryCode != "" {
 				filteredList = countryCodeLimiter(listOfRSE, country.CountryCode)
+				// Assigns the country identifier to be the country code.
+				countryIdentifier = country.CountryCode
 			}
 		}
+		// The new list is a filtered list based on country code.
 		listOfRSE = filteredList
 		// No longer printing all countries.
 		allCountries = false
+		// Increment the invocations for the given country code
+		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
+		if dbErr != nil {
+			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	// Checks for begin and end queries.

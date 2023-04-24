@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
@@ -57,6 +58,12 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// If neighbours is not passed, the filtered list is the one to be shown.
 			currentList = filteredList
+		}
+		// Increment the invocations for the given country code
+		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
+		if dbErr != nil {
+			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
+			return
 		}
 	}
 

@@ -10,7 +10,7 @@ func ReplaceSpaces(url string) string {
 // GetParams Returns a string slice of parameters.
 func GetParams(url string, endpoint string) string {
 	// Checks if url or endpoint is empty. Returns an empty string if so.
-	if url == "" || endpoint == "" {
+	if url == "/" || url == "" || endpoint == "" {
 		return ""
 	}
 
