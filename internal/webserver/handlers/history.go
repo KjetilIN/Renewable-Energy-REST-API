@@ -34,7 +34,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			// Checks if country searched for is a full common name.
 			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
 			if countryConversionErr != nil {
-				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusNoContent)
+				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusBadRequest)
 				return
 			}
 			// Checks if country code is empty.
@@ -102,7 +102,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 
 	// Checks if list is empty.
 	if len(listOfRSE) == 0 {
-		http.Error(w, "Nothing matching your search terms.", http.StatusNoContent)
+		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
 		return
 	}
 	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.

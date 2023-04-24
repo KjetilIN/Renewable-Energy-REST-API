@@ -81,7 +81,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
-		http.Error(w, "No search results matching your parameters.", http.StatusNotFound)
+		http.Error(w, "No search results matching your parameters.", http.StatusBadRequest)
 		return
 	}
 	// Resets country identifier.
