@@ -62,7 +62,7 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 	assert.NotEmpty(t, testList, "JSON list from body is empty.")
 }
 
-// Test post greier x)
+// TestHistoryMockHandler tests GET and POST requests on the History mock handler
 func TestHistoryMockHandler(t *testing.T) {
 	// Changes the working directory to the project directory.
 	err := utility.DirChanger()
