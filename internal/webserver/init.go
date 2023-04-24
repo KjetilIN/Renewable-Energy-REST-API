@@ -18,6 +18,10 @@ func InitServer() {
 	http.HandleFunc(constants.STATUS_PATH, handlers.HandlerStatus)
 	http.HandleFunc(constants.NOTIFICATIONS_PATH, handlers.HandlerNotifications)
 
+	// Points the different URL-paths to the correct stubHandler
+	http.HandleFunc("/current/no", handlers.StubHandlerCurrent)
+	http.HandleFunc("/history/no", handlers.StubHandlerHistory)
+
 	// Starting HTTP-server
 	log.Println("Starting server on port " + constants.DEFAULT_PORT + " ...")
 	uptime.Init()
