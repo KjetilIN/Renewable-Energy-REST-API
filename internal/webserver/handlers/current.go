@@ -24,10 +24,11 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	// Checks if country identifier exists.
 	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
+		// Adds corresponding country code to a filtered list.
+		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
-		// Checks if countryIdentifier is not empty, and then if it is less or more than 3 characters,
-		// if so it is not a country code.
-		if len(countryIdentifier) > 0 && len([]byte(countryIdentifier)) != 3 {
+		// Checks if filtered list is empty, if so it tries to find based on country name.
+		if len(filteredList) == 0 {
 			// Parses country name to country code.
 			countryCode, getError := utility.GetCountry(countryIdentifier, false)
 			if getError != nil {
@@ -35,9 +36,9 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			countryIdentifier = countryCode.CountryCode
+			// Gets the countries based on country code, uses api.
+			filteredList = countryCodeLimiter(currentList, countryIdentifier)
 		}
-		// Gets the countries based on country code, uses api.
-		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
 		// Checks if query neighbours is presented.
 		if len(filteredList) > 0 && strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
