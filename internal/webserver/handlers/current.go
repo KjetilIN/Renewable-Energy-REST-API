@@ -65,12 +65,12 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 			// If neighbours is not passed, the filtered list is the one to be shown.
 			currentList = filteredList
 		}
-		// Increment the invocations for the given country code
-		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
-		if dbErr != nil {
+		// Increment the invocations for the given country code.
+		go db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
+		/*if dbErr != nil {
 			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
 			return
-		}
+		}*/
 	}
 
 	// Checks if sortByValue query is passed. If so it sorts it by percentage.

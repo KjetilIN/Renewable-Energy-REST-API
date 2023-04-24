@@ -1,8 +1,13 @@
-# Assignment 2 #
+<div align="center">
+    <h1>Assignment 2</h1>
+    <i>A project by: Sander Hauge, Kjetil Indrehus & Martin Johannessen</i>
+</div>
 
-> Group members: Kjetil Indrehus, Martin Johannessen, Sander Hauge.
 
-This is an API which allows for: searching of reports on percentage of renewable energy in different countries' energy mix over time.
+
+---
+
+API which allows for searching of reports on percentage of renewable energy in different countries' energy mix over time.
 ```
 /energy/v1/renewables/current 
 /energy/v1/renewables/history/
@@ -10,27 +15,91 @@ This is an API which allows for: searching of reports on percentage of renewable
 /energy/v1/status/
 ```
 
+---
+
+# Index #
+* [Current endpoint](#Current endpoint)
+  * [Current test](#current-test)
+* [History endpoint](#history-endpoint)
+  * [History test](#history-test)
+* [Notification endpoint](#notification-endpoint)
+  * [Setting up a new notification subscription](#setting-up-a-new-notification-subscription--br)
+  * [Deleting subscription](#deleting-a-notification-subscription--br)
+  * [Information about a subscription](#retrieving-information-about-a-notification-subscription--br)
+  * [Information about all subscriptions](#retrieving-information-about-all-notification-subscriptions-br)
+  * [Notifications being sent](#when-are-you-notified)
+  * [Purging mechanism](#purging-mechanism)
+  * [Invocation incrementation](#when-is-invocations-incremented)
+  * [Storing notifications](#how-are-notifications-stored)
+  * [Notification tests](#notification-endpoint-and-firebase-tests)
+* [Deployment](#deployment)
+  * [Security and Access](#security-and-access)
+  * [Docker](#docker-and-its-purpose)
+
+---
+
+
 ## Current endpoint ##
 
 This endpoint retrieves the elements of the latest year currently available. The newest data in renewable-share-energy
 is from 2021, and is therefore the current year of this project. Features of this endpoint:
 * Search for country by name and country code.
-* Add-on to get neighbouring countries
+* Add-on to get neighbouring countries.
 * Cache for reducing amount of calls to countries API.
+* Sorting of results.
 
 It uses the file renewable-share-energy.csv and REST Countries API, which is retrieved from: http://129.241.150.113:8080/v3.1. 
 
 **Using the endpoint**
 ```
 REQUEST: GET
-PATH: /energy/v1/renewables/current/{country?}{?neighbours=bool?}
+PATH: /energy/v1/renewables/current/{country?}{?neighbours=bool?}{sortbyvalue/sortalphabetically=bool?, descending=bool?}
 ```
-
-Using no extra parameters will print all countries to the client.
+Using no extra parameters will print all countries of the year=2021, to the client. The year found is based on the
+highest year found in the csv file.
 If an optional parameter: /{country?}, is passed the corresponding country will be printed. This variable could be both
-country codes, and also country name.
+country codes, and country name.
 The query: {?neighbours=bool?}, may also be used, and will print information about the neighbouring countries of the
 country passed. This query is dependent on the optional parameter country.
+Two other queries may be used:
+* {sortbyvalue=bool?} is a query which sorts the results by percentage.
+* {sortalphabetically=bool?} is a query which sorts the results alphabetically.
+* {descending=bool?} is a query to sort descending, requires either sortbyvalue or alphabetically.
+
+**Example Request:**
+```
+REQUEST: GET
+PATH: /energy/v1/renewables/current/norway/neighbours=true
+```
+This is returned to the client.
+```json
+[
+  {
+    "name": "Norway",
+    "isoCode": "NOR",
+    "year": 2021,
+    "percentage": 71.558365
+  },
+  {
+    "name": "Finland",
+    "isoCode": "FIN",
+    "year": 2021,
+    "percentage": 34.61129
+  },
+  {
+    "name": "Sweden",
+    "isoCode": "SWE",
+    "year": 2021,
+    "percentage": 50.924007
+  },
+  {
+    "name": "Russia",
+    "isoCode": "RUS",
+    "year": 2021,
+    "percentage": 6.6202893
+  }
+]
+```
 
 ### Current Test ###
 
@@ -64,7 +133,7 @@ These can also be combined, using "&" after "?". Begin and end query combined wi
 REQUEST: GET
 PATH: /energy/v1/renewables/history/nor?begin=2011&end=2014&sortbyvalue=true
 ```
-
+This request returns.
 ```json
 [
 {
@@ -168,7 +237,6 @@ If there is a webhook with the given ID, the response could look like this:
     "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
     "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
 }
-
 ```
 
 ## Retrieving information about all notification subscriptions <br>
