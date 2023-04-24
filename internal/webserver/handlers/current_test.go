@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
+	"assignment-2/internal/webserver/mock"
 	"assignment-2/internal/webserver/structs"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -12,11 +14,11 @@ import (
 // TestHandlerCurrent_NoParams Tests the base handler without any params.
 func TestHandlerCurrent_NoParams(t *testing.T) {
 	// Changes working directory to root directory.
-	dirChangeErr := dirChanger() // Function in history test.
+	dirChangeErr := utility.DirChanger() // Function in history test.
 	if dirChangeErr != nil {
 		t.Fatal("Error switching working directory: " + dirChangeErr.Error())
 	}
-	server := httptest.NewServer(http.HandlerFunc(HandlerCurrent))
+	server := httptest.NewServer(http.HandlerFunc(mock.StubHandlerCurrent))
 	resp, getReqErr := http.Get(server.URL)
 	if getReqErr != nil {
 		t.Fatal("Error when requesting: " + getReqErr.Error())
@@ -43,11 +45,48 @@ func TestHandlerCurrent_NoParams(t *testing.T) {
 	}
 }
 
+// TestCurrentMockHandler tests GET and POST requests on the Current mock handler
+func TestCurrentMockHandler(t *testing.T) {
+	// Changes the working directory to the project directory.
+	err := utility.DirChanger()
+	if err != nil {
+		return
+	}
+
+	// Testing a get request on local host
+	getRequest, _ := http.NewRequest("GET", constants.MOCK_CURRENT_API_URL, nil)
+	response := httptest.NewRecorder()
+	//Executing the handler
+	mock.StubHandlerCurrent(response, getRequest)
+	resultGet := response.Result()
+	defer resultGet.Body.Close()
+
+	//Error if not implemented or not correct
+	if resultGet.StatusCode != http.StatusOK {
+		t.Error("Test case on GET failed, should be 200")
+	}
+	expected1 := "application/json"
+	resultGetHeader := resultGet.Header.Get("content-type")
+	if resultGetHeader != expected1 {
+		t.Errorf("Test case failed on GET: wrong header information")
+	}
+
+	// Test case 2: POST request
+	postRequest, _ := http.NewRequest("POST", constants.MOCK_CURRENT_API_URL, nil)
+	postResponse := httptest.NewRecorder()
+	mock.StubHandlerCurrent(postResponse, postRequest)
+	resultPost := postResponse.Result()
+	defer resultPost.Body.Close()
+	if resultPost.StatusCode != http.StatusNotImplemented {
+		t.Errorf("Test case POST failed: Not marked as not implemented")
+	}
+}
+
 // TestNeighbourRetrieval Tests if neighbour retrieval works.
 // Tests API retrieval at the same time.
 func TestNeighbourRetrieval(t *testing.T) {
 	// Changes directory.
-	dirChangeErr := dirChanger() // Function in history test.
+	dirChangeErr := utility.DirChanger() // Function in history test.
 	if dirChangeErr != nil {
 		t.Fatal("Error changing directory: " + dirChangeErr.Error())
 	}
