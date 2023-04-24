@@ -3,6 +3,7 @@ package main
 import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver"
+	"assignment-2/internal/webserver/handlers"
 	"log"
 	"os"
 )
@@ -15,4 +16,5 @@ func main() {
 		log.Println("PORT has not been set. Default: 8080", constants.DEFAULT_PORT)
 	}
 	webserver.InitServer()
+	handlers.InitWebhookRegistrations()
 }

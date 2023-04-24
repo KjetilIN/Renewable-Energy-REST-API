@@ -3,20 +3,26 @@ package handlers
 import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
-	"encoding/csv"
-	"log"
 	"net/http"
-	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
 
+// ASCENDING Used in sorting method to sort ascending.
+const ASCENDING = 1
+
+// DESCENDING Used in sorting method to sort descending.
+const DESCENDING = 2
+
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
+	// Boolean if all countries are to be shown.
+	allCountries := true
 
 	// Reads from csv and returns json list.
-	listOfRSE, jsonError := rseToJSON()
+	listOfRSE, jsonError := utility.RSEToJSON()
 	if jsonError != nil {
 		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
 		return
@@ -26,11 +32,30 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
 
 	// Checks if an optional parameter is passed.
-	if len(params) == 6 {
-		listOfRSE = countryCodeLimiter(listOfRSE, params[5])
+	if len(params) == 6 && params[5] != "" {
+		countryIdentifier := params[5]
+		var filteredList []structs.RenewableShareEnergyElement
+		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
+
+		// If list is empty, could not find country by country code.
+		if len(filteredList) == 0 {
+			// Checks if country searched for is a full common name.
+			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
+			if countryConversionErr != nil {
+				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusNoContent)
+				return
+			}
+			// Checks if country code is empty.
+			if country.CountryCode != "" {
+				filteredList = countryCodeLimiter(listOfRSE, country.CountryCode)
+			}
+		}
+		listOfRSE = filteredList
+		// No longer printing all countries.
+		allCountries = false
 	}
 
-	// Checks for queries.
+	// Checks for begin and end queries.
 	if r.URL.Query().Has("begin") || r.URL.Query().Has("end") {
 		var queryError error // Initialises a potential error.
 		beginQuery := r.URL.Query().Get("begin")
@@ -40,74 +65,69 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		if queryError != nil {
 			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
 		}
+		// Mean of each country should not be calculated.
+		allCountries = false
 	}
+
+	// Year query, which returns a specific year.
+	if r.URL.Query().Has("year") {
+		year := r.URL.Query().Get("year")
+		var queryErr error
+		if year != "" {
+			listOfRSE, queryErr = beginEndLimiter(year, year, listOfRSE)
+			if queryErr != nil {
+				http.Error(w, "Error using queries: "+queryErr.Error(), http.StatusBadRequest)
+			}
+		}
+		// Mean of each country should not be calculated.
+		allCountries = false
+	}
+
+	// Overrides allCountries. Calculates the mean of grouped countries.
+	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
+		listOfRSE = meanCalculation(listOfRSE)
+	}
+
 	// Checks if sortByValue query is passed.
 	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		listOfRSE = sortingListPercentage(listOfRSE)
+		// Sorts percentage descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			listOfRSE = sliceSortingByValue(listOfRSE, false, DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			listOfRSE = sliceSortingByValue(listOfRSE, false, ASCENDING)
+		}
+	}
+
+	// Checks if sortAlphabetically query is passed.
+	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
+		// Sorts list descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			listOfRSE = sliceSortingByValue(listOfRSE, true, DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
+		}
 	}
 
 	// Checks if list is empty.
 	if len(listOfRSE) == 0 {
-		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
+		http.Error(w, "Nothing matching your search terms.", http.StatusNoContent)
 		return
 	}
-
-	// If Query: mean=true, a different struct type will be encoded to client. It calculates the mean of grouped countries.
-	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
-		meanList := meanCalculation(listOfRSE)
-		utility.Encoder(w, meanList)
-	} else {
-		// Encodes list and prints to console.
-		utility.Encoder(w, listOfRSE)
+	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
+	if allCountries {
+		listOfRSE = meanCalculation(listOfRSE)
+		listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
 	}
-}
 
-// rseToJSON is an internal function to use a 2D string and input it into a struct.
-func rseToJSON() ([]structs.HistoricalRSE, error) {
-	var jsonList []structs.HistoricalRSE
-	var jsonObj structs.HistoricalRSE
-
-	// readFromFile is a 2D string array.
-	readFromFile, readErr := readCSV("./internal/res/renewable-share-energy.csv")
-	if readErr != nil {
-		return nil, readErr
-	}
-	var lineRead []string
-	//Iterates through 1 dimension of readFromFile.
-	for i := 1; i < len(readFromFile); i++ {
-		// Stores a slice of values to be iterated through.
-		lineRead = readFromFile[i]
-
-		// Parses year from JSON to int, if failed error is handled.
-		year, convErr := strconv.Atoi(lineRead[2]) // Converts string line to integer.
-		if convErr != nil {
-			log.Fatal(convErr)
-			return nil, convErr
-		}
-		// Parses percentage from JSON to float, if failed error is handled.
-		percentage, convErr := strconv.ParseFloat(lineRead[3], 6) // Converts string line to float og 6 decimals.
-		if convErr != nil {
-			log.Fatal(convErr)
-			return nil, convErr
-		}
-		// Iterates through the lineRead slice, and appends to a new entity in HistoricalRSE slice.
-		jsonObj = structs.HistoricalRSE{
-			Name:       lineRead[0],
-			IsoCode:    lineRead[1],
-			Year:       year,
-			Percentage: percentage,
-		}
-		jsonList = append(jsonList, jsonObj)
-
-	}
-	return jsonList, nil
+	// Encodes list and prints to console.
+	utility.Encoder(w, listOfRSE)
 }
 
 // countryCodeLimiter Method to limit a list based on country code.
-func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode string) []structs.HistoricalRSE {
-	var limitedList []structs.HistoricalRSE
+func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
+	var limitedList []structs.RenewableShareEnergyElement
 	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), countryCode) { // If country code match it is
+		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), strings.ToLower(countryCode)) { // If country code match it is
 			// appended to new list.
 			limitedList = append(limitedList, v)
 		}
@@ -116,8 +136,8 @@ func countryCodeLimiter(listToIterate []structs.HistoricalRSE, countryCode strin
 }
 
 // beginEndLimiter Function to allow for searching to and from a year.
-func beginEndLimiter(begin string, end string, listToIterate []structs.HistoricalRSE) ([]structs.HistoricalRSE, error) {
-	var newlist []structs.HistoricalRSE
+func beginEndLimiter(begin string, end string, listToIterate []structs.RenewableShareEnergyElement) ([]structs.RenewableShareEnergyElement, error) {
+	var newList []structs.RenewableShareEnergyElement
 	var convErr error // Potential error.
 	var convBegin int // Variable to store str turned to int.
 	var convEnd int   // Variable to store str turned to int.
@@ -140,100 +160,98 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Historica
 	if convErr != nil {
 		return nil, convErr
 	}
-	// Append json objects fitting conditions to newlist.
-	for i, v := range listToIterate {
-		relevantYear := listToIterate[i].Year
+	// Append json objects fitting conditions to newList.
+	for _, v := range listToIterate {
+		relevantYear := v.Year
 		if toFromOr == 3 && relevantYear <= convEnd && convBegin <= relevantYear {
-			newlist = append(newlist, v)
+			newList = append(newList, v)
 		} else if toFromOr == 1 && convBegin <= relevantYear {
-			newlist = append(newlist, v)
+			newList = append(newList, v)
 		} else if toFromOr == 2 && relevantYear <= convEnd {
-			newlist = append(newlist, v)
+			newList = append(newList, v)
 		}
 	}
-	return newlist, nil
+	// Returns mean of years between, as long as begin and end is not the same.
+	if toFromOr == 3 && convBegin != convEnd {
+		newList = meanCalculation(newList)
+	}
+	return newList, nil
 }
 
 // meanCalculation Function to calculate the mean of percentage per country, from the inputted list.
-func meanCalculation(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSEMean {
-	newList := []structs.HistoricalRSEMean{}
-	meanList := []float64{} // Initiates an empty float slice.
-	sum, mean := 0.0, 0.0
-	// Iterates through input list to calculate mean.
-	for i := 1; i < len(listToIterate); i++ {
-		if listToIterate[i].Name == listToIterate[i-1].Name { // If name is the same as previous, add value to meanList.
-			meanList = append(meanList, listToIterate[i].Percentage)
-		} else { // If it is not the same, we have jumped to a new country. Then the mean should be calculated.
-			// Add up all floats.
-			for _, v := range meanList {
-				sum = sum + v
-			}
-			mean = sum / float64(len(meanList))
-
-			// Potential bug: duplicate names and isocode.
-			newEntry := structs.HistoricalRSEMean{
-				Name:       listToIterate[i-1].Name,
-				IsoCode:    listToIterate[i-1].IsoCode,
-				Percentage: mean,
-			}
-			// Resets the lists and variables.
-			newList = append(newList, newEntry)
-			mean, sum = 0.0, 0.0
-			meanList = []float64{}
-		}
+func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
+	// If listToIterate is empty, nothing is done.
+	if len(listToIterate) == 0 {
+		return []structs.RenewableShareEnergyElement{}
 	}
-	return newList
+	// Creates a map for counting and collecting percentages.
+	meanMap := make(map[string]structs.RenewableShareEnergyElement)
+	countMap := make(map[string]int)
+
+	// Loops through listToIterate and inserts into newly created maps.
+	for _, v := range listToIterate {
+		key := v.Name
+		// Value returned is not relevant, exits is a bool if it exists in map.
+		_, exists := meanMap[key]
+		// Adds new entry if it does not exist.
+		if !exists {
+			meanMap[key] = structs.RenewableShareEnergyElement{
+				Name:       v.Name,
+				IsoCode:    v.IsoCode,
+				Percentage: 0,
+			}
+		}
+		// Cannot modify map values directly, has to extract and then reassign.
+		mapValueExtracted := meanMap[key]
+		mapValueExtracted.Percentage = mapValueExtracted.Percentage + v.Percentage
+		meanMap[key] = mapValueExtracted
+		// Increments count to be used to calculate mean.
+		countMap[key]++
+	}
+
+	// Create a new listToIterate to be appended to.
+	resultCalc := make([]structs.RenewableShareEnergyElement, len(meanMap))
+	i := 0
+	for _, v := range meanMap {
+		amount := countMap[v.Name]
+		// Removes the possibility for division by 0.
+		if amount == 0 {
+			continue
+		}
+		// Calculates the mean.
+		v.Percentage /= float64(amount)
+		resultCalc[i] = v
+		// Increments, to append to next index.
+		i++
+	}
+	// Returns the results, year is not added to result list and therefore omitted.
+	return resultCalc
 }
 
-// sortingListPercentage a function which sorts a json list based on percentage. The function is not very
-// efficient.
-func sortingListPercentage(listToIterate []structs.HistoricalRSE) []structs.HistoricalRSE {
-	var sortedList []structs.HistoricalRSE
-	HighestValIndex := 0
-	HighestVal := 0.0
-	sorted := false
-	count := 0
-
-	// Loop which iterates until sorted is true.
-	for !sorted {
-		// Iterates through all elements in listToIterate.
-		for i, v := range listToIterate {
-			// If the current percentage is highest.
-			if v.Percentage > HighestVal {
-				HighestVal = v.Percentage
-				HighestValIndex = i
-			}
-			// Checks if i is at the end of the list.
-			if i == len(listToIterate)-1 {
-				sortedList = append(sortedList, listToIterate[HighestValIndex])
-				// Resets values for another loop.
-				listToIterate[HighestValIndex].Percentage = 0.0
-				HighestVal = 0
-				HighestValIndex = 0
-			}
-		}
-		// Counts amount of times iterated through list.
-		count = count + 1
-		// If count is as long as the passed list, the sorting is done.
-		if count == len(listToIterate) {
-			sorted = true
-		}
+// sliceSortingByValue A function which sorts a json list based on value, using inbuilt sort method.
+func sliceSortingByValue(listToIterate []structs.RenewableShareEnergyElement, alphabetical bool, sortingMethod int) []structs.RenewableShareEnergyElement {
+	// Sorts list, based on alphabetical boolean and sortingMethods value.
+	switch {
+	// Sorts by percentage, ascending.
+	case sortingMethod == ASCENDING && !alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[j].Percentage < listToIterate[i].Percentage
+		})
+	// Sorts by percentage, descending.
+	case sortingMethod == DESCENDING && !alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[i].Percentage < listToIterate[j].Percentage
+		})
+	// Sorts alphabetically, ascending.
+	case sortingMethod == ASCENDING && alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[i].Name < listToIterate[j].Name
+		})
+	// Sorts alphabetically, descending.
+	case sortingMethod == DESCENDING && alphabetical:
+		sort.Slice(listToIterate, func(i, j int) bool {
+			return listToIterate[j].Name < listToIterate[i].Name
+		})
 	}
-	return sortedList
-}
-
-// Function to read from a CSV file.
-func readCSV(filePath string) ([][]string, error) {
-	file, readErr := os.Open(filePath)
-	if readErr != nil {
-		return nil, readErr
-	}
-	defer file.Close()
-
-	csvReader := csv.NewReader(file)
-	information, parseError := csvReader.ReadAll()
-	if parseError != nil {
-		return nil, parseError
-	}
-	return information, nil
+	return listToIterate
 }
