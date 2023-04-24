@@ -1,45 +1,68 @@
 package handlers
 
 import (
-	"assignment-2/internal/constants"
-	"html/template"
+	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 )
-
-// DefaultPageData contains data for the default page.
-type DefaultPageData struct {
-	CurrentPath       string
-	HistoryPath       string
-	NotificationsPath string
-	StatusPath        string
-}
 
 // HandlerDefault is a handler for the /default endpoint.
 func HandlerDefault(w http.ResponseWriter, r *http.Request) {
-	// Ensure interpretation as HTML by client (browser)
-	w.Header().Set("content-type", "text/html")
-
-	// Define the page data.
-	pageData := DefaultPageData{
-		CurrentPath:       constants.CURRENT_PATH,
-		HistoryPath:       constants.HISTORY_PATH,
-		NotificationsPath: constants.NOTIFICATIONS_PATH,
-		StatusPath:        constants.STATUS_PATH,
-	}
-
-	// Parse the template.
-	tmpl, err := template.ParseFiles("templates/default.html")
+	// Load HTML and CSS files
+	html, err := loadFile("templates/default.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println("Error when parsing template.")
+		log.Println("Error when reading HTML file.")
+		return
+	}
+	css, err := loadFile("templates/style.css")
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println("Error when reading CSS file.")
 		return
 	}
 
-	// Render the template with the page data.
-	err = tmpl.Execute(w, pageData)
+	// Parse HTML and add CSS styles
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println("Error when rendering template.")
+		log.Println("Error when parsing HTML.")
+		return
 	}
+	style := fmt.Sprintf("<style>%s</style>", css)
+	doc.Find("head").AppendHtml(style)
+
+	// Write the modified HTML to the response
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	docHtml, err := doc.Html()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println("Error when converting HTML to string.")
+		return
+	}
+
+	if _, err := w.Write([]byte(docHtml)); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println("Error when writing HTML to response writer.")
+		return
+	}
+}
+
+// loadFile takes a filename as a string and returns the contents of the file as a string.
+// Returns: a string, or an error and an empty string.
+func loadFile(filename string) (string, error) {
+	path, err := filepath.Abs(filename)
+	if err != nil {
+		return "", err
+	}
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(file), nil
 }

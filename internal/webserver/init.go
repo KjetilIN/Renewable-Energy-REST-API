@@ -16,7 +16,6 @@ func InitServer() {
 	http.HandleFunc(constants.HISTORY_PATH, handlers.HandlerHistory)
 	http.HandleFunc(constants.STATUS_PATH, handlers.HandlerStatus)
 	http.HandleFunc(constants.NOTIFICATIONS_PATH, handlers.HandlerNotifications)
-	http.Handle("/", http.FileServer(http.Dir("./templates")))
 
 	// Starting HTTP-server
 	log.Println("Starting server on port " + constants.DEFAULT_PORT + " ...")
