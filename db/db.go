@@ -5,12 +5,14 @@ import (
 	"assignment-2/internal/webserver/structs"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
@@ -343,16 +345,35 @@ func CallUrl(webhook structs.WebhookID) error {
 	// Log the attempt for calling an url
 	log.Println("Calling the url: " + webhook.Url + "...")
 
-	// Creating a new request;
-	request, err := http.NewRequest(http.MethodGet, webhook.Url, bytes.NewReader([]byte(webhook.ID)))
+	// Message to return to the user
+	message := "Notification triggered: " + strconv.Itoa(webhook.Calls) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
+
+	//Creating the response struct:
+	responseWebhook := structs.WebhookCallResponse{
+		ID: webhook.ID,
+		Webhook: webhook.Webhook,
+		Invocations: webhook.Invocations,
+		Message: message,
+	}
+
+	// Add the struct to the response struct 
+	requestBody, err := json.Marshal(responseWebhook)
 	if err != nil {
-		log.Println("Error on creating a request")
+		log.Println("Error encoding responseWebhook to JSON")
 		return err
+	}
+
+	// Create a new request with the JSON-encoded webhook in the body
+	request, creatingError := http.NewRequest(http.MethodPost, webhook.Url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.Println("Error creating request")
+		return creatingError
 	}
 
 	// Set the ID as a signature in the request and the application type
 	request.Header.Set("Signature-x", webhook.ID)
-	request.Header.Add("Content-Type", "application/text")
+	request.Header.Set("Content-Type", "application/json")
+
 
 	// Creating a client and executing the request
 	client := http.Client{}

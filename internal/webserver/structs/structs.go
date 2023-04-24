@@ -26,6 +26,13 @@ type WebhookID struct {
 	Invocations int       `json:"invocations"`
 }
 
+type WebhookCallResponse struct{
+	ID string `json:"webhook_id"`
+	Webhook
+	Invocations int `json:"invocations"`
+	Message string `json:"message"`
+}
+
 // RenewableShareEnergyElement Struct to parse historical data into.
 type RenewableShareEnergyElement struct {
 	Name       string  `json:"name"`
