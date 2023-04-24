@@ -11,6 +11,12 @@ import (
 
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
+	// Checks the request type.
+	if !utility.CheckRequest(r, http.MethodGet) {
+		http.Error(w, "Request not supported.", http.StatusNotImplemented)
+		return
+	}
+	// Sets the content type of client to be json format.
 	w.Header().Set("content-type", "application/json")
 
 	// Collects the CSV list into JSON.
