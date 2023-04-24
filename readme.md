@@ -3,7 +3,14 @@
     <i>A project by: Sander Hauge, Kjetil Indrehus & Martin Johannessen</i>
 </div>
 
-
+<div align="center">
+    <sup>Status</sup>
+    <br />
+    <a href="https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2023/-/wikis/Assignments/Assignment-2">
+        <img alt="Assignment" src="https://img.shields.io/badge/Assignment-Click%20me-orange" />
+    </a>
+    
+</div>
 
 ---
 
