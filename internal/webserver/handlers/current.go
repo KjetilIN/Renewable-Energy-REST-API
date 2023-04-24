@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"assignment-2/db"
+	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
@@ -9,6 +11,12 @@ import (
 
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
+	// Checks the request type.
+	if !utility.CheckRequest(r, http.MethodGet) {
+		http.Error(w, "Request not supported.", http.StatusNotImplemented)
+		return
+	}
+	// Sets the content type of client to be json format.
 	w.Header().Set("content-type", "application/json")
 
 	// Collects the CSV list into JSON.
@@ -18,16 +26,16 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 	currentList := getCurrentList(originalList)
 
-	// Collects parameters, separated by /
-	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
-	// Checks if an optional parameter is passed.
-	if len(params) == 6 {
-		countryIdentifier := params[5]
+	// Collects parameter from url path.
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
+	// Checks if country identifier exists.
+	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
+		// Adds corresponding country code to a filtered list.
+		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
-		// Checks if countryIdentifier is not empty, and then if it is less or more than 3 characters,
-		// if so it is not a country code.
-		if len(countryIdentifier) > 0 && len([]byte(countryIdentifier)) != 3 {
+		// Checks if filtered list is empty, if so it tries to find based on country name.
+		if len(filteredList) == 0 {
 			// Parses country name to country code.
 			countryCode, getError := utility.GetCountry(countryIdentifier, false)
 			if getError != nil {
@@ -35,9 +43,9 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			countryIdentifier = countryCode.CountryCode
+			// Gets the countries based on country code, uses api.
+			filteredList = countryCodeLimiter(currentList, countryIdentifier)
 		}
-		// Gets the countries based on country code, uses api.
-		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
 		// Checks if query neighbours is presented.
 		if len(filteredList) > 0 && strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
@@ -57,12 +65,41 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 			// If neighbours is not passed, the filtered list is the one to be shown.
 			currentList = filteredList
 		}
+		// Increment the invocations for the given country code
+		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
+		if dbErr != nil {
+			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
+			return
+		}
 	}
+
+	// Checks if sortByValue query is passed. If so it sorts it by percentage.
+	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
+		// Sorts percentage descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			currentList = utility.SortRSEList(currentList, false, constants.DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			currentList = utility.SortRSEList(currentList, false, constants.ASCENDING)
+		}
+	}
+
+	// Checks if sortAlphabetically query is passed.
+	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
+		// Sorts list descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			currentList = utility.SortRSEList(currentList, true, constants.DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			currentList = utility.SortRSEList(currentList, true, constants.ASCENDING)
+		}
+	}
+
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
-		http.Error(w, "No search results matching your parameters.", http.StatusNotFound)
+		http.Error(w, "No search results matching your parameters.", http.StatusBadRequest)
 		return
 	}
+	// Resets country identifier.
+	countryIdentifier = ""
 	// Encodes currentList to the client.
 	utility.Encoder(w, currentList)
 }

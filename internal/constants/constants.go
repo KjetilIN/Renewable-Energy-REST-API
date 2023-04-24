@@ -19,10 +19,17 @@ const (
 	FIRESTORE_COLLECTION_TEST = "test_collection"         // Name of the collection which the test make use of
 	FIREBASE_CREDENTIALS_FILE = "cloud-assignment-2.json" // Name of the credential file, see readme for how to use and where to place
 	MAX_WEBHOOK_COUNT         = 40                        //
-
+	// COUNTRIES_API_URL Used to send head request.
 	COUNTRIES_API_URL  = "http://129.241.150.113:8080/v3.1/"
 	NOTIFICATIONDB_URL = ""
 
-	COUNTRYCODE_API_ADDRESS = "https://restcountries.com/v3/alpha/"
-	COUNTRYNAME_API_ADDRESS = "https://restcountries.com/v3/name/"
+	// COUNTRYCODE_API_ADDRESS URL for GET request of country code.
+	COUNTRYCODE_API_ADDRESS = "http://129.241.150.113:8080/v3.1/alpha/"
+	// COUNTRYNAME_API_ADDRESS URL for GET request of country names.
+	COUNTRYNAME_API_ADDRESS = "http://129.241.150.113:8080/v3.1/name/"
+
+	// ASCENDING Used to address way of sorting.
+	ASCENDING = 1
+	// DESCENDING Used to address way of sorting.
+	DESCENDING = 2
 )
