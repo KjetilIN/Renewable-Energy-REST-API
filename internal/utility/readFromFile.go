@@ -49,7 +49,7 @@ func RSEToJSON() ([]structs.RenewableShareEnergyElement, error) {
 	return jsonList, nil
 }
 
-// Function to read from a CSV file.
+// readCSV Function to read from a CSV file.
 func readCSV(filePath string) ([][]string, error) {
 	file, readErr := os.Open(filePath)
 	if readErr != nil {

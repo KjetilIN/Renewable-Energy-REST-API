@@ -19,11 +19,10 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 	currentList := getCurrentList(originalList)
 
-	// Collects parameters, separated by /
-	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
-	// Checks if an optional parameter is passed.
-	if len(params) == 6 && params[5] != "" {
-		countryIdentifier := params[5]
+	// Collects parameter from url path.
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
+	// Checks if country identifier exists.
+	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
 
 		// Checks if countryIdentifier is not empty, and then if it is less or more than 3 characters,
@@ -85,6 +84,8 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No search results matching your parameters.", http.StatusNotFound)
 		return
 	}
+	// Resets country identifier.
+	countryIdentifier = ""
 	// Encodes currentList to the client.
 	utility.Encoder(w, currentList)
 }

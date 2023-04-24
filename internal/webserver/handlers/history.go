@@ -22,12 +22,10 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Collects parameters, separated by /
-	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
-
-	// Checks if an optional parameter is passed.
-	if len(params) == 6 && params[5] != "" {
-		countryIdentifier := params[5]
+	// Collects parameter from url path.
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
+	// Checks if country identifier exists.
+	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
 		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
 
@@ -112,7 +110,8 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		listOfRSE = meanCalculation(listOfRSE)
 		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
 	}
-
+	// Resets country identifier.
+	countryIdentifier = ""
 	// Encodes list and prints to console.
 	utility.Encoder(w, listOfRSE)
 }
