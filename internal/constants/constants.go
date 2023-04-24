@@ -23,6 +23,10 @@ const (
 	COUNTRIES_API_URL  = "http://129.241.150.113:8080/v3.1/"
 	NOTIFICATIONDB_URL = ""
 
+	//URL const
+	MOCK_HISTORY_API_URL = "http://localhost:8080/mock/history"
+	MOCK_CURRENT_API_URL = "http://localhost:8080/mock/current"
+
 	COUNTRYCODE_API_ADDRESS = "https://restcountries.com/v3/alpha/"
 	COUNTRYNAME_API_ADDRESS = "https://restcountries.com/v3/name/"
 )

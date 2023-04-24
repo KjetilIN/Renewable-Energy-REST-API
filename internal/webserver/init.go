@@ -3,6 +3,7 @@ package webserver
 import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/handlers"
+	"assignment-2/internal/webserver/mock"
 	"assignment-2/internal/webserver/uptime"
 	"log"
 	"net/http"
@@ -19,8 +20,8 @@ func InitServer() {
 	http.HandleFunc(constants.NOTIFICATIONS_PATH, handlers.HandlerNotifications)
 
 	// Points the different URL-paths to the correct stubHandler
-	http.HandleFunc("/current/no", handlers.StubHandlerCurrent)
-	http.HandleFunc("/history/no", handlers.StubHandlerHistory)
+	http.HandleFunc(constants.MOCK_CURRENT_API_URL, mock.StubHandlerCurrent)
+	http.HandleFunc(constants.MOCK_HISTORY_API_URL, mock.StubHandlerHistory)
 
 	// Starting HTTP-server
 	log.Println("Starting server on port " + constants.DEFAULT_PORT + " ...")
