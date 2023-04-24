@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
@@ -21,7 +22,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	// Collects parameters, separated by /
 	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
 	// Checks if an optional parameter is passed.
-	if len(params) == 6 {
+	if len(params) == 6 && params[5] != "" {
 		countryIdentifier := params[5]
 		var filteredList []structs.RenewableShareEnergyElement
 
@@ -58,6 +59,27 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 			currentList = filteredList
 		}
 	}
+
+	// Checks if sortByValue query is passed. If so it sorts it by percentage.
+	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
+		// Sorts percentage descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			currentList = utility.SortRSEList(currentList, false, constants.DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			currentList = utility.SortRSEList(currentList, false, constants.ASCENDING)
+		}
+	}
+
+	// Checks if sortAlphabetically query is passed.
+	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
+		// Sorts list descending if descending query is true.
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			currentList = utility.SortRSEList(currentList, true, constants.DESCENDING)
+		} else { // Sorting standard is ascending if nothing else is passed.
+			currentList = utility.SortRSEList(currentList, true, constants.ASCENDING)
+		}
+	}
+
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
 		http.Error(w, "No search results matching your parameters.", http.StatusNotFound)
