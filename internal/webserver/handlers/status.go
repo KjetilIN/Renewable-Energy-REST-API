@@ -1,28 +1,17 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
 	"encoding/json"
 	"errors"
-	"github.com/shirou/gopsutil/mem"
 	"net/http"
 	"strconv"
+
+	"github.com/shirou/gopsutil/mem"
 )
-
-// Webhooks DB
-var webhooks []structs.WebhookID
-
-// Init empty list of webhooks
-func InitWebhookRegistrations() {
-	webhooks = []structs.WebhookID{}
-}
-
-// Get number of webhooks
-func GetNumberOfWebhooks() int {
-	return len(webhooks)
-}
 
 // HTTP client
 var client = &http.Client{}
@@ -110,14 +99,12 @@ func getStatus() (structs.Status, error) {
 	}
 	loadAvg = strconv.Itoa(int(avg.Load1))*/
 
-	// get number of registered webhooks
-	numWebhooks := GetNumberOfWebhooks()
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
 		CountriesApi: countriesApiStatus,
-		//NotificationDB: 	notificationDBStatus,
-		Webhooks: numWebhooks,
+		NotificationDB: 	db.CheckFirestoreConnection(),
+		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
 		Version:  "v1",
 		Uptime:   uptime.GetUptime(),
 		//AverageSystemLoad: loadAvg + " in the last minute",

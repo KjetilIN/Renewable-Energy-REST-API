@@ -24,8 +24,6 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 // when using a valid method (GET).
 // Returns: http.StatusOK, or an error message.
 func TestHandlerStatus_ValidMethod(t *testing.T) {
-	// Initialize the webhooks list before running the tests.
-	InitWebhookRegistrations()
 
 	req, err := http.NewRequest("GET", "/status", nil)
 	if err != nil {
@@ -45,8 +43,6 @@ func TestHandlerStatus_ValidMethod(t *testing.T) {
 // invalid HTTP method is used to access the endpoint.
 // Returns: http.StatusMethodNotAllowed, or an error message.
 func TestHandlerStatus_InvalidMethod(t *testing.T) {
-	// Initialize the webhooks list before running the tests.
-	InitWebhookRegistrations()
 
 	req, err := http.NewRequest("POST", "/status", nil)
 	if err != nil {
@@ -66,8 +62,6 @@ func TestHandlerStatus_InvalidMethod(t *testing.T) {
 // an error when accessing the country API fails.
 // Returns: an error, or nothing.
 func TestHandlerStatus_GetStatusError(t *testing.T) {
-	// Initialize the webhooks list before running the tests.
-	InitWebhookRegistrations()
 
 	// Create a mock http client that returns an error when accessing the country API
 	mockErrClient := &http.Client{
@@ -91,8 +85,6 @@ func TestHandlerStatus_GetStatusError(t *testing.T) {
 // code when accessing the country API succeeds.
 // Returns: a successful status code and no errors, or an error message.
 func TestHandlerStatus_GetStatusSuccess(t *testing.T) {
-	// Initialize the webhooks list before running the tests.
-	InitWebhookRegistrations()
 
 	// Create a mock http client that returns a 200 status code when accessing the country API
 	mockOKClient := &http.Client{
