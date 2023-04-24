@@ -258,6 +258,9 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error {
 		return nil
 	}
 
+	// Notify all subscribers for the event of purging 
+	go NotifyForEvent(constants.PURGE_EVENT, constants.FIRESTORE_COLLECTION)
+
 	// Calculate how many of the webhooks we can delete
 	numberOfWebhooksToDelete := numberOfWebhooks - webhookLimit
 
@@ -360,13 +363,14 @@ func CallUrl(webhook structs.WebhookID) error {
 		case constants.COUNTRY_API_EVENT:
 			message = "Notification triggered: Country API is down!"
 			break
+		case constants.PURGE_EVENT:
+			message = "Notification triggered: Webhooks has been purged!"
 		default:
 			message = "Notification triggered: " + strconv.Itoa(webhook.Calls) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
 			break
 
 	}
 	
-
 	//Creating the response struct:
 	responseWebhook := structs.WebhookCallResponse{
 		ID: webhook.ID,
