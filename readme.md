@@ -90,7 +90,7 @@ To use the test, print into command line when in root project folder:
 
 # Deployment 
 
-This service is deployed with OpenStack. OpenStack is a IaaS where the user define what resources is needed. It vitalizes resources to serve all end users. More information here: [OpenstackLink](https://www.ntnu.no/wiki/display/skyhigh) <br>
+This service is deployed with OpenStack. OpenStack is a IaaS where the user define what resources is needed. It vitalizes resources to serve all end users. More information here: [Openstack Link](https://www.ntnu.no/wiki/display/skyhigh) <br>
 
 ## Predefined resources
 This service has the following resources predefined: 
@@ -119,12 +119,12 @@ http://10.212.169.162:81/energy/v1/status/
 Docker is a set of platform as a service (PaaS) products that use OS-level virtualization to deliver software in packages called containers. [This project used this docs for setting up docker on the OpenStack server.](https://docs.docker.com/engine/install/ubuntu/#set-up-the-repository)
 
 <br>
-Note that the project uses both a Docker file and a docker compose file. The docker file contains introductions for building the Docker Image. By defining a base image, additional packages and other versions, the Docker image can be created more deterministic. The base image that we use is `golang:1.18`. The Docker File also gets all packages from the go project.
+Note that the project uses both a Docker file and a docker compose file. The docker file contains introductions for building the Docker Image. By defining a base image, additional packages and other versions, the Docker image can be created more deterministic. The base image that we use is golang:1.18. The Docker File also gets all packages from the go project.
 
 [Read more about how dockerfile works here](https://docs.docker.com/engine/reference/builder/)
 
 <br>
 
-Docker Compose is for running multi-container Docker application. However, this project uses it to define volumes for the credentials file for firebase. Also the renewable energy .csv file should also stay in a volume. 
+Docker Compose is for running multi-container Docker application. However, this project uses it to define volumes for the credentials file for firebase. Also the renewable energy **.csv** file should also stay in a volume. 
 
 [More on docker compose here](https://docs.docker.com/compose/)
