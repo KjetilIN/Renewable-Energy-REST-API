@@ -21,7 +21,6 @@ const (
 	MAX_WEBHOOK_COUNT         = 40                        //
 	// COUNTRIES_API_URL Used to send head request.
 	COUNTRIES_API_URL  = "http://129.241.150.113:8080/v3.1/"
-	NOTIFICATIONDB_URL = ""
 
 	// COUNTRYCODE_API_ADDRESS URL for GET request of country code.
 	COUNTRYCODE_API_ADDRESS = "http://129.241.150.113:8080/v3.1/alpha/"
@@ -32,4 +31,10 @@ const (
 	ASCENDING = 1
 	// DESCENDING Used to address way of sorting.
 	DESCENDING = 2
+)
+
+// The different events type 
+const(
+	COUNTRY_API_EVENT = "COUNTRY_DOWN"
+	CALLS_EVENT = "CALLS"
 )

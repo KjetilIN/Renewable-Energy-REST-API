@@ -58,18 +58,13 @@ func getStatus() (structs.Status, error) {
 
 	countriesApiStatus := res.StatusCode
 
-	/*
-		// Check the status of the notification db.
-		url = constants.NOTIFICATIONDB_URL
-		notificationDBRequest, _ := http.NewRequest(http.MethodHead, url, nil)
+	// If the status code is not 200, notify all subscribers to that event
+	if countriesApiStatus != 200{
+		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
+	}
 
-		res, err = client.Do(notificationDBRequest)
-		if err != nil {
-			return structs.Status{}, err
-		}
-
-		notificationDBStatus := res.StatusCode
-	*/
+	// Firebase status
+	dbStatus := db.CheckFirestoreConnection()
 
 	var memUsage string
 	defer func() {
@@ -85,25 +80,11 @@ func getStatus() (structs.Status, error) {
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-	/*var loadAvg string
-	// Get the average system load for the last minute.
-	defer func() {
-		if r := recover(); r != nil {
-			loadAvg = "N/A"
-		}
-	}()
-
-	avg, err := load.Avg()
-	if err != nil {
-		panic(err)
-	}
-	loadAvg = strconv.Itoa(int(avg.Load1))*/
-
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
 		CountriesApi: countriesApiStatus,
-		NotificationDB: 	db.CheckFirestoreConnection(),
+		NotificationDB: dbStatus	,
 		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
 		Version:  "v1",
 		Uptime:   uptime.GetUptime(),

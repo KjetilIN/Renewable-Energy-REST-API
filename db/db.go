@@ -85,6 +85,15 @@ func AddWebhook(webhook structs.WebhookID, collection string) error {
 		return clientErr
 	}
 
+	// Set default event
+	if webhook.Event == ""{
+		webhook.Event = constants.CALLS_EVENT
+	}
+	
+	// Turn it into upper case 
+	webhook.Event = strings.ToUpper(webhook.Event)
+	
+
 	// Create a new doc in the
 	_, err := client.Collection(collection).Doc(webhook.ID).Set(context.Background(), webhook)
 	if err != nil {
@@ -329,7 +338,7 @@ func IncrementInvocations(alphaCode string, collection string) error {
 		webhook.Invocations++ // Increment the local version
 
 		// Invocation that has been updated is multiple of two
-		if webhook.Calls != 0 && webhook.Invocations%webhook.Calls == 0 {
+		if webhook.Calls != 0 && webhook.Invocations%webhook.Calls == 0 && strings.ToUpper(webhook.Event) == "CALLS" {
 			// Using the call url method as a go routine
 			go CallUrl(webhook)
 
@@ -346,7 +355,17 @@ func CallUrl(webhook structs.WebhookID) error {
 	log.Println("Calling the url: " + webhook.Url + "...")
 
 	// Message to return to the user
-	message := "Notification triggered: " + strconv.Itoa(webhook.Calls) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
+	var message string
+	switch (webhook.Event){
+		case constants.COUNTRY_API_EVENT:
+			message = "Notification triggered: Country API is down!"
+			break
+		default:
+			message = "Notification triggered: " + strconv.Itoa(webhook.Calls) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
+			break
+
+	}
+	
 
 	//Creating the response struct:
 	responseWebhook := structs.WebhookCallResponse{
@@ -385,5 +404,45 @@ func CallUrl(webhook structs.WebhookID) error {
 
 	// Logging that a webhook has been invocated
 	log.Println("Webhook with ID: " + webhook.ID + " was invoked. Status code for response is " + strconv.Itoa(response.StatusCode))
+	return nil
+}
+
+
+// Function to call when a given event 
+func NotifyForEvent(event string, collection string) error {
+	// Get the client
+	client, clientError := getFirestoreClient()
+	if clientError != nil {
+		return clientError
+	}
+
+	// Create a query that filters documents based on the specified alpha code
+	query := client.Collection(collection).Where("Event", "==", strings.ToUpper(event) ).Documents(context.Background())
+
+	//Iterate thought each document
+	for {
+		// Get the next document or quit
+		doc, err := query.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Println("Error on iterating a doc")
+			return err
+		}
+
+		// Check if we need to call a webhook...
+		var webhook structs.WebhookID
+		err = doc.DataTo(&webhook)
+		if err != nil {
+			log.Println("Error on deconstruct the webhook")
+			return err
+		}
+		
+		// Using the call url method as a go routine
+		go CallUrl(webhook)
+
+	
+	}
 	return nil
 }
