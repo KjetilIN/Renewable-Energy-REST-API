@@ -25,4 +25,9 @@ const (
 
 	COUNTRYCODE_API_ADDRESS = "https://restcountries.com/v3/alpha/"
 	COUNTRYNAME_API_ADDRESS = "https://restcountries.com/v3/name/"
+
+	// ASCENDING Used to address way of sorting.
+	ASCENDING = 1
+	// DESCENDING Used to address way of sorting.
+	DESCENDING = 2
 )

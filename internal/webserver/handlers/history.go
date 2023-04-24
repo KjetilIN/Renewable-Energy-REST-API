@@ -1,19 +1,13 @@
 package handlers
 
 import (
+	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 )
-
-// ASCENDING Used in sorting method to sort ascending.
-const ASCENDING = 1
-
-// DESCENDING Used in sorting method to sort descending.
-const DESCENDING = 2
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +86,9 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
 		// Sorts percentage descending if descending query is true.
 		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = sliceSortingByValue(listOfRSE, false, DESCENDING)
+			listOfRSE = utility.SortRSEList(listOfRSE, false, constants.DESCENDING)
 		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = sliceSortingByValue(listOfRSE, false, ASCENDING)
+			listOfRSE = utility.SortRSEList(listOfRSE, false, constants.ASCENDING)
 		}
 	}
 
@@ -102,9 +96,9 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
 		// Sorts list descending if descending query is true.
 		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = sliceSortingByValue(listOfRSE, true, DESCENDING)
+			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.DESCENDING)
 		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
+			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
 		}
 	}
 
@@ -116,7 +110,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
 	if allCountries {
 		listOfRSE = meanCalculation(listOfRSE)
-		listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
+		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
 	}
 
 	// Encodes list and prints to console.
@@ -226,32 +220,4 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 	}
 	// Returns the results, year is not added to result list and therefore omitted.
 	return resultCalc
-}
-
-// sliceSortingByValue A function which sorts a json list based on value, using inbuilt sort method.
-func sliceSortingByValue(listToIterate []structs.RenewableShareEnergyElement, alphabetical bool, sortingMethod int) []structs.RenewableShareEnergyElement {
-	// Sorts list, based on alphabetical boolean and sortingMethods value.
-	switch {
-	// Sorts by percentage, ascending.
-	case sortingMethod == ASCENDING && !alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[j].Percentage < listToIterate[i].Percentage
-		})
-	// Sorts by percentage, descending.
-	case sortingMethod == DESCENDING && !alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[i].Percentage < listToIterate[j].Percentage
-		})
-	// Sorts alphabetically, ascending.
-	case sortingMethod == ASCENDING && alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[i].Name < listToIterate[j].Name
-		})
-	// Sorts alphabetically, descending.
-	case sortingMethod == DESCENDING && alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[j].Name < listToIterate[i].Name
-		})
-	}
-	return listToIterate
 }
