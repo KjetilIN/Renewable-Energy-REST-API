@@ -490,7 +490,7 @@ func TestInvocate(t *testing.T) {
 
 func TestCallUrl(t *testing.T) {
 	// Create a mock server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		// Respond with a 200 status code and a message
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "This is a test response")

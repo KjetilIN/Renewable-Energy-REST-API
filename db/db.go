@@ -92,8 +92,10 @@ func AddWebhook(webhook structs.WebhookID, collection string) error {
 	
 	// Turn it into upper case 
 	webhook.Event = strings.ToUpper(webhook.Event)
-	
 
+	// Purge webhooks if needed
+	go PurgeWebhooks(collection)
+	
 	// Create a new doc in the
 	_, err := client.Collection(collection).Doc(webhook.ID).Set(context.Background(), webhook)
 	if err != nil {
@@ -366,7 +368,7 @@ func CallUrl(webhook structs.WebhookID) error {
 		case constants.PURGE_EVENT:
 			message = "Notification triggered: Webhooks has been purged!"
 		default:
-			message = "Notification triggered: " + strconv.Itoa(webhook.Calls) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
+			message = "Notification triggered: " + strconv.Itoa(webhook.Invocations) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
 			break
 
 	}
