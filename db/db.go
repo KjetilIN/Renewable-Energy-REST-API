@@ -461,6 +461,12 @@ func NotifyForEvent(event string, collection string) error {
 		// Using the call url method as a go routine
 		go CallUrl(webhook)
 
+
+		// Delete the webhook if the event is when the country api is down 
+		if strings.ToUpper(webhook.Event) == constants.COUNTRY_API_EVENT{
+			go DeleteWebhook(webhook.ID, collection)
+		}
+
 	
 	}
 	return nil
