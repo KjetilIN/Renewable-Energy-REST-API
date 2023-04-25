@@ -39,13 +39,18 @@ API which allows for searching of reports on percentage of renewable energy in d
   * [Invocation incrementation](#when-is-invocations-incremented)
   * [Storing notifications](#how-are-notifications-stored)
   * [Notification tests](#notification-endpoint-and-firebase-tests)
-* [Status endpoint](#status endpoint)
+* [Status endpoint](#status-endpoint)
     * [Status tests](#status-tests)
 * [Deployment](#deployment)
   * [OpenStack Configurations: Instance resources](#openstack-configurations-instance-resources)
   * [OpenStack Configurations: Security and Access](#openstack-configurations-security-and-access)
   * [About Docker](#docker-and-its-purpose)
   * [Deploying with Docker](#how-to-deploy-the-docker-service)
+* [Advanced functionality](#advanced-functionality)
+    * [Cache](#cache)
+* [Design](#design)
+    * [Project structure](#project-structure)
+* [Further development](#further-development)
 
 ---
 
@@ -550,4 +555,40 @@ The following steps are
     ```terminal
     docker ps -a 
     ```
+
+# Advanced functionality
+This assignment introduced the following advanced tasks:
+* Cache: Implement purging of cached information for requests older than a given number of hours/days.
+* Event types: Consider supporting other event types you can think of.
+* Current endpoint: Extend {?country} to support country name (e.g., norway) as input.
+* History endpoint: 
+  * Selective use of only begin or end as single parameter (e.g., ?begin=1980 only consider data from 
+  1980 onwards; ?end=1980, values from the first time entry until 1980 only). 
+  * Extend the history for all countries with a time constraint. Where {?begin=year&end=year?} is specified 
+  (e.g., ?begin=1960&end=1970), only calculate mean values for these years (not for all years). 
+  * Additional optional parameter {?sortByValue=bool?} to support sorting of output by percentage value 
+  (e.g., ?sortByValue=true).
+
+## Cache
+When searching for a country/ies, the country/ies will be cached for a set period of time. This is done to ensure an 
+updated cache. This result in less frequent requests for the API and shorter response time.
+
+# Design
+Throughout the implementation of this application, the focus points on the design has been loose coupling, high 
+cohesion and modularity as close to Golang convention as possible. This has been done through constants, different 
+files for handlers and generic functions.
+
+### Project structure
+The project structure was created with the goal of responsibility driven design, and to minimize code duplication overall.
+
+The endpoint-handlers got one file each, and are all located in the "handlers" package.
+
+In order to limit API-requests, when countries are requested all borders from the country is retrieved and for each 
+border request the country. By doing this the API workload can get large. The API-server side's workload is reduced. 
+In this way the REST-principles are met.
+
+# Further development
+These are further improvements we did not have time to resolve.
+* Use a middleware to set the content-type header for all response.
+* Implement Gorilla Mux to define URL routes and extract variables from them instead of doing it manually.
 
