@@ -41,6 +41,7 @@ API which allows for searching of reports on percentage of renewable energy in d
   * [Notification tests](#notification-endpoint-and-firebase-tests)
 * [Status endpoint](#status-endpoint)
     * [Status tests](#status-tests)
+* [Default endpoint](#default-endpoint)
 * [Deployment](#deployment)
   * [OpenStack Configurations: Instance resources](#openstack-configurations-instance-resources)
   * [OpenStack Configurations: Security and Access](#openstack-configurations-security-and-access)
@@ -475,6 +476,17 @@ There is created a test class for the status endpoint.
 
 To use the test, print into command line when in root project folder:
 > go test .\internal\webserver\handlers\status_test.go
+
+# Default endpoint
+This endpoint is the server's root path level. It does not provide any functionality, but assists the user to navigate
+in the server. The HTML file in linked up with a css file in order to provide a more clean look to the page, with the 
+endpoints being displayed in an organized and easy-to-use format. It is possible to press the different endpoints to 
+navigate to their respective endpoints.
+
+```
+REQUEST: GET
+PATH: /energy/
+```
 
 # Deployment 
 
