@@ -21,7 +21,8 @@ const (
 
 	FIREBASE_CREDENTIALS_FILE_PATH           = "./cloud-assignment-2.json"  // Name of the credential file, see readme for how to use and where to place
 	FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS = "../cloud-assignment-2.json" // Same credentials but different locations
-	MAX_WEBHOOK_COUNT                        = 40                           //
+	FIREBASE_CREDENTIALS_FILE_PATH_FOR_NOTIFICATION_TEST = "../../../cloud-assignment-2.json" // Test path for the notifications endpoint 
+	MAX_WEBHOOK_COUNT = 40  // Max amount of notifications added   
 
 	// COUNTRIES_API_URL Used to send head request.
 	COUNTRIES_API_URL = "http://129.241.150.113:8080/v3.1/"
