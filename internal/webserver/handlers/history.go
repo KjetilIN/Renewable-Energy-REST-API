@@ -55,6 +55,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		listOfRSE = filteredList
 		// No longer printing all countries.
 		allCountries = false
+
 		// Increment the invocations for the given country code
 		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
 		if dbErr != nil {
@@ -95,26 +96,8 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
 		listOfRSE = meanCalculation(listOfRSE)
 	}
-
-	// Checks if sortByValue query is passed.
-	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		// Sorts percentage descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = utility.SortRSEList(listOfRSE, false, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = utility.SortRSEList(listOfRSE, false, constants.ASCENDING)
-		}
-	}
-
-	// Checks if sortAlphabetically query is passed.
-	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
-		// Sorts list descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
-		}
-	}
+	// Handles queries.
+	listOfRSE = SortQueryHandler(r, listOfRSE)
 
 	// Checks if list is empty.
 	if len(listOfRSE) == 0 {

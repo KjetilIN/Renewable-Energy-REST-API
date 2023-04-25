@@ -27,7 +27,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	currentList := getCurrentList(originalList)
 
 	// Collects parameter from url path.
-	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.CURRENT_PATH)
 	// Checks if country identifier exists.
 	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
@@ -73,25 +73,8 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Checks if sortByValue query is passed. If so it sorts it by percentage.
-	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		// Sorts percentage descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			currentList = utility.SortRSEList(currentList, false, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			currentList = utility.SortRSEList(currentList, false, constants.ASCENDING)
-		}
-	}
-
-	// Checks if sortAlphabetically query is passed.
-	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
-		// Sorts list descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			currentList = utility.SortRSEList(currentList, true, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			currentList = utility.SortRSEList(currentList, true, constants.ASCENDING)
-		}
-	}
+	// Handles queries.
+	currentList = SortQueryHandler(r, currentList)
 
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
