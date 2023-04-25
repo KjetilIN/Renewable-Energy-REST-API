@@ -45,3 +45,10 @@ type Country struct {
 type IdResponse struct {
 	ID string `json:"webhook_id"`
 }
+
+// Information A struct to encode information.
+type Information struct {
+	Title       string
+	Example     string
+	Description string
+}

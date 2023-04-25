@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
@@ -17,6 +18,17 @@ const DESCENDING = 2
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
+	// Query for printing information about endpoint.
+	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n" +
+			"Queries may also be used in tandem, such as /countryCode?begin=2020&mean=true.\n"))
+		if writeErr != nil {
+			return
+		}
+		utility.Encoder(w, constants.HistoryEndpointInformation())
+		return
+	}
+
 	w.Header().Set("content-type", "application/json")
 	// Boolean if all countries are to be shown.
 	allCountries := true
