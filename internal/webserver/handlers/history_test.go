@@ -205,6 +205,8 @@ func TestMeanCalculated(t *testing.T) {
 	// Calculated mean.
 	meanAfrica := 7.436156868421055
 	meanList := meanCalculation(shortList)
+	// As mean uses maps, the return is unsorted.
+	meanList = utility.SortRSEList(meanList, false, 1)
 
 	// Checks if the average of first country is correct.
 	assert.Equal(t, meanAfrica, meanList[0].Percentage, "The average is wrong.")
