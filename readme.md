@@ -40,8 +40,10 @@ API which allows for searching of reports on percentage of renewable energy in d
   * [Storing notifications](#how-are-notifications-stored)
   * [Notification tests](#notification-endpoint-and-firebase-tests)
 * [Deployment](#deployment)
-  * [Security and Access](#security-and-access)
-  * [Docker](#docker-and-its-purpose)
+  * [OpenStack Configurations: Instance resources](#openstack-configurations-instance-resources)
+  * [OpenStack Configurations: Security and Access](#openstack-configurations-security-and-access)
+  * [About Docker](#docker-and-its-purpose)
+  * [Deploying with Docker](#how-to-deploy-the-docker-service)
 
 ---
 
@@ -320,9 +322,9 @@ Whenever there is a request to the third party api, `restcounties`, we increment
 
 ## How are notifications stored?
 
-Using the firebase cloud storage called: Firestore. The application uses firestore to store webhooks in form of documents. See document databases for more information on how this works. The technical aspects for getting this to work is; <br>
+Using the firebase cloud storage called: [Firestore](https://firebase.google.com/docs/firestore). The application uses firestore to store webhooks in form of documents. See document databases for more information on how this works. The technical aspects for getting this to work is; <br>
 
-> 1) Having a firestore credentials file in the root folder. <br>
+> 1) Having a firestore credentials file in the root folder of the project. <br>
 > 2) The credentials file MUST be called **cloud-assignment-2.json**
 > 3) Manually created two collections called: **test_collection** and **webhooks**
 
@@ -331,7 +333,6 @@ Using the firebase cloud storage called: Firestore. The application uses firesto
 This is also located in the constant code: <br>
 
 ```go
-// This file defines constants used throughout the program.
 const (
 	....
 	FIRESTORE_COLLECTION = "webhooks" 
@@ -342,9 +343,9 @@ const (
 
 ```
 
-## Notification endpoint and firebase tests.
+## Notification endpoint and Firebase tests.
 
-The notification test are highly coupled with the firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the firebase test should have no issue if Firestore is correctly setup. From this if: <br>
+The notification test are highly coupled with the Firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the Firebase test should have no issue if Firestore is correctly setup. From this if: <br>
 
 1) **FIRESTORE && NOTIFICATION ENDPOINT TEST FAIL** -> Most likely just incorrectly setup the firestore 
 2) **ONLY NOTIFICATION ENDPOINT FAIL** -> Logical error in the code in **notification.go** 
@@ -366,14 +367,14 @@ go test ./internal/webserver/handlers/
 
 This service is deployed with OpenStack. OpenStack is a IaaS where the user define what resources is needed. It vitalizes resources to serve all end users. More information here: [Openstack Link](https://www.ntnu.no/wiki/display/skyhigh) <br>
 
-## Predefined resources
+## OpenStack Configurations: Instance resources
 This service has the following resources predefined: 
 
 1) Ubuntu Server 22.04 LTS (Jammy Jellyfish) amd64 
 2) gx1.1c1r flavor 
 
 
-## Security and Access
+## OpenStack Configurations: Security and Access
 
 Security group prevents all communication with the server, but this is allowed: 
 
@@ -384,10 +385,13 @@ Security group prevents all communication with the server, but this is allowed:
 To access our service you need be connected to the NTNU network. This could also use the Cisco VPN to connect to the campus network. [More information about the VPN here!](https://i.ntnu.no/wiki/-/wiki/Norsk/Cisco+AnyConnect+VPN)
 
 The service can be access with: 
+
 <br>
 ```http
 http://10.212.169.162:8000/energy/v1/status/
 ```
+
+**Note:** In the case of self hosting, use the floating IP. 
 
 ## Docker and its purpose 
 Docker is a set of platform as a service (PaaS) products that use OS-level virtualization to deliver software in packages called containers. [This project used this docs for setting up docker on the OpenStack server.](https://docs.docker.com/engine/install/ubuntu/#set-up-the-repository)
@@ -423,6 +427,7 @@ The following steps are
 7. Clone the repo to the machine using `git clone`
 8. Use the `scp` linux command for adding the firestore credential file:
     - Secure copy command article 
+    - See the section on [Storing notifications](#how-are-notifications-stored) for how Firestore should be setup
     - File **must** be named:
       ```terminal
       ./cloud-assignment-2.json
