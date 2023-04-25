@@ -12,22 +12,14 @@ import (
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
-	// Checks the request type.
-	if !utility.CheckRequest(r, http.MethodGet) {
-		http.Error(w, "Request not supported.", http.StatusNotImplemented)
+	// Runs initialise method for handler.
+	listOfRSE, initError := InitHandler(w, r)
+	if initError != nil {
+		http.Error(w, initError.Error(), http.StatusInternalServerError)
 		return
 	}
-	// Sets the content type of client to be json format.
-	w.Header().Set("content-type", "application/json")
 	// Boolean if all countries are to be shown.
 	allCountries := true
-
-	// Reads from csv and returns json list.
-	listOfRSE, jsonError := utility.RSEToJSON()
-	if jsonError != nil {
-		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
-		return
-	}
 
 	// Collects parameter from url path.
 	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
@@ -96,7 +88,14 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
 		listOfRSE = meanCalculation(listOfRSE)
 	}
-	// Handles queries.
+
+	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
+	if allCountries {
+		listOfRSE = meanCalculation(listOfRSE)
+		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
+	}
+	
+	// Handles sort query.
 	listOfRSE = SortQueryHandler(r, listOfRSE)
 
 	// Checks if list is empty.
@@ -104,11 +103,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
 		return
 	}
-	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
-	if allCountries {
-		listOfRSE = meanCalculation(listOfRSE)
-		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
-	}
+
 	// Resets country identifier.
 	countryIdentifier = ""
 	// Encodes list and prints to console.
