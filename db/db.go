@@ -9,31 +9,34 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	"github.com/joho/godotenv"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-// Function for getting the Firestore client
+// Function for getting the Firestore client.
+// The method switches path of the credentials once, in case the user trying to run test.
+// Return a client or an error. 
 // Private for security reasons
-func getFirestoreClient() (*firestore.Client, error) {
-	// Load cred
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-		return nil, err
-	}
+func getFirestoreClient(path ...string) (*firestore.Client, error) {
 
 	// Use a service account
 	ctx := context.Background()
-	credentialsPath := os.Getenv("CREDENTIALS_PATH")
+
+	// Set the credentials path based on if there was given arguments
+	var credentialsPath string
+	if path != nil{
+		credentialsPath = path[0]
+	}else{
+		credentialsPath = constants.FIREBASE_CREDENTIALS_FILE_PATH
+	}
+	
+	// Using the credentials file 
 	sa := option.WithCredentialsFile(credentialsPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
@@ -44,8 +47,17 @@ func getFirestoreClient() (*firestore.Client, error) {
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		log.Println("Credentials file: '" + credentialsPath + "'")
-		return nil, err
+		// Logging the error 
+		log.Println("Credentials file: '" + credentialsPath + "' lead to an error. Trying with the test path...." )
+
+		// If the path is null, try again withe the test path, else return the error
+		if path == nil{
+			client , err := getFirestoreClient(constants.FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS)
+			return client, err
+		}else{
+			return nil, err
+		}
+		
 	}
 	return client, nil
 }
