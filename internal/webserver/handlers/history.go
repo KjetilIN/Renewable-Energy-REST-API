@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
@@ -15,7 +14,6 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	// Runs initialise method for handler.
 	listOfRSE, initError := InitHandler(w, r)
 	if initError != nil {
-		http.Error(w, initError.Error(), http.StatusInternalServerError)
 		return
 	}
 	// Boolean if all countries are to be shown.
@@ -23,39 +21,15 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 
 	// Collects parameter from url path. If empty, an empty string is returned.
 	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
-
-	// Checks if country identifier exists.
 	if countryIdentifier != "" {
-		var filteredList []structs.RenewableShareEnergyElement
-		// Tries to filter list by country code.
-		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
+		var filterErr error
 
-		// If list is empty, could not find country by country code.
-		if len(filteredList) == 0 {
-			// Checks if country searched for is a full common name.
-			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
-			if countryConversionErr != nil {
-				http.Error(w, "Did not find country based on search parameters.", http.StatusBadRequest)
-				return
-			}
-			// Checks if country code is empty.
-			if country.CountryCode != "" {
-				filteredList = countryCodeLimiter(listOfRSE, country.CountryCode)
-				// Assigns the country identifier to be the country code.
-				countryIdentifier = country.CountryCode
-			}
-		}
-		// The new list is a filtered list based on country code.
-		listOfRSE = filteredList
-		// No longer printing all countries.
-		allCountries = false
-
-		// Increment the invocations for the given country code
-		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
-		if dbErr != nil {
-			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
+		listOfRSE, filterErr = CountryFilterer(w, listOfRSE, countryIdentifier)
+		if filterErr != nil {
 			return
 		}
+		// It will not show all countries.
+		allCountries = false
 	}
 
 	// Checks for begin and end queries.
@@ -128,18 +102,6 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	countryIdentifier = ""
 	// Encodes list and prints to console.
 	utility.Encoder(w, listOfRSE)
-}
-
-// countryCodeLimiter Method to limit a list based on country code.
-func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
-	var limitedList []structs.RenewableShareEnergyElement
-	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), strings.ToLower(countryCode)) { // If country code match it is
-			// appended to new list.
-			limitedList = append(limitedList, v)
-		}
-	}
-	return limitedList // Returns list containing all matching countries.
 }
 
 // beginEndLimiter Function to allow for searching to and from a year.

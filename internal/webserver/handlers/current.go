@@ -14,31 +14,37 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	// Runs initialise method for handler.
 	originalList, initError := InitHandler(w, r)
 	if initError != nil {
-		http.Error(w, initError.Error(), http.StatusInternalServerError)
 		return
 	}
 	// Retrieves the list of current year records.
 	currentList := getCurrentList(originalList)
 
-	// Collects parameter from url path.
+	// Collects parameter from url path. Returns empty string if none exists.
 	countryIdentifier := utility.GetParams(r.URL.Path, constants.CURRENT_PATH)
+
 	// Checks if country identifier exists.
 	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
-		// Adds corresponding country code to a filtered list.
+		// Tries to filter list by country code.
 		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
-		// Checks if filtered list is empty, if so it tries to find based on country name.
+		// Checks if filtered list is empty, if so the identifier might not be a country code. Checks for country names.
 		if len(filteredList) == 0 {
 			// Parses country name to country code.
-			countryCode, getError := utility.GetCountry(countryIdentifier, false)
-			if getError != nil {
-				http.Error(w, "Error when parsing country name to country code: "+getError.Error(), http.StatusBadRequest)
+			country, getCountryError := utility.GetCountry(countryIdentifier, false)
+			if getCountryError != nil {
+				http.Error(w, "Did not find country based on search parameters.", http.StatusBadRequest)
 				return
 			}
-			countryIdentifier = countryCode.CountryCode
-			// Gets the countries based on country code, uses api.
-			filteredList = countryCodeLimiter(currentList, countryIdentifier)
+			if country.CountryCode != "" {
+				// Assigns the country identifier to be the country code from api.
+				countryIdentifier = country.CountryCode
+				// Using country code from api it filters list.
+				filteredList = countryCodeLimiter(filteredList, countryIdentifier)
+			} else { // If country code does not exist, it is handled here.
+				http.Error(w, "No country code corresponding to country.", http.StatusNotFound)
+				return
+			}
 		}
 
 		// Checks if query neighbours is presented.

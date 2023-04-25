@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
@@ -14,7 +15,7 @@ func InitHandler(w http.ResponseWriter, r *http.Request) ([]structs.RenewableSha
 	// Checks the request type.
 	if !utility.CheckRequest(r, http.MethodGet) {
 		http.Error(w, "Request not supported.", http.StatusNotImplemented)
-		return nil, errors.New("faulty request method")
+		return nil, errors.New("method not supported") // Error is returned, but without name. This is as http error is present.
 	}
 	// Sets the content type of client to be json format.
 	w.Header().Set("content-type", "application/json")
@@ -51,4 +52,55 @@ func SortQueryHandler(r *http.Request, list []structs.RenewableShareEnergyElemen
 		}
 	}
 	return list
+}
+
+// CountryFilterer Filters list based on country code or name.
+func CountryFilterer(w http.ResponseWriter, list []structs.RenewableShareEnergyElement, countryIdentifier string) ([]structs.RenewableShareEnergyElement, error) {
+	// Checks if country identifier exists.
+	if countryIdentifier != "" {
+		var filteredList []structs.RenewableShareEnergyElement
+		// Tries to filter list by country code.
+		filteredList = countryCodeLimiter(list, countryIdentifier)
+
+		// Checks if filtered list is empty, if so the identifier might not be a country code. Checks for country names.
+		if len(filteredList) == 0 {
+			// Parses country name to country code.
+			country, getCountryError := utility.GetCountry(countryIdentifier, false)
+			if getCountryError != nil {
+				http.Error(w, "Did not find country based on search parameters.", http.StatusBadRequest)
+				return nil, errors.New("no matching country")
+			}
+			if country.CountryCode != "" {
+				// Assigns the country identifier to be the country code from api.
+				countryIdentifier = country.CountryCode
+				// Using country code from api it filters list.
+				filteredList = countryCodeLimiter(list, countryIdentifier)
+			} else { // If country code does not exist, it is handled here.
+				http.Error(w, "No country code corresponding to country.", http.StatusNotFound)
+				return nil, errors.New("no country code")
+			}
+		}
+		// Increment the invocations for the given country code
+		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
+		if dbErr != nil {
+			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
+			return nil, dbErr
+		}
+
+		return filteredList, nil
+	} else {
+		return list, nil
+	}
+}
+
+// countryCodeLimiter Method to limit a list based on country code.
+func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
+	var limitedList []structs.RenewableShareEnergyElement
+	for i, v := range listToIterate { // Iterates through input list.
+		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), strings.ToLower(countryCode)) { // If country code match it is
+			// appended to new list.
+			limitedList = append(limitedList, v)
+		}
+	}
+	return limitedList // Returns list containing all matching countries.
 }
