@@ -34,7 +34,7 @@ API which allows for searching of reports on percentage of renewable energy in d
   * [Deleting subscription](#deleting-a-notification-subscription--br)
   * [Information about a subscription](#retrieving-information-about-a-notification-subscription--br)
   * [Information about all subscriptions](#retrieving-information-about-all-notification-subscriptions-br)
-  * [Notifications being sent](#when-are-you-notified)
+  * [Notification Event Types](#notification-event-types)
   * [Purging mechanism](#purging-mechanism)
   * [Invocation incrementation](#when-is-invocations-incremented)
   * [Storing notifications](#how-are-notifications-stored)
@@ -293,11 +293,53 @@ Should return a list of all webhooks. Could also be empty if non are registered 
 ]
 ```
 
-## When are you notified? 
+## Notification Event Types
 
-You will receive a notification if the number of API calls made to a country's endpoint is divisible by the number of calls set for the notification. For example, if you set the number of calls to be notified for a country to 100 and 1000 API calls are made to that country's endpoint, you will be notified since 1000 % 100 = 0. In simpler terms, if you set **call** to be **5**, every 5th time the country have been called, you get notified.  
+This service offers three types of of events:
 
-Here is an example of the JSON response you will receive when a notification is triggered:
+- **PURGE:** 
+  - **Description:** Notification if the service had to purge webhooks (due to stepping over the limit)
+  - **Does it delete itself after invocation?** No, the notification is saved.
+  - **Example of registration:**
+      ```
+      REQUEST: Post
+      PATH: "/energy/v1/notification" 
+      BODY: 
+      {
+        "url": "https://webhook.site/url-stuff",
+        "event": "purge"
+      }
+    ```
+- **CALLS:**  
+  - **Description:** When the number of invocations is dividable by the calls number
+  - **Does it delete itself after invocation?** No, the notification is saved.
+  - **Example of registration:**
+      ```
+      REQUEST: Post
+      PATH: "/energy/v1/notification" 
+      BODY: 
+      {
+        "url": "https://webhook.site/url-stuff",
+        "country": "NOR",
+        "calls": 4,
+        "event": "calls"
+      }
+    ```
+- **COUNTRY_DOWN:** 
+  - **Description:** If the country API goes down, a notification is sent. Only happens if the status endpoint gives other status code for the country API then **200**
+  - **Does it delete itself after invocation?** Yes, once invoked, a new notification is needed.
+  - **Example of registration:**
+      ```
+      REQUEST: Post
+      PATH: "/energy/v1/notification" 
+      BODY: 
+      {
+          "url": "https://webhook.site/url-stuff",
+          "calls": "country_down"
+      }
+      ```
+
+Here is an example of the JSON response you will receive when a notification is triggered based on the calls event:
 
 ```json
     {
@@ -318,7 +360,7 @@ When the user adds a notification, a method called PurgeWebhooks is called. It c
 
 ## When is invocations incremented?
 
-Whenever there is a request to the third party api, `restcounties`, we increment all the webhooks for that country with one. In the same function we notify the user, if the condition of being notified is met. See paragraph above for more details. 
+Whenever there is a request to the third party api, `restcounties`, we increment all the webhooks for that country with one. In the same function we notify the user, if the condition of being notified is met.  
 
 ## How are notifications stored?
 
