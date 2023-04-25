@@ -67,7 +67,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Handles queries.
+	// Handles sorting queries.
 	currentList = SortQueryHandler(r, currentList)
 
 	// If list is empty, error is passed.

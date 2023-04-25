@@ -21,11 +21,13 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	// Boolean if all countries are to be shown.
 	allCountries := true
 
-	// Collects parameter from url path.
+	// Collects parameter from url path. If empty, an empty string is returned.
 	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
+
 	// Checks if country identifier exists.
 	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
+		// Tries to filter list by country code.
 		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
 
 		// If list is empty, could not find country by country code.
@@ -33,7 +35,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 			// Checks if country searched for is a full common name.
 			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
 			if countryConversionErr != nil {
-				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusBadRequest)
+				http.Error(w, "Did not find country based on search parameters.", http.StatusBadRequest)
 				return
 			}
 			// Checks if country code is empty.
@@ -61,13 +63,20 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		var queryError error // Initialises a potential error.
 		beginQuery := r.URL.Query().Get("begin")
 		endQuery := r.URL.Query().Get("end")
-		// Calls function to include begin and end checking.
-		listOfRSE, queryError = beginEndLimiter(beginQuery, endQuery, listOfRSE)
-		if queryError != nil {
-			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
+		// Checks if queries is empty.
+		if beginQuery != "" || endQuery != "" {
+			// Calls function to include begin and end checking.
+			listOfRSE, queryError = beginEndLimiter(beginQuery, endQuery, listOfRSE)
+			if queryError != nil {
+				http.Error(w, "Begin or end query faulty. It should be of type number.", http.StatusBadRequest)
+				return
+			}
+			// Mean of each country should not be calculated.
+			allCountries = false
+		} else { // If year is empty, it tells user it is empty, but still allows for code to run.
+			http.Error(w, "Begin or end query should not be empty.", http.StatusLengthRequired)
+			return
 		}
-		// Mean of each country should not be calculated.
-		allCountries = false
 	}
 
 	// Year query, which returns a specific year.
@@ -77,24 +86,35 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		if year != "" {
 			listOfRSE, queryErr = beginEndLimiter(year, year, listOfRSE)
 			if queryErr != nil {
-				http.Error(w, "Error using queries: "+queryErr.Error(), http.StatusBadRequest)
+				http.Error(w, "Year query faulty, it should be a number.", http.StatusBadRequest)
+				return
 			}
+			// Mean of each country should not be calculated.
+			allCountries = false
+		} else { // If year is empty, it tells user it is empty, but still allows for code to run.
+			http.Error(w, "Year query should not be empty.", http.StatusLengthRequired)
+			return
 		}
-		// Mean of each country should not be calculated.
-		allCountries = false
 	}
 
-	// Overrides allCountries. Calculates the mean of grouped countries.
-	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
-		listOfRSE = meanCalculation(listOfRSE)
+	// Calculates the mean of grouped countries. Overrides allCountries=true.
+	if r.URL.Query().Has("mean") {
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
+			listOfRSE = meanCalculation(listOfRSE)
+			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
+		} else { // To inform the user that mean query must be true to use.
+			http.Error(w, "?mean=true, required to use mean.", http.StatusMethodNotAllowed)
+			return
+		}
 	}
 
 	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
 	if allCountries {
 		listOfRSE = meanCalculation(listOfRSE)
+		// Sorts alphabetically as meanCalculation uses maps, which randomizes entries.
 		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
 	}
-	
+
 	// Handles sort query.
 	listOfRSE = SortQueryHandler(r, listOfRSE)
 
