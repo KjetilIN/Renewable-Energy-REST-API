@@ -86,7 +86,6 @@ func CountryFilterer(w http.ResponseWriter, list []structs.RenewableShareEnergyE
 			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
 			return nil, dbErr
 		}
-
 		return filteredList, nil
 	} else {
 		return list, nil
