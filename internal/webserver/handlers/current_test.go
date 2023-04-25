@@ -14,7 +14,7 @@ import (
 // TestHandlerCurrent_NoParams Tests the base handler without any params.
 func TestHandlerCurrent_NoParams(t *testing.T) {
 	// Changes working directory to root directory.
-	dirChangeErr := utility.DirChanger() // Function in history test.
+	dirChangeErr := utility.DirChanger(3) // Function in history test.
 	if dirChangeErr != nil {
 		t.Fatal("Error switching working directory: " + dirChangeErr.Error())
 	}
@@ -48,7 +48,7 @@ func TestHandlerCurrent_NoParams(t *testing.T) {
 // TestCurrentMockHandler tests GET and POST requests on the Current mock handler
 func TestCurrentMockHandler(t *testing.T) {
 	// Changes the working directory to the project directory.
-	err := utility.DirChanger()
+	err := utility.DirChanger(3)
 	if err != nil {
 		return
 	}
@@ -86,7 +86,7 @@ func TestCurrentMockHandler(t *testing.T) {
 // Tests API retrieval at the same time.
 func TestNeighbourRetrieval(t *testing.T) {
 	// Changes directory.
-	dirChangeErr := utility.DirChanger() // Function in history test.
+	dirChangeErr := utility.DirChanger(2) // Function in history test.
 	if dirChangeErr != nil {
 		t.Fatal("Error changing directory: " + dirChangeErr.Error())
 	}

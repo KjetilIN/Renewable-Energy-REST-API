@@ -6,12 +6,29 @@ import (
 	"runtime"
 )
 
-// dirChanger Changes the directory to project root.
-func DirChanger() error {
-	// Gets the filepath of history_test.go.
+// DirChanger Changes the directory to project root.
+func DirChanger(amountOfFolderToJump int) error {
+	// Gets the filepath of file in question.
 	_, filename, _, _ := runtime.Caller(0)
-	// Jumps back 3 folders.
-	dir := path.Join(path.Dir(filename), "..", "..", "..")
+	var dir string
+
+	switch amountOfFolderToJump {
+	case 0:
+		dir = path.Join(path.Dir(filename), ".")
+		break
+	case 1:
+		dir = path.Join(path.Dir(filename), "..")
+		break
+	case 2:
+		dir = path.Join(path.Dir(filename), "..", "..")
+		break
+	case 3:
+		dir = path.Join(path.Dir(filename), "..", "..", "..")
+		break
+	case 4:
+		dir = path.Join(path.Dir(filename), "..", "..", "..", "..")
+		break
+	}
 	// Changes to the new dir structure.
 	err := os.Chdir(dir)
 	if err != nil {

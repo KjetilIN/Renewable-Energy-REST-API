@@ -30,7 +30,7 @@ func getBody(response *http.Response, template interface{}) error {
 // TestHandlerHistory_NoParams Testing the base return from history endpoint.
 func TestHandlerHistory_NoParams(t *testing.T) {
 	// Changes the working directory to the project directory.
-	err := utility.DirChanger()
+	err := utility.DirChanger(3)
 	if err != nil {
 		return
 	}
@@ -65,7 +65,7 @@ func TestHandlerHistory_NoParams(t *testing.T) {
 // TestHistoryMockHandler tests GET and POST requests on the History mock handler
 func TestHistoryMockHandler(t *testing.T) {
 	// Changes the working directory to the project directory.
-	err := utility.DirChanger()
+	err := utility.DirChanger(3)
 	if err != nil {
 		return
 	}
@@ -102,7 +102,7 @@ func TestHistoryMockHandler(t *testing.T) {
 // prepareList Function which prepares the lists for testing.
 func prepareList(setting int) ([]structs.RenewableShareEnergyElement, error) {
 	// Changes the working directory to the project directory.
-	changeErr := utility.DirChanger()
+	changeErr := utility.DirChanger(2)
 	if changeErr != nil {
 		return nil, changeErr
 	}
