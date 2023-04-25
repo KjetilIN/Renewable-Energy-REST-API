@@ -56,10 +56,12 @@ func getStatus() (structs.Status, error) {
 		return structs.Status{}, err
 	}
 
+	// Status code of the country API
 	countriesApiStatus := res.StatusCode
 
 	// If the status code is not 200, notify all subscribers to that event
 	if countriesApiStatus != 200{
+		// Start a go routine for notifying all subscribers that they have been notified for the country api is down. 
 		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
 	}
 

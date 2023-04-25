@@ -33,9 +33,9 @@ const (
 	DESCENDING = 2
 )
 
-// The different events type 
+// The different events types
 const(
-	COUNTRY_API_EVENT = "COUNTRY_DOWN"
-	CALLS_EVENT = "CALLS"
-	PURGE_EVENT ="PURGE"
+	COUNTRY_API_EVENT = "COUNTRY_DOWN" // Event: country api is down
+	CALLS_EVENT = "CALLS" // Event: based on invocations 
+	PURGE_EVENT ="PURGE" // Event: webhooks has been purged
 )

@@ -414,7 +414,8 @@ func CallUrl(webhook structs.WebhookID) error {
 }
 
 
-// Function to call when a given event 
+// Function to call when a given event. 
+// Only used for other events then the calls event type. See Readme for event types
 func NotifyForEvent(event string, collection string) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
