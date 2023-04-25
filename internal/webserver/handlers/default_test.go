@@ -2,11 +2,43 @@ package handlers
 
 import (
 	"assignment-2/internal/constants"
+	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
+
+// Define file paths
+var htmlFilePath = "templates/default.html"
+var cssFilePath = "templates/style.css"
+
+func TestLoadFile(t *testing.T) {
+	// Changes the working directory to the project directory.
+	changeErr := dirChanger()
+	if changeErr != nil {
+		t.Fatal(changeErr.Error())
+	}
+
+	// Test loading HTML and Css file that exists
+	_, err := loadFile(htmlFilePath)
+	if err != nil {
+		t.Errorf("loadFile returned error when loading existing file: %v", err)
+	}
+
+	_, err = loadFile(cssFilePath)
+	if err != nil {
+		t.Errorf("loadFile returned error when loading existing file: %v", err)
+	}
+
+	// Test loading a file that doesn't exist
+	_, err = loadFile("testdata/nonexistent.txt")
+	if err == nil {
+		t.Error("loadFile did not return an error when loading nonexistent file")
+	}
+}
 
 func TestHandlerDefault(t *testing.T) {
 	// Changes the working directory to the project directory.
@@ -15,25 +47,47 @@ func TestHandlerDefault(t *testing.T) {
 		t.Fatal(changeErr.Error())
 	}
 
-	req, err := http.NewRequest("GET", constants.DEFAULT_PATH, nil)
-	if err != nil {
-		t.Fatal(err)
+	// Load HTML and CSS files
+	html, htmlErr := os.ReadFile(htmlFilePath)
+	if htmlErr != nil {
+		t.Fatal(htmlErr)
+	}
+	css, cssErr := os.ReadFile(cssFilePath)
+	if cssErr != nil {
+		t.Fatal(cssErr)
 	}
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(HandlerDefault)
+	// Parse HTML and add CSS styles
+	doc, docErr := goquery.NewDocumentFromReader(strings.NewReader(string(html)))
+	if docErr != nil {
+		t.Fatal(docErr)
+	}
+	style := fmt.Sprintf("<style>%s</style>", string(css))
+	doc.Find("head").AppendHtml(style)
 
+	// Create request and response recorder
+	req, reqErr := http.NewRequest("GET", constants.DEFAULT_PATH, nil)
+	if reqErr != nil {
+		t.Fatal(reqErr)
+	}
+	rr := httptest.NewRecorder()
+
+	// Call handler function
+	handler := http.HandlerFunc(HandlerDefault)
 	handler.ServeHTTP(rr, req)
 
+	// Check status code
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
+	// Check content type
 	expectedContentType := "text/html; charset=utf-8"
 	if contentType := rr.Header().Get("Content-Type"); contentType != expectedContentType {
 		t.Errorf("handler returned wrong content type: got %v want %v", contentType, expectedContentType)
 	}
 
+	// Check body contains expected substrings
 	expectedSubstring := "<div class=\"project-info\">"
 	if body := rr.Body.String(); !strings.Contains(body, expectedSubstring) {
 		t.Errorf("handler returned unexpected body: missing expected substring %v", expectedSubstring)
