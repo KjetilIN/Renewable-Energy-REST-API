@@ -39,6 +39,8 @@ API which allows for searching of reports on percentage of renewable energy in d
   * [Invocation incrementation](#when-is-invocations-incremented)
   * [Storing notifications](#how-are-notifications-stored)
   * [Notification tests](#notification-endpoint-and-firebase-tests)
+* [Status endpoint](#status endpoint)
+    * [Status tests](#status-tests)
 * [Deployment](#deployment)
   * [OpenStack Configurations: Instance resources](#openstack-configurations-instance-resources)
   * [OpenStack Configurations: Security and Access](#openstack-configurations-security-and-access)
@@ -404,6 +406,70 @@ To test the endpoints only: <br>
 go test ./internal/webserver/handlers/
 ```
 <br>
+
+# Status endpoint #
+The status endpoint provides the availability of all individual services this service depends on.
+The reporting occurs based on status codes returned by the dependent services. The status interface
+further provides information about the number of registered webhooks, and the uptime of the service.
+It also provides the total memory usage of the computer in use.
+
+```
+Method: GET
+Path: /energy/v1/status/
+```
+
+#### Response
+Content type: `application/json`
+
+Status codes
+* 200: Everything is OK.
+* 404: Not found.
+* 500: Internal server error.
+
+Status content
+* countries_api: the http status code for the "REST Countries API".
+* notification_db: the http status code for "Notification DB" in Firebase.
+* webhooks: the number of registered webhooks.
+* version: set to "v1".
+* uptime: the time since the last service restart.
+
+#### Example request and response
+
+Request: `/status`
+
+Response:
+
+```
+{
+   "countries_api": "<http status code for restcountries API>",
+   "notification_db": "<http status code for notification DB in Firebase>",
+   "webhooks": "<amount of registered webhooks>",
+   "version": "v1",
+   "uptime": <time elapsed from the last service restart>
+   "total_memory_usage": <"percent of total memory usage on the user's computer">
+}
+```
+
+Note: `<some value>` indicates placeholders for values to be populated by the service.
+An example response is provided underneath.
+
+Example response:
+```
+{
+    "countries_api": 200,
+    "notification_db": 200,
+    "webhooks": 2,
+    "version": "v1",
+    "uptime": "10 seconds",
+    "total_memory_usage": "78%"
+}
+```
+
+## Status tests ##
+There is created a test class for the status endpoint.
+
+To use the test, print into command line when in root project folder:
+> go test .\internal\webserver\handlers\status_test.go
 
 # Deployment 
 
