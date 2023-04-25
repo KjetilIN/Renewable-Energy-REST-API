@@ -322,7 +322,7 @@ Whenever there is a request to the third party api, `restcounties`, we increment
 
 Using the firebase cloud storage called: Firestore. The application uses firestore to store webhooks in form of documents. See document databases for more information on how this works. The technical aspects for getting this to work is; <br>
 
-> 1) Having a firestore credentials file in the root folder. (Note that the `.env` files are for loading this file) <br>
+> 1) Having a firestore credentials file in the root folder. <br>
 > 2) The credentials file MUST be called **cloud-assignment-2.json**
 > 3) Manually created two collections called: **test_collection** and **webhooks**
 
@@ -379,14 +379,14 @@ Security group prevents all communication with the server, but this is allowed:
 
 1) Allows to any ICMP package (Ping is allowed)
 2) SSH (Port 22)
-3) Http (Port 81)
+3) Http (Port 8000)
 
 To access our service you need be connected to the NTNU network. This could also use the Cisco VPN to connect to the campus network. [More information about the VPN here!](https://i.ntnu.no/wiki/-/wiki/Norsk/Cisco+AnyConnect+VPN)
 
 The service can be access with: 
 <br>
 ```http
-http://10.212.169.162:81/energy/v1/status/
+http://10.212.169.162:8000/energy/v1/status/
 ```
 
 ## Docker and its purpose 
@@ -402,3 +402,39 @@ Note that the project uses both a Docker file and a docker compose file. The doc
 Docker Compose is for running multi-container Docker application. However, this project uses it to define volumes for the credentials file for firebase. Also the renewable energy **.csv** file should also stay in a volume. 
 
 [More on docker compose here](https://docs.docker.com/compose/)
+
+## How to deploy the docker service? 
+
+The following steps are
+1. Connect to the NTNU Campus network (Via VPN or direct connection)
+2. Create an OpenStack Instance has the same flavor and OS that has been specified in this README
+3. Create and add Security Policy to the Instance with
+    - SSH to port 22 (For logging on to the instance)
+    - Ingress at port 8000 (For accessing the service)
+4. Create and add SSH key to the Instance
+    - Store the `.pem` file for logging in to the server
+5. Login the the server using the floating IP and the `.pem` file with:
+    ```terminal
+    ssh -i ./name-of-ssh-key.pem ubuntu@<YOUR_FLOATING_IP>
+    ```
+    - **Common errors:** Not correct permissions to the `.pem`file or that the ssh key has not been set to the instance
+    - Other errors is due to not correctly deploying an instance, see [OpenStack introduction docs here](https://www.ntnu.no/wiki/display/skyhigh/Using+the+webinterface)
+6. Installed docker: [Docker installation manual for ubuntu here.](https://docs.docker.com/engine/install/ubuntu/#set-up-the-repository)
+7. Clone the repo to the machine using `git clone`
+8. Use the `scp` linux command for adding the firestore credential file:
+    - Secure copy command article 
+    - File **must** be named:
+      ```terminal
+      ./cloud-assignment-2.json
+      ```
+    - File **must** be moved inside the repo at the root of the project 
+7. **OPTIONAL** Set docker to the group of sodu privileges. The rest of the steps assumes docker can be used without sudo. By default, docker needs sudo privileges to run. Can also use `sudo docker ....` when using docker commands. 
+8. Build and deploy with this command. Uses the compose file. Also detaches form the :
+    ```terminal
+    docker compose up -d 
+    ```
+9. Verify that compose the service has been deployed by using the docker command for checking on the service:
+    ```terminal
+    docker ps -a 
+    ```
+
