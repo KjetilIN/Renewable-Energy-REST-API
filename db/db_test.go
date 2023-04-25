@@ -58,6 +58,7 @@ func TestAddWebhook(t *testing.T) {
 			Url:     "TEST_URL",
 			Country: "TEST_COUNTRY",
 			Calls:   5,
+			Event: constants.CALLS_EVENT,
 		},
 		Created: time.Now(),
 	}
@@ -148,7 +149,12 @@ func TestFetchWebhookWithID(t *testing.T) {
 	// Add a webhook to Firestore
 	testWebhook := structs.WebhookID{
 		ID:      "test-webhook-id",
-		Webhook: structs.Webhook{},
+		Webhook: structs.Webhook{
+			Url: "THIS IS URL",
+			Country: "NOR",
+			Calls: 0,
+			Event: constants.COUNTRY_API_EVENT,
+		},
 		Created: time.Now(),
 	}
 	err = AddWebhook(testWebhook, constants.FIRESTORE_COLLECTION_TEST)
@@ -484,7 +490,7 @@ func TestInvocate(t *testing.T) {
 
 func TestCallUrl(t *testing.T) {
 	// Create a mock server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		// Respond with a 200 status code and a message
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "This is a test response")

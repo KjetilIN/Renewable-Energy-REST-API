@@ -11,7 +11,7 @@ import (
 )
 
 // HandlerDefault is a handler for the /default endpoint.
-func HandlerDefault(w http.ResponseWriter, r *http.Request) {
+func HandlerDefault(w http.ResponseWriter, _ *http.Request) {
 	// Load HTML and CSS files
 	html, err := loadFile("templates/default.html")
 	if err != nil {
