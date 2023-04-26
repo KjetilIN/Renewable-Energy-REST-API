@@ -20,14 +20,12 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the content-type header to indicate that the response contains JSON data
-	w.Header().Set("content-type", "application/json")
-
-	// Collects the CSV list into JSON.
-	originalList, err := utility.RSEToJSON()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Runs initialise method for handler.
+	originalList, initError := InitHandler(w, r)
+	if initError != nil {
+		return
 	}
+
 	// Retrieves the list of current year records.
 	currentList := getCurrentList(originalList)
 

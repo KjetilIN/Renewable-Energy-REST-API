@@ -8,6 +8,7 @@ import (
 	"assignment-2/internal/webserver/uptime"
 	"encoding/json"
 	"errors"
+	"github.com/shirou/gopsutil/mem"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,9 +21,6 @@ var webhooks []structs.WebhookID
 func InitWebhookRegistrations() {
 	webhooks = []structs.WebhookID{}
 }
-
-	"github.com/shirou/gopsutil/mem"
-)
 
 // HTTP client
 var client = &http.Client{}
@@ -81,8 +79,8 @@ func getStatus() (structs.Status, error) {
 	countriesApiStatus := res.StatusCode
 
 	// If the status code is not 200, notify all subscribers to that event
-	if countriesApiStatus != 200{
-		// Start a go routine for notifying all subscribers that they have been notified for the country api is down. 
+	if countriesApiStatus != 200 {
+		// Start a go routine for notifying all subscribers that they have been notified for the country api is down.
 		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
 	}
 
@@ -103,14 +101,13 @@ func getStatus() (structs.Status, error) {
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi: countriesApiStatus,
-		NotificationDB: dbStatus	,
-		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:  "v1",
-		Uptime:   uptime.GetUptime(),
+		CountriesApi:   countriesApiStatus,
+		NotificationDB: dbStatus,
+		Webhooks:       db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:        "v1",
+		Uptime:         uptime.GetUptime(),
 		//AverageSystemLoad: loadAvg + " in the last minute",
 		TotalMemoryUsage: memUsage + "%",
 	}, nil

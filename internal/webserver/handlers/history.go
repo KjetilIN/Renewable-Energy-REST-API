@@ -21,17 +21,12 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the content-type header to indicate that the response contains JSON data
-	w.Header().Set("content-type", "application/json")
-	// Boolean if all countries are to be shown.
-	allCountries := true
-
-	// Reads from csv and returns json list.
-	listOfRSE, jsonError := utility.RSEToJSON()
-	if jsonError != nil {
-		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
+	// Runs initialise method for handler.
+	listOfRSE, initError := InitHandler(w, r)
+	if initError != nil {
 		return
 	}
+
 	// Boolean if all countries are to be shown.
 	allCountries := true
 
