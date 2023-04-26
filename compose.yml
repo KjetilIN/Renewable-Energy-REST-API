@@ -1,6 +1,7 @@
 version: '1.0.0'
 services:
   app:
+    restart: unless-stopped
     build: .
     volumes:
       - ./cloud-assignment-2.json:/go/src/app/cloud-assignment-2.json
