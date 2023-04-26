@@ -42,6 +42,7 @@ API which allows for searching of reports on percentage of renewable energy in d
 * [Status endpoint](#status-endpoint)
     * [Status tests](#status-tests)
 * [Default endpoint](#default-endpoint)
+    * [Default tests](#default-tests)
 * [Deployment](#deployment)
   * [OpenStack Configurations: Instance resources](#openstack-configurations-instance-resources)
   * [OpenStack Configurations: Security and Access](#openstack-configurations-security-and-access)
@@ -487,6 +488,12 @@ navigate to their respective endpoints.
 REQUEST: GET
 PATH: /energy/
 ```
+
+## Default tests ##
+There is created a test class for the default endpoint.
+
+To use the test, print into command line when in root project folder:
+> go test .\internal\webserver\handlers\default_test.go
 
 # Deployment 
 
