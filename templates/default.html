@@ -9,16 +9,18 @@
         <div class="project-info">
             <h2>Project Information</h2>
             <p>This project consists of a REST web application that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. The application uses an existing webservice and an own data-centric webservice to gather and expose data via endpoints. The service allows for notification registration using webhooks and is dockerized and deployed using an IaaS system.</p>
-            <p>This service does not provide any functionality on the root path level. Please try one of the paths below:</p>
+            <p>This service does not provide any functionality on the root path level. Please press one of the paths below:</p>
+            <p>Add this <b>"?information=true"</b> query to the url for more information about how to use each endpoint. </p>
         </div>
         <section class="endpoints">
             <div class="endpoint" onclick="location.href='/energy/v1/status/'">
                 <h3>Status</h3>
-                <p>Indicates the availability of all individual services this service depends on. Also, information about the registered webhooks and the uptime of the service.</p>
+                <p>This endpoint indicates the availability of all individual services this service depends on, and provides information about the total memory usage on the user's computer, the registered webhooks and the uptime of the service.</p>
+                <p></p>
             </div>
             <div class="endpoint" onclick="location.href='/energy/v1/notifications/'">
                 <h3>Notifications</h3>
-                <p>Users can register webhooks (single or multiple) that are triggered by the service based on specified events.</p>
+                <p>This endpoint enables users to register webhooks (single or multiple) that are triggered by the service based on specified events.</p>
             </div>
             <div class="endpoint" onclick="location.href='/energy/v1/renewables/history'">
                 <h3>History</h3>

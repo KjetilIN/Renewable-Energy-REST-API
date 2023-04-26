@@ -102,9 +102,9 @@ Provide the following details to get notifications to the given url. The standar
     PATH: "/energy/v1/notification" 
     BODY: 
     {
-        "url": <The given url for the webhook to call>,
-        "country": <Alpha code of the country>,
-        "calls": <Number of calls for notification>
+        "url": "The given url for the webhook to call",
+        "country": "Alpha code of the country",
+        "calls": "Number of calls for notification"
     }
 ```
 
@@ -145,12 +145,12 @@ If there is a webhook with the given ID, the response could look like this:
 
 ```json
 {
-    "webhook_id": <ID_of_the_webhook>,
-    "url": <Url_of_the_registration>,
-    "country": <Alpha_code_of_the_country>,
-    "calls": <The_amount_of_calls_that_needs_to_be_for_invoking>,
-    "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
-    "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
+    "webhook_id": "ID_of_the_webhook",
+    "url": "Url_of_the_registration",
+    "country": "Alpha_code_of_the_country",
+    "calls": "The_amount_of_calls_that_needs_to_be_for_invoking",
+    "created_timestamp": "Server_timestamp_when_the_webhook_was_created",
+    "invocations": "The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked"
 }
 
 ```
@@ -169,12 +169,12 @@ Should return a list of all webhooks. Could also be empty if non are registered 
 ```json
 [
     {
-        "webhook_id": <ID_of_the_webhook>,
-        "url": <Url_of_the_registration>,
-        "country": <Alpha_code_of_the_country>,
-        "calls": <The_amount_of_calls_that_needs_to_be_for_invoking>,
-        "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
-        "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
+        "webhook_id": "ID_of_the_webhook",
+        "url": "Url_of_the_registration",
+        "country": "Alpha_code_of_the_country",
+        "calls": "The_amount_of_calls_that_needs_to_be_for_invoking",
+        "created_timestamp": "Server_timestamp_when_the_webhook_was_created",
+        "invocations": "The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked"
     },
     ...
 ]
