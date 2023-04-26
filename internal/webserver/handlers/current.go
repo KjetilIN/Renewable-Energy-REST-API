@@ -52,7 +52,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 			// Retrieves the neighbour countries using country code.
 			neighbourList, neighbourErr := retrieveNeighbours(currentList, countryIdentifier)
 			if neighbourErr != nil {
-				http.Error(w, "Error:"+neighbourErr.Error(), http.StatusInternalServerError)
+				http.Error(w, "Error:"+neighbourErr.Error(), http.StatusBadRequest)
 				return
 			}
 			// Sets the filtered list to currentList, which is the one to be shown.

@@ -4,7 +4,6 @@
 </div>
 
 <div align="center">
-    <sup>Status</sup>
     <br />
     <a href="https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2023/-/wikis/Assignments/Assignment-2">
         <img alt="Assignment" src="https://img.shields.io/badge/Assignment-Click%20me-orange" />
@@ -58,44 +57,79 @@ API which allows for searching of reports on percentage of renewable energy in d
 
 
 ## Current endpoint ##
-
 This endpoint retrieves the elements of the latest year currently available. The newest data in renewable-share-energy
-is from 2021, and is therefore the current year of this project. Features of this endpoint:
+is from 2021, and is therefore the current year of this project.
+
+<u>Features of this endpoint:</u> <br>
 * Search for country by name and country code.
 * Add-on to get neighbouring countries.
 * Cache for reducing amount of calls to countries API.
 * Sorting of results.
 
-It uses the file renewable-share-energy.csv and REST Countries API, which is retrieved from: http://129.241.150.113:8080/v3.1.
+The endpoint uses a file: "renewable-share-energy.csv" and REST Countries API, which is retrieved from: http://129.241.150.113:8080/v3.1.
+The file contains historical data from each countries' share of renewable sources.
+
+### Request ###
+```
+Method: GET
+Path: /energy/v1/renewables/current/{country?}{?neighbours=bool?}{sortbyvalue/sortalphabetically=bool?, descending=bool?}
+```
+Using no extra parameters will print all countries of the year=2021, to the client. The year found is based on the
+highest year found in the csv file.
+
+`{country?}` is an optional parameter which could be passed to the API, which will print information about the country 
+as long as it is found. It could be a 3-letter country code, or country name.
+
+`{?neighbours=bool?}` is an optional query parameter which will print information about the neighbouring countries of the
+country passed. It therefore, dependent on the optional parameter: `country`.
+
+`{?sortbyvalue=bool?}` is an optional query parameter which will sort the results by percentage.
+
+`{?sortalphabetically=bool?}` is an optional query parameter which sorts the results alphabetically.
+
+`{?descending=bool?}` is an optional query parameter which is dependent on the other sorting queries. When used it will sort descending instead.
+
 The endpoint only supports GET requests.
 
 <br>
 
-**Using the endpoint**
-```
-REQUEST: GET
-PATH: /energy/v1/renewables/current/{country?}{?neighbours=bool?}{sortbyvalue/sortalphabetically=bool?, descending=bool?}
-```
-Using no extra parameters will print all countries of the year=2021, to the client. The year found is based on the
-highest year found in the csv file.
-If an optional parameter: /{country?}, is passed the corresponding country will be printed. This variable could be both
-country codes, and country name.
-The query: {?neighbours=bool?}, may also be used, and will print information about the neighbouring countries of the
-country passed. This query is dependent on the optional parameter: country.
+### Response ###
+Content type: `application/json`
 
-Three other queries may also be used:
-* {sortbyvalue=bool?} is a query which sorts the results by percentage.
-* {sortalphabetically=bool?} is a query which sorts the results alphabetically.
-* {descending=bool?} is a query to sort descending, requires either sortbyvalue or alphabetically.
+Status codes:
+* 200: Success, everything works as intended.
+* 400: Bad request, error in the request. For example sent a number when it should have been a string.
+* 404: Not found, for example did not find country code based on search.
+* 500: Internal server error, error due to the server. For example, faulty file reading.
+* 501: Not implemented, function is not implemented.
+
+Body:
+```
+{
+	"Name":       <country_name>,               (string)
+	"IsoCode":    <country_code>,               (string)
+	"Year"        <year_recorded>,              (int)
+	"Percentage": <percentage_of_renewables>    (float64)
+}
+```
 
 <br>
 
-**Example Request:**
+**Example Requests & Responses:**
+
+Request sent: `/energy/v1/renewables/current/swe`
+Response:
+```json
+{
+        "name": "Sweden",
+        "isoCode": "SWE",
+        "year": 2021,
+        "percentage": 50.924007
+}
 ```
-REQUEST: GET
-PATH: /energy/v1/renewables/current/norway/neighbours=true
-```
-This is returned to the client.
+
+Request sent: `/energy/v1/renewables/current/norway?neighbours=true`
+Response:
 ```json
 [
   {
@@ -127,45 +161,90 @@ This is returned to the client.
 
 <br>
 
-### Current Test ###
-
-There is created a test class for the current endpoint.
-
-To use the test, print into command line when in root project folder:
-> go test .\internal\webserver\handlers\current_test.go
-
-<br>
-
 ## History endpoint ##
 
 This endpoint retrieves all elements from renewable-share-energy. When no query is passed it will return the mean of all
-data based on each country. Functionality of history endpoint:
+data based on each country. 
+<u> Functionality of history endpoint: </u> <br>
 * Search for specific countries based on country code and name. 
 * Allows for searching for specific years.
 * Allows for searching to, from and between specific years.
 * Sort by percentage and alphabetically, both descending and ascending. 
 * Calculating the mean of a country.
 
-It uses the file renewable-share-energy.csv and API for countries.
-The endpoint only supports GET requests.
+The endpoint uses a file: "renewable-share-energy.csv" and REST Countries API, which is retrieved from: http://129.241.150.113:8080/v3.1.
+The file contains historical data from each countries' share of renewable sources.
 
 <br>
 
-**Using the endpoint**
+### Request ###
 ```
 REQUEST: GET
 PATH: /energy/v1/renewables/history/{country?}{?begin=year?}{?end=year?}{?mean=bool?}{?sortbyvalue=bool?}
 ```
-These can also be combined, using "&" after "?". Begin and end query combined will find countries between the ones written.
+When you use this endpoint with no parameters or queries, it will print the mean of all historical entries for each country.
+The data is retrieved from renewable share energy.
+
+`{country?}` is an optional parameter which could be passed to the API, which will print information about the country
+as long as it is found. It could be a 3-letter country code, or country name.
+
+`{?begin=year?}` is an optional query parameter used to filter results from a specific year. 
+
+`{?end=year?}` is an optional query parameter used to filter results to a specific year.
+
+`{?begin=year&end=year?}` using both begin and end it will return results between the years written.
+
+`{?mean=bool?}` is an optional query parameter, which will only work in tandem with `country`, `begin` or `end`. It 
+calculates the mean of the elements returned. This is done if no queries is presented.
+
+`{?sortbyvalue=bool?}` is an optional query parameter which will sort the results by percentage.
+
+`{?sortalphabetically=bool?}` is an optional query parameter which sorts the results alphabetically.
+
+`{?descending=bool?}` is an optional query parameter which is dependent on the other sorting queries. When used it will sort descending instead.
+
+The endpoint only supports GET requests.
 
 <br>
 
-**Example request:**
+### Response ###
+Content type: `application/json`
+
+Status codes:
+* 200: Success, everything works as intended.
+* 400: Bad request, error in the request. For example no country matching search parameter.
+* 404: Not found, for example did not find country code based on search.
+* 405: Method not allowed, writing invalid value in query. Example: ?query=notSupposedToBeLikeThis.
+* 411: Length required, need more information to work.
+* 500: Internal server error, error due to the server. For example, faulty file reading.
+* 501: Not implemented, function is not implemented.
+
+Body:
 ```
-REQUEST: GET
-PATH: /energy/v1/renewables/history/nor?begin=2011&end=2014&sortbyvalue=true
+{
+	"Name":       <country_name>,               (string)
+	"IsoCode":    <country_code>,               (string)
+	"Year"        <year_recorded>,              (int)
+	"Percentage": <percentage_of_renewables>    (float64)
+}
 ```
-This request returns.
+
+### Example request: ###
+
+Request sent: `/energy/v1/renewables/history/sverige?mean=true`
+Response:
+```json
+[
+    {
+        "name": "Sweden",
+        "isoCode": "SWE",
+        "percentage": 33.970860684210535
+    }
+]
+```
+
+Request sent: `/energy/v1/renewables/history/nor?begin=2011&end=2014&sortbyvalue=true`
+Response:
 ```json
 [
 {
@@ -193,17 +272,6 @@ This request returns.
 "percentage": 66.30012
 }
 ]
-```
-
-<br>
-
-### History test ###
-
-There is a test class for the history endpoint, which covers most of the history endpoints' functions.
-
-To use the test, print into command line when in root project folder:
-```terminal
-go test .\internal\webserver\handlers\history_test.go
 ```
 
 <br>
@@ -394,24 +462,6 @@ const (
 
 ```
 
-## Notification endpoint and Firebase tests.
-
-The notification test are highly coupled with the Firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the Firebase test should have no issue if Firestore is correctly setup. From this if: <br>
-
-1) **FIRESTORE && NOTIFICATION ENDPOINT TEST FAIL** -> Most likely just incorrectly setup the firestore 
-2) **ONLY NOTIFICATION ENDPOINT FAIL** -> Logical error in the code in **notification.go** 
-
-To test the firebase methods only: <br>
-
-```terminal
-go test ./db
-```
-
-To test the endpoints only: <br>
-
-```terminal
-go test ./internal/webserver/handlers/
-```
 <br>
 
 # Status endpoint #
@@ -472,11 +522,7 @@ Example response:
 }
 ```
 
-## Status tests ##
-There is created a test class for the status endpoint.
-
-To use the test, print into command line when in root project folder:
-> go test .\internal\webserver\handlers\status_test.go
+<br>
 
 # Default endpoint
 This endpoint is the server's root path level. It does not provide any functionality, but assists the user to navigate
@@ -489,11 +535,70 @@ REQUEST: GET
 PATH: /energy/
 ```
 
+<br>
+
+
+## Endpoint Tests ##
+To run all endpoint tests write the following command in root folder: 
+```
+go test .\internal\webserver\handlers
+```
+
+
+### Current Tests ###
+There is created a test class for the current endpoint.
+
+To use the test, print into command line when in root project folder: 
+```
+go test .\internal\webserver\handlers\current_test.go
+```
+
+<br>
+
+### History test ###
+
+There is a test class for the history endpoint, which covers most of the history endpoints' functions.
+
+To use the test, print into command line when in root project folder:
+``` 
+go test .\internal\webserver\handlers\history_test.go
+```
+
+<br>
+
+## Notification endpoint and Firebase tests.
+
+The notification test are highly coupled with the Firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the Firebase test should have no issue if Firestore is correctly setup. From this if: <br>
+
+1) **FIRESTORE && NOTIFICATION ENDPOINT TEST FAIL** -> Most likely just incorrectly setup the firestore
+2) **ONLY NOTIFICATION ENDPOINT FAIL** -> Logical error in the code in **notification.go**
+
+To test the firebase methods only: <br>
+``` 
+go test ./db
+```
+
+<br>
+
+## Status tests ##
+There is created a test class for the status endpoint.
+
+To use the test, print into command line when in root project folder:
+```
+go test .\internal\webserver\handlers\status_test.go
+```
+
+<br>
+
 ## Default tests ##
 There is created a test class for the default endpoint.
 
 To use the test, print into command line when in root project folder:
-> go test .\internal\webserver\handlers\default_test.go
+``` 
+go test .\internal\webserver\handlers\default_test.go
+```
+
+<br>
 
 # Deployment 
 
