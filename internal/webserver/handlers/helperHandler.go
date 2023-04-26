@@ -59,12 +59,18 @@ func CountryFilterer(w http.ResponseWriter, list []structs.RenewableShareEnergyE
 	// Checks if country identifier exists.
 	if countryIdentifier != "" {
 		var filteredList []structs.RenewableShareEnergyElement
-		// Tries to filter list by country code.
-		filteredList = countryCodeLimiter(list, countryIdentifier)
 
-		// Checks if filtered list is empty, if so the identifier might not be a country code. Checks for country names.
+		// Checks for country code if country identifier has 3 characters.
+		if len([]byte(countryIdentifier)) == 3 {
+			// Tries to filter list by country code.
+			filteredList = countryCodeLimiter(list, countryIdentifier)
+		} else {
+			// Checks for country name.
+			filteredList = countryNameLimiter(list, countryIdentifier)
+		}
+
+		// Checks if filtered list is empty, it checks the API for it.
 		if len(filteredList) == 0 {
-			// Parses country name to country code.
 			country, getCountryError := utility.GetCountry(countryIdentifier, false)
 			if getCountryError != nil {
 				http.Error(w, "Did not find country based on search parameters.", http.StatusBadRequest)
@@ -102,4 +108,16 @@ func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, cou
 		}
 	}
 	return limitedList // Returns list containing all matching countries.
+}
+
+// countryNameLimiter Method to limit a list based on country name.
+func countryNameLimiter(listToIterate []structs.RenewableShareEnergyElement, countryName string) []structs.RenewableShareEnergyElement {
+	var filteredList []structs.RenewableShareEnergyElement
+	for i, v := range listToIterate {
+		if strings.Contains(strings.ToLower(listToIterate[i].Name), strings.ToLower(countryName)) { // If country code match it is
+			// appended to new list.
+			filteredList = append(filteredList, v)
+		}
+	}
+	return filteredList // Returns list of matching countries.
 }
