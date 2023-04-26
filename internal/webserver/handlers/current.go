@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
@@ -11,87 +10,52 @@ import (
 
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
-	// Checks the request type.
-	if !utility.CheckRequest(r, http.MethodGet) {
-		http.Error(w, "Request not supported.", http.StatusNotImplemented)
+	// Runs initialise method for handler.
+	originalList, initError := InitHandler(w, r)
+	if initError != nil {
 		return
 	}
-	// Sets the content type of client to be json format.
-	w.Header().Set("content-type", "application/json")
-
-	// Collects the CSV list into JSON.
-	originalList, err := utility.RSEToJSON()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// Retrieves the list of current year records.
 	currentList := getCurrentList(originalList)
 
-	// Collects parameter from url path.
-	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
-	// Checks if country identifier exists.
+	// Collects parameter from url path. Returns empty string if none exists.
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.CURRENT_PATH)
 	if countryIdentifier != "" {
-		var filteredList []structs.RenewableShareEnergyElement
-		// Adds corresponding country code to a filtered list.
-		filteredList = countryCodeLimiter(currentList, countryIdentifier)
-
-		// Checks if filtered list is empty, if so it tries to find based on country name.
-		if len(filteredList) == 0 {
-			// Parses country name to country code.
-			countryCode, getError := utility.GetCountry(countryIdentifier, false)
-			if getError != nil {
-				http.Error(w, "Error when parsing country name to country code: "+getError.Error(), http.StatusBadRequest)
-				return
-			}
-			countryIdentifier = countryCode.CountryCode
-			// Gets the countries based on country code, uses api.
-			filteredList = countryCodeLimiter(currentList, countryIdentifier)
+		filteredList, filterErr := CountryFilterer(w, currentList, countryIdentifier)
+		if filterErr != nil {
+			return
 		}
 
 		// Checks if query neighbours is presented.
-		if len(filteredList) > 0 && strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
-			// Retrieves the neighbour countries using country code.
-			neighbourList, neighbourErr := retrieveNeighbours(currentList, countryIdentifier)
-			if neighbourErr != nil {
-				http.Error(w, "Error:"+neighbourErr.Error(), http.StatusInternalServerError)
-				return
-			}
-			// Sets the filtered list to currentList, which is the one to be shown.
-			currentList = filteredList
-			// Appends neighbours into the list to be shown.
-			for _, v := range neighbourList {
-				currentList = append(currentList, v)
+		if (len(filteredList) > 0 && filteredList == nil) && r.URL.Query().Has("neighbours") {
+			if strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
+				// Collects iso code from filtered list. Filtered list is never nil or empty.
+				countryIdentifier = filteredList[0].IsoCode
+				// Retrieves the neighbour countries using country code.
+				neighbourList, neighbourErr := retrieveNeighbours(currentList, countryIdentifier)
+				if neighbourErr != nil {
+					http.Error(w, "Error:"+neighbourErr.Error(), http.StatusInternalServerError)
+					return
+				}
+				// Sets the filtered list to currentList, which is the one to be shown.
+				currentList = filteredList
+				// Appends neighbours into the list to be shown.
+				for _, v := range neighbourList {
+					currentList = append(currentList, v)
+				}
+			} else { // Neighbours query is not correctly prompted, but will continue anyway.
+				http.Error(w, "Neighbour query must be =true to work.", http.StatusBadRequest)
+				// The country passed will be encoded to user.
+				currentList = filteredList
 			}
 		} else {
 			// If neighbours is not passed, the filtered list is the one to be shown.
 			currentList = filteredList
 		}
-		// Increment the invocations for the given country code
-		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
-		if dbErr != nil {
-			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
-			return
-		}
 	}
 
-	// Checks if sortByValue query is passed. If so it sorts it by percentage.
-	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		// Sorts percentage descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			currentList = utility.SortRSEList(currentList, false, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			currentList = utility.SortRSEList(currentList, false, constants.ASCENDING)
-		}
-	}
-
-	// Checks if sortAlphabetically query is passed.
-	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
-		// Sorts list descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			currentList = utility.SortRSEList(currentList, true, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			currentList = utility.SortRSEList(currentList, true, constants.ASCENDING)
-		}
-	}
+	// Handles sorting queries.
+	currentList = SortQueryHandler(r, currentList)
 
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
