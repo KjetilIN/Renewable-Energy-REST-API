@@ -21,10 +21,10 @@ import (
 
 // Function for getting the Firestore client.
 // The method switches path of the credentials once, in case the user trying to run test.
+// This method is recursive, with an optional parameter string, for the path of the credential 
 // Return a client or an error. 
 // Private for security reasons
 func getFirestoreClient(path ...string) (*firestore.Client, error) {
-
 	// Use a service account
 	ctx := context.Background()
 
@@ -45,6 +45,7 @@ func getFirestoreClient(path ...string) (*firestore.Client, error) {
 		return nil, err
 	}
 
+	//No initial error, so a client is used to gather other information 
 	client, err := app.Firestore(ctx)
 	if err != nil {
 		// Logging the error 
@@ -55,10 +56,14 @@ func getFirestoreClient(path ...string) (*firestore.Client, error) {
 			client , err := getFirestoreClient(constants.FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS)
 			return client, err
 		}else{
+			// This is the case, we have tried the test file path put with no luck
+			// Credentials are therefor not provided 
 			return nil, err
 		}
 		
 	}
+
+	// No errors so we return the test client and no error
 	return client, nil
 }
 
