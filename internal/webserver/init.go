@@ -11,7 +11,6 @@ import (
 
 // InitServer sets up handler endpoints and starts the HTTP-server
 func InitServer() {
-
 	// Points the different URL-paths to the correct handler
 	http.HandleFunc(constants.DEFAULT_PATH, handlers.HandlerDefault)
 	http.HandleFunc(constants.CURRENT_PATH, handlers.HandlerCurrent)

@@ -198,19 +198,19 @@ func TestSorted(t *testing.T) {
 		t.Fatal("Error when getting list: " + err.Error())
 	}
 	// Sorts the list by percentage.
-	sortedList := sliceSortingByValue(list, false, 1) // Ascending sorting.
+	sortedList := utility.SortRSEList(list, false, 1) // Ascending sorting.
 
 	// Checks if list is sorted by percentage.
 	for i := 1; i < len(sortedList); i++ {
 		assert.GreaterOrEqualf(t, sortedList[i-1].Percentage, sortedList[i].Percentage, "List is not sorted.")
 	}
-	sortedList = sliceSortingByValue(list, false, 2) // Descending value.
+	sortedList = utility.SortRSEList(list, false, 2) // Descending value.
 	for i := 1; i < len(sortedList); i++ {
 		assert.LessOrEqualf(t, sortedList[i-1].Percentage, sortedList[i].Percentage, "List is not sorted correctly.")
 	}
 
 	// Checks if list is sorted alphabetically.
-	sortedList = sliceSortingByValue(list, true, 1) // Ascending sorting.
+	sortedList = utility.SortRSEList(list, true, 1) // Ascending sorting.
 	for i := 1; i < len(sortedList); i++ {
 		if sortedList[i-1].Name > sortedList[i].Name {
 			t.Fatal("List is not sorted correctly.")
@@ -218,7 +218,7 @@ func TestSorted(t *testing.T) {
 	}
 
 	// Checks if list is sorted descending alphabetically.
-	sortedList = sliceSortingByValue(list, true, 2) // Descending sorting.
+	sortedList = utility.SortRSEList(list, true, 2) // Descending sorting.
 	for i := 1; i < len(sortedList); i++ {
 		if sortedList[i-1].Name < sortedList[i].Name {
 			t.Fatal("List is not sorted correctly.")
@@ -236,6 +236,8 @@ func TestMeanCalculated(t *testing.T) {
 	// Calculated mean.
 	meanAfrica := 7.436156868421055
 	meanList := meanCalculation(shortList)
+	// As mean uses maps, the return is unsorted.
+	meanList = utility.SortRSEList(meanList, false, 1)
 
 	// Checks if the average of first country is correct.
 	assert.Equal(t, meanAfrica, meanList[0].Percentage, "The average is wrong.")
