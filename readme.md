@@ -726,5 +726,18 @@ In this way the REST-principles are met.
 
 # Further development
 These are further improvements we did not have time to resolve.
+
+## Administrator user
+Let the user get extra functionality based on their user role, for example an administrator. An administrator would
+have certain privileges to data related to the server health, examples are provided below:
+* Response time: Measure the time it takes for the service to respond to requests.
+* Error rate: An idea of the number of errors that occur in the service.
+* Request count: The number of requests made to the service.
+
+This could be solved through making requests with a HEAD field including a passphrase or password. A user without
+the credentials in the HEAD field would not be able to access the endpoint that offers the privileged functionality since
+the user would not be authenticated.
+
+## Other
 * Use a middleware to set the content-type header for all response.
 * Implement Gorilla Mux to define URL routes and extract variables from them instead of doing it manually.
