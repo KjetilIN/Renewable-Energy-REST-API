@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
 	"encoding/json"
 	"errors"
-	"github.com/shirou/gopsutil/mem"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,10 +21,8 @@ func InitWebhookRegistrations() {
 	webhooks = []structs.WebhookID{}
 }
 
-// Get number of webhooks
-func GetNumberOfWebhooks() int {
-	return len(webhooks)
-}
+	"github.com/shirou/gopsutil/mem"
+)
 
 // HTTP client
 var client = &http.Client{}
@@ -79,7 +77,17 @@ func getStatus() (structs.Status, error) {
 		return structs.Status{}, err
 	}
 
+	// Status code of the country API
 	countriesApiStatus := res.StatusCode
+
+	// If the status code is not 200, notify all subscribers to that event
+	if countriesApiStatus != 200{
+		// Start a go routine for notifying all subscribers that they have been notified for the country api is down. 
+		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
+	}
+
+	// Firebase status
+	dbStatus := db.CheckFirestoreConnection()
 
 	var memUsage string
 	defer func() {
@@ -95,14 +103,12 @@ func getStatus() (structs.Status, error) {
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-	// get number of registered webhooks
-	numWebhooks := GetNumberOfWebhooks()
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
 		CountriesApi: countriesApiStatus,
-		//NotificationDB: 	notificationDBStatus,
-		Webhooks: numWebhooks,
+		NotificationDB: dbStatus	,
+		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
 		Version:  "v1",
 		Uptime:   uptime.GetUptime(),
 		//AverageSystemLoad: loadAvg + " in the last minute",

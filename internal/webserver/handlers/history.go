@@ -5,16 +5,9 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 )
-
-// ASCENDING Used in sorting method to sort ascending.
-const ASCENDING = 1
-
-// DESCENDING Used in sorting method to sort descending.
-const DESCENDING = 2
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
@@ -39,31 +32,19 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
 		return
 	}
+	// Boolean if all countries are to be shown.
+	allCountries := true
 
-	// Collects parameters, separated by /
-	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
+	// Collects parameter from url path. If empty, an empty string is returned.
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
+	if countryIdentifier != "" {
+		var filterErr error
 
-	// Checks if an optional parameter is passed.
-	if len(params) == 6 && params[5] != "" {
-		countryIdentifier := params[5]
-		var filteredList []structs.RenewableShareEnergyElement
-		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
-
-		// If list is empty, could not find country by country code.
-		if len(filteredList) == 0 {
-			// Checks if country searched for is a full common name.
-			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
-			if countryConversionErr != nil {
-				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusNoContent)
-				return
-			}
-			// Checks if country code is empty.
-			if country.CountryCode != "" {
-				filteredList = countryCodeLimiter(listOfRSE, country.CountryCode)
-			}
+		listOfRSE, filterErr = CountryFilterer(w, listOfRSE, countryIdentifier)
+		if filterErr != nil {
+			return
 		}
-		listOfRSE = filteredList
-		// No longer printing all countries.
+		// It will not show all countries.
 		allCountries = false
 	}
 
@@ -72,13 +53,20 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		var queryError error // Initialises a potential error.
 		beginQuery := r.URL.Query().Get("begin")
 		endQuery := r.URL.Query().Get("end")
-		// Calls function to include begin and end checking.
-		listOfRSE, queryError = beginEndLimiter(beginQuery, endQuery, listOfRSE)
-		if queryError != nil {
-			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
+		// Checks if queries is empty.
+		if beginQuery != "" || endQuery != "" {
+			// Calls function to include begin and end checking.
+			listOfRSE, queryError = beginEndLimiter(beginQuery, endQuery, listOfRSE)
+			if queryError != nil {
+				http.Error(w, "Begin or end query faulty. It should be of type number.", http.StatusBadRequest)
+				return
+			}
+			// Mean of each country should not be calculated.
+			allCountries = false
+		} else { // If year is empty, it tells user it is empty, but still allows for code to run.
+			http.Error(w, "Begin or end query should not be empty.", http.StatusLengthRequired)
+			return
 		}
-		// Mean of each country should not be calculated.
-		allCountries = false
 	}
 
 	// Year query, which returns a specific year.
@@ -88,63 +76,48 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		if year != "" {
 			listOfRSE, queryErr = beginEndLimiter(year, year, listOfRSE)
 			if queryErr != nil {
-				http.Error(w, "Error using queries: "+queryErr.Error(), http.StatusBadRequest)
+				http.Error(w, "Year query faulty, it should be a number.", http.StatusBadRequest)
+				return
 			}
-		}
-		// Mean of each country should not be calculated.
-		allCountries = false
-	}
-
-	// Overrides allCountries. Calculates the mean of grouped countries.
-	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
-		listOfRSE = meanCalculation(listOfRSE)
-	}
-
-	// Checks if sortByValue query is passed.
-	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		// Sorts percentage descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = sliceSortingByValue(listOfRSE, false, DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = sliceSortingByValue(listOfRSE, false, ASCENDING)
+			// Mean of each country should not be calculated.
+			allCountries = false
+		} else { // If year is empty, it tells user it is empty, but still allows for code to run.
+			http.Error(w, "Year query should not be empty.", http.StatusLengthRequired)
+			return
 		}
 	}
 
-	// Checks if sortAlphabetically query is passed.
-	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
-		// Sorts list descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = sliceSortingByValue(listOfRSE, true, DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
+	// Calculates the mean of grouped countries. Overrides allCountries=true.
+	if r.URL.Query().Has("mean") {
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
+			listOfRSE = meanCalculation(listOfRSE)
+			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
+		} else { // To inform the user that mean query must be true to use.
+			http.Error(w, "?mean=true, required to use mean.", http.StatusMethodNotAllowed)
+			return
 		}
 	}
 
-	// Checks if list is empty.
-	if len(listOfRSE) == 0 {
-		http.Error(w, "Nothing matching your search terms.", http.StatusNoContent)
-		return
-	}
 	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
 	if allCountries {
 		listOfRSE = meanCalculation(listOfRSE)
-		listOfRSE = sliceSortingByValue(listOfRSE, true, ASCENDING)
+		// Sorts alphabetically as meanCalculation uses maps, which randomizes entries.
+		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
 	}
 
+	// Handles sort query.
+	listOfRSE = SortQueryHandler(r, listOfRSE)
+
+	// Checks if list is empty.
+	if len(listOfRSE) == 0 {
+		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
+		return
+	}
+
+	// Resets country identifier.
+	countryIdentifier = ""
 	// Encodes list and prints to console.
 	utility.Encoder(w, listOfRSE)
-}
-
-// countryCodeLimiter Method to limit a list based on country code.
-func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
-	var limitedList []structs.RenewableShareEnergyElement
-	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), strings.ToLower(countryCode)) { // If country code match it is
-			// appended to new list.
-			limitedList = append(limitedList, v)
-		}
-	}
-	return limitedList // Returns list containing all matching countries.
 }
 
 // beginEndLimiter Function to allow for searching to and from a year.
@@ -238,32 +211,4 @@ func meanCalculation(listToIterate []structs.RenewableShareEnergyElement) []stru
 	}
 	// Returns the results, year is not added to result list and therefore omitted.
 	return resultCalc
-}
-
-// sliceSortingByValue A function which sorts a json list based on value, using inbuilt sort method.
-func sliceSortingByValue(listToIterate []structs.RenewableShareEnergyElement, alphabetical bool, sortingMethod int) []structs.RenewableShareEnergyElement {
-	// Sorts list, based on alphabetical boolean and sortingMethods value.
-	switch {
-	// Sorts by percentage, ascending.
-	case sortingMethod == ASCENDING && !alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[j].Percentage < listToIterate[i].Percentage
-		})
-	// Sorts by percentage, descending.
-	case sortingMethod == DESCENDING && !alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[i].Percentage < listToIterate[j].Percentage
-		})
-	// Sorts alphabetically, ascending.
-	case sortingMethod == ASCENDING && alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[i].Name < listToIterate[j].Name
-		})
-	// Sorts alphabetically, descending.
-	case sortingMethod == DESCENDING && alphabetical:
-		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[j].Name < listToIterate[i].Name
-		})
-	}
-	return listToIterate
 }

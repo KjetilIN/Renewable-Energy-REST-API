@@ -5,33 +5,38 @@ import (
 	"assignment-2/internal/webserver/structs"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
-	"os"
 	"sort"
 	"strconv"
+	"strings"
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	"github.com/joho/godotenv"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-// Function for getting the Firestore client
+// Function for getting the Firestore client.
+// The method switches path of the credentials once, in case the user trying to run test.
+// Return a client or an error. 
 // Private for security reasons
-func getFirestoreClient() (*firestore.Client, error) {
-	// Load cred
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-		return  nil, err
-	}
+func getFirestoreClient(path ...string) (*firestore.Client, error) {
 
 	// Use a service account
 	ctx := context.Background()
-	credentialsPath := os.Getenv("CREDENTIALS_PATH")
+
+	// Set the credentials path based on if there was given arguments
+	var credentialsPath string
+	if path != nil{
+		credentialsPath = path[0]
+	}else{
+		credentialsPath = constants.FIREBASE_CREDENTIALS_FILE_PATH
+	}
+	
+	// Using the credentials file 
 	sa := option.WithCredentialsFile(credentialsPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
@@ -42,20 +47,29 @@ func getFirestoreClient() (*firestore.Client, error) {
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		log.Println("Credentials file: '" + credentialsPath + "'" )
-		return nil, err
+		// Logging the error 
+		log.Println("Credentials file: '" + credentialsPath + "' lead to an error. Trying with the test path...." )
+
+		// If the path is null, try again withe the test path, else return the error
+		if path == nil{
+			client , err := getFirestoreClient(constants.FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS)
+			return client, err
+		}else{
+			return nil, err
+		}
+		
 	}
 	return client, nil
 }
 
-//Function for getting status code of the connection to the firestore 
+// Function for getting status code of the connection to the firestore
 func CheckFirestoreConnection() int {
 	// Connect to to the firestore with the client
-	client, err := getFirestoreClient();
+	client, err := getFirestoreClient()
 	defer client.Close()
 
-	//check for errors on connection 
-	if err != nil{
+	//check for errors on connection
+	if err != nil {
 		log.Fatal("Error on creating the connection: " + err.Error())
 		return http.StatusInternalServerError
 	}
@@ -72,38 +86,47 @@ func CheckFirestoreConnection() int {
 	return http.StatusOK
 }
 
-
 // Function that adds a webhook to the firestore, using the given webhook struct and a generated ID.
-// Takes the webhook struct and the collection name as parameters. 
+// Takes the webhook struct and the collection name as parameters.
 // Return an error if it could not add the webhook, returns nil if everything went okay .
-func AddWebhook(webhook structs.WebhookID, collection string) error{
+func AddWebhook(webhook structs.WebhookID, collection string) error {
 	// Get the client for the firestore
 	client, clientErr := getFirestoreClient()
 	defer client.Close()
-	if clientErr != nil{
+	if clientErr != nil {
 		return clientErr
 	}
 
-	// Create a new doc in the 
-	_ , err := client.Collection(collection).Doc(webhook.ID).Set(context.Background(),webhook)
-	if err != nil{
+	// Set default event
+	if webhook.Event == ""{
+		webhook.Event = constants.CALLS_EVENT
+	}
+	
+	// Turn it into upper case 
+	webhook.Event = strings.ToUpper(webhook.Event)
+
+	// Purge webhooks if needed
+	go PurgeWebhooks(collection)
+	
+	// Create a new doc in the
+	_, err := client.Collection(collection).Doc(webhook.ID).Set(context.Background(), webhook)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-
-// Get number of webhooks. 
+// Get number of webhooks.
 // Note that if the service is down there will be not handled this function, and 0 wil be returned
 // The user has to see the status endpoint
 // Takes the name of the collection as a parameter
-func GetNumberOfWebhooks(collection string) int{
-	//Create a client for the 
+func GetNumberOfWebhooks(collection string) int {
+	//Create a client for the
 	client, err := getFirestoreClient()
 	defer client.Close()
-	if err != nil{
-		return 0;
+	if err != nil {
+		return 0
 	}
 
 	// Get the number of webhooks in the collection.
@@ -117,36 +140,35 @@ func GetNumberOfWebhooks(collection string) int{
 	return len(allWebHooks)
 }
 
-
-// Fetch a webhook using its ID. 
+// Fetch a webhook using its ID.
 // The webhook id has to be the same as the document id.
 // Takes the id and collection name as parameters.
 // Return an error if something went wrong.
 func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error) {
-	//Create a client for the 
+	//Create a client for the
 	client, err := getFirestoreClient()
 	defer client.Close()
-	if err != nil{
-		return structs.WebhookID{}, err;
+	if err != nil {
+		return structs.WebhookID{}, err
 	}
 
 	var webhook structs.WebhookID
-	iter := client.Collection(collection).Documents(context.Background());
+	iter := client.Collection(collection).Documents(context.Background())
 
-	//Loop through each document 
-	for{
-		//Get the document and check if it is done 
+	//Loop through each document
+	for {
+		//Get the document and check if it is done
 		doc, err := iter.Next()
 		if err == iterator.Done {
 			// Break if no more docs to get
 			break
 		}
 
-		//if the ID is the same as the docs 
+		//if the ID is the same as the docs
 		if doc.Ref.ID == id {
 			log.Println("Webhook found: " + id)
-			err := doc.DataTo(&webhook);
-			if err != nil{
+			err := doc.DataTo(&webhook)
+			if err != nil {
 				log.Println("Webhook with id: " + id + " was found but not decodable")
 				return structs.WebhookID{}, err
 			}
@@ -157,50 +179,49 @@ func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error)
 	}
 
 	// Correctly went through the method but did not find a webhook
-	return structs.WebhookID{}, errors.New("No webhook was found in that matched the id: " + id) 
+	return structs.WebhookID{}, errors.New("No webhook was found in that matched the id: " + id)
 }
 
 // Fetch all webhooks
 // Returns a list of webhooks with id from the database.
-// Takes the name of the collection as parameter. 
+// Takes the name of the collection as parameter.
 // Returns an error if something went wrong
-func FetchAllWebhooks(collection string) ([]structs.WebhookID, error){
+func FetchAllWebhooks(collection string) ([]structs.WebhookID, error) {
 	//Create a client
 	client, err := getFirestoreClient()
 	defer client.Close()
-	if err != nil{
-		return nil, err;
+	if err != nil {
+		return nil, err
 	}
 
 	//Iterate through all docs and decode them into the list of structs
 	var webhooks []structs.WebhookID
 	iter := client.Collection(collection).Documents(context.Background())
-	for{
-		//Get the document and check if it is done 
+	for {
+		//Get the document and check if it is done
 		doc, err := iter.Next()
 		if err == iterator.Done {
 			// Break if now more docs to get
 			break
 		}
 
-		//Check for errors on iterator 
+		//Check for errors on iterator
 		if err != nil {
 			//Log the error if any
 			log.Println("Failed to iterate: " + err.Error())
 		}
 
-
-		// Decode the webhook into a struct if possible 
+		// Decode the webhook into a struct if possible
 		var webhook structs.WebhookID
 		if err := doc.DataTo(&webhook); err != nil {
 			log.Println("Error during data decoding")
-		}else{
+		} else {
 			// No error so we append the webhook
-			webhooks = append(webhooks, webhook);
+			webhooks = append(webhooks, webhook)
 		}
 
 	}
-	
+
 	// Returns either an empty list or a list of webhooks
 	return webhooks, nil
 
@@ -208,33 +229,33 @@ func FetchAllWebhooks(collection string) ([]structs.WebhookID, error){
 
 // Delete a webhook from a given webhook id
 // Takes the given webhook as id and the name of the collection
-// No error returns indicates that the process was okay 
-func DeleteWebhook(webhookID string, collection string) error{
+// No error returns indicates that the process was okay
+func DeleteWebhook(webhookID string, collection string) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
-	if clientError != nil{
+	if clientError != nil {
 		return clientError
 	}
 
 	// Delete the document based on the id given
-	_ , err := client.Collection(collection).Doc(webhookID).Delete(context.Background())
-	if err != nil{
+	_, err := client.Collection(collection).Doc(webhookID).Delete(context.Background())
+	if err != nil {
 		return err
 	}
-	// No error and we return nil 
+	// No error and we return nil
 	return nil
 }
 
 // Function that removes webhook when we have stored over a set limit
 // Takes a collection name as argument.
 // Optionally takes the max amount of webhooks, else uses the predefined limit
-func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
+func PurgeWebhooks(collection string, maxWebhookCount ...int) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
-	if clientError != nil{
+	if clientError != nil {
 		return clientError
 	}
-	
+
 	// Get the amount of webhooks
 	numberOfWebhooks := GetNumberOfWebhooks(collection)
 
@@ -246,19 +267,22 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 		webhookLimit = constants.MAX_WEBHOOK_COUNT
 	}
 
-	// Check if we need to purge 
-	if numberOfWebhooks <= webhookLimit{
+	// Check if we need to purge
+	if numberOfWebhooks <= webhookLimit {
 		return nil
 	}
 
-	// Calculate how many of the webhooks we can delete 
+	// Notify all subscribers for the event of purging 
+	go NotifyForEvent(constants.PURGE_EVENT, constants.FIRESTORE_COLLECTION)
+
+	// Calculate how many of the webhooks we can delete
 	numberOfWebhooksToDelete := numberOfWebhooks - webhookLimit
 
 	// Get all the webhooks
 	querySnapshot, err := client.Collection(collection).Documents(context.Background()).GetAll()
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
 	// Add the webhooks to a list and sort them by the timestamp
 	var webhooks []*structs.WebhookID
@@ -275,10 +299,10 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 		return webhooks[i].Created.Before(webhooks[j].Created)
 	})
 
-	// Use the sorted list of webhooks to delete webhooks from the firestore 
-	for i:= 0; i < numberOfWebhooksToDelete; i++{
-		_ , err := client.Collection(collection).Doc(webhooks[i].ID).Delete(context.Background())
-		if err != nil{
+	// Use the sorted list of webhooks to delete webhooks from the firestore
+	for i := 0; i < numberOfWebhooksToDelete; i++ {
+		_, err := client.Collection(collection).Doc(webhooks[i].ID).Delete(context.Background())
+		if err != nil {
 			log.Println("Error on deleting in purging mechanism: " + err.Error())
 			return err
 		}
@@ -287,86 +311,163 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error{
 	return nil
 }
 
-// Function to call when a alpha code of a country has been used. 
-// Returns an error if something went wrong 
-func Invocate(alphaCode string, collection string) error{
+// Function to call when a alpha code of a country has been used.
+// Returns an error if something went wrong
+func IncrementInvocations(alphaCode string, collection string) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
-	if clientError != nil{
+	if clientError != nil {
 		return clientError
 	}
 
 	// Create a query that filters documents based on the specified alpha code
-    query := client.Collection(collection).Where("Country", "==", alphaCode).Documents(context.Background())
+	query := client.Collection(collection).Where("Country", "==", alphaCode).Documents(context.Background())
 
-	//Iterate thought each document 
+	//Iterate thought each document
 	for {
-		// Get the next document or quit 
+		// Get the next document or quit
 		doc, err := query.Next()
-		if err == iterator.Done{
+		if err == iterator.Done {
 			break
 		}
-		if err != nil{
+		if err != nil {
 			log.Println("Error on iterating a doc")
 			return err
 		}
 
 		// Increment the invocations field of the retrieved document by one
-        _, err = doc.Ref.Update(context.Background(), []firestore.Update{
-            {
-				Path: "Invocations", 
+		_, err = doc.Ref.Update(context.Background(), []firestore.Update{
+			{
+				Path:  "Invocations",
 				Value: firestore.Increment(1)},
-        })
-        if err != nil {
-            return errors.New("Error on trying to increment the invocations number")
-        }
+		})
+		if err != nil {
+			return errors.New("Error on trying to increment the invocations number")
+		}
 
 		// Check if we need to call a webhook...
 		var webhook structs.WebhookID
 		err = doc.DataTo(&webhook)
-		if err != nil{
+		if err != nil {
 			log.Println("Error on deconstruct the webhook")
 			return err
 		}
-		webhook.Invocations++ // Increment the local version 
+		webhook.Invocations++ // Increment the local version
 
 		// Invocation that has been updated is multiple of two
-		if webhook.Calls != 0  && webhook.Invocations % webhook.Calls == 0{
+		if webhook.Calls != 0 && webhook.Invocations%webhook.Calls == 0 && strings.ToUpper(webhook.Event) == "CALLS" {
 			// Using the call url method as a go routine
 			go CallUrl(webhook)
 
 		}
 	}
-	return nil;
+	return nil
 }
 
 // Function using for calling a url
 // Takes a webhook and uses its information when calling
 // Return an error if something went wrong
-func CallUrl(webhook structs.WebhookID) error{
-	// Log the attempt for calling an url 
+func CallUrl(webhook structs.WebhookID) error {
+	// Log the attempt for calling an url
 	log.Println("Calling the url: " + webhook.Url + "...")
 
-	// Creating a new request;
-	request, err := http.NewRequest(http.MethodGet, webhook.Url, bytes.NewReader([]byte(webhook.ID)))
+	// Message to return to the user
+	var message string
+	switch (webhook.Event){
+		case constants.COUNTRY_API_EVENT:
+			message = "Notification triggered: Country API is down!"
+			break
+		case constants.PURGE_EVENT:
+			message = "Notification triggered: Webhooks has been purged!"
+		default:
+			message = "Notification triggered: " + strconv.Itoa(webhook.Invocations) + " invocations made to " + strings.ToUpper(webhook.Country) + " endpoint."
+			break
+
+	}
+	
+	//Creating the response struct:
+	responseWebhook := structs.WebhookCallResponse{
+		ID: webhook.ID,
+		Webhook: webhook.Webhook,
+		Invocations: webhook.Invocations,
+		Message: message,
+	}
+
+	// Add the struct to the response struct 
+	requestBody, err := json.Marshal(responseWebhook)
 	if err != nil {
-		log.Println("Error on creating a request")
+		log.Println("Error encoding responseWebhook to JSON")
 		return err
 	}
 
-	// Set the ID as a signature in the request and the application type 
+	// Create a new request with the JSON-encoded webhook in the body
+	request, creatingError := http.NewRequest(http.MethodPost, webhook.Url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.Println("Error creating request")
+		return creatingError
+	}
+
+	// Set the ID as a signature in the request and the application type
 	request.Header.Set("Signature-x", webhook.ID)
-	request.Header.Add("Content-Type", "application/text")
+	request.Header.Set("Content-Type", "application/json")
+
 
 	// Creating a client and executing the request
 	client := http.Client{}
-	response, err:= client.Do(request)
-	if err != nil{
+	response, err := client.Do(request)
+	if err != nil {
 		log.Println("Error while trying to execute the request")
 		return err
 	}
 
-	// Logging that a webhook has been invocated 
+	// Logging that a webhook has been invocated
 	log.Println("Webhook with ID: " + webhook.ID + " was invoked. Status code for response is " + strconv.Itoa(response.StatusCode))
+	return nil
+}
+
+
+// Function to call when a given event. 
+// Only used for other events then the calls event type. See Readme for event types
+func NotifyForEvent(event string, collection string) error {
+	// Get the client
+	client, clientError := getFirestoreClient()
+	if clientError != nil {
+		return clientError
+	}
+
+	// Create a query that filters documents based on the specified alpha code
+	query := client.Collection(collection).Where("Event", "==", strings.ToUpper(event) ).Documents(context.Background())
+
+	//Iterate thought each document
+	for {
+		// Get the next document or quit
+		doc, err := query.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Println("Error on iterating a doc")
+			return err
+		}
+
+		// Check if we need to call a webhook...
+		var webhook structs.WebhookID
+		err = doc.DataTo(&webhook)
+		if err != nil {
+			log.Println("Error on deconstruct the webhook")
+			return err
+		}
+		
+		// Using the call url method as a go routine
+		go CallUrl(webhook)
+
+
+		// Delete the webhook if the event is when the country api is down 
+		if strings.ToUpper(webhook.Event) == constants.COUNTRY_API_EVENT{
+			go DeleteWebhook(webhook.ID, collection)
+		}
+
+	
+	}
 	return nil
 }

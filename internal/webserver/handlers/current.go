@@ -28,53 +28,55 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	// Retrieves the list of current year records.
 	currentList := getCurrentList(originalList)
 
-	// Collects parameters, separated by /
-	params := strings.Split(r.URL.Path, "/") //Used to split the / in path to collect search parameters.
-	// Checks if an optional parameter is passed.
-	if len(params) == 6 {
-		countryIdentifier := params[5]
-		var filteredList []structs.RenewableShareEnergyElement
-
-		// Checks if countryIdentifier is not empty, and then if it is less or more than 3 characters,
-		// if so it is not a country code.
-		if len(countryIdentifier) > 0 && len([]byte(countryIdentifier)) != 3 {
-			// Parses country name to country code.
-			countryCode, getError := utility.GetCountry(countryIdentifier, false)
-			if getError != nil {
-				http.Error(w, "Error when parsing country name to country code: "+getError.Error(), http.StatusBadRequest)
-				return
-			}
-			countryIdentifier = countryCode.CountryCode
+	// Collects parameter from url path. Returns empty string if none exists.
+	countryIdentifier := utility.GetParams(r.URL.Path, constants.CURRENT_PATH)
+	if countryIdentifier != "" {
+		filteredList, filterErr := CountryFilterer(w, currentList, countryIdentifier)
+		if filterErr != nil {
+			return
 		}
-		// Gets the countries based on country code, uses api.
-		filteredList = countryCodeLimiter(currentList, countryIdentifier)
 
 		// Checks if query neighbours is presented.
-		if len(filteredList) > 0 && strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
-			// Retrieves the neighbour countries using country code.
-			neighbourList, neighbourErr := retrieveNeighbours(currentList, countryIdentifier)
-			if neighbourErr != nil {
-				http.Error(w, "Error:"+neighbourErr.Error(), http.StatusInternalServerError)
-				return
-			}
-			// Sets the filtered list to currentList, which is the one to be shown.
-			currentList = filteredList
-			// Appends neighbours into the list to be shown.
-			for _, v := range neighbourList {
-				currentList = append(currentList, v)
+		if (len(filteredList) > 0 && filteredList == nil) && r.URL.Query().Has("neighbours") {
+			if strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
+				// Collects iso code from filtered list. Filtered list is never nil or empty.
+				countryIdentifier = filteredList[0].IsoCode
+				// Retrieves the neighbour countries using country code.
+				neighbourList, neighbourErr := retrieveNeighbours(currentList, countryIdentifier)
+				if neighbourErr != nil {
+					http.Error(w, "Error:"+neighbourErr.Error(), http.StatusInternalServerError)
+					return
+				}
+				// Sets the filtered list to currentList, which is the one to be shown.
+				currentList = filteredList
+				// Appends neighbours into the list to be shown.
+				for _, v := range neighbourList {
+					currentList = append(currentList, v)
+				}
+			} else { // Neighbours query is not correctly prompted, but will continue anyway.
+				http.Error(w, "Neighbour query must be =true to work.", http.StatusBadRequest)
+				// The country passed will be encoded to user.
+				currentList = filteredList
 			}
 		} else {
 			// If neighbours is not passed, the filtered list is the one to be shown.
 			currentList = filteredList
 		}
 	}
+
+	// Handles sorting queries.
+	currentList = SortQueryHandler(r, currentList)
+
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
-		http.Error(w, "No search results matching your parameters.", http.StatusNotFound)
+		http.Error(w, "No search results matching your parameters.", http.StatusBadRequest)
 		return
 	}
+	// Resets country identifier.
+	countryIdentifier = ""
 	// Encodes currentList to the client.
 	utility.Encoder(w, currentList)
 }
