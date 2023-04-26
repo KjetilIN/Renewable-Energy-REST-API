@@ -5,16 +5,19 @@ const (
 	// DEFAULT_PORT PORT Default port. If the port is not set by environment variables, set the port.
 	DEFAULT_PORT = "8080"
 
+	// Version of the service
+	VERSION = "v1"
+
 	// The paths that will be handled by each handler
 	DEFAULT_PATH = "/energy/"
-	CURRENT_PATH = "/energy/v1/renewables/current/"
-	HISTORY_PATH = "/energy/v1/renewables/history/"
+	CURRENT_PATH = "/energy/" + VERSION + "/renewables/current/"
+	HISTORY_PATH = "/energy/" + VERSION + "/renewables/history/"
 
 	// LIMIT_CACHE_TIME The default limit of how long entry can be stored in cache.
 	LIMIT_CACHE_TIME = 600
 
-	STATUS_PATH        = "/energy/v1/status/"
-	NOTIFICATIONS_PATH = "/energy/v1/notifications/"
+	STATUS_PATH        = "/energy/" + VERSION + "/status/"
+	NOTIFICATIONS_PATH = "/energy/" + VERSION + "/notifications/"
 
 	FIRESTORE_COLLECTION      = "webhooks"        // Name of the main collection for the webhooks
 	FIRESTORE_COLLECTION_TEST = "test_collection" // Name of the collection which the test make use of

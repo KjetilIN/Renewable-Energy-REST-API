@@ -88,7 +88,7 @@ func getStatus() (structs.Status, error) {
 		CountriesApi: countriesApiStatus,
 		NotificationDB: dbStatus	,
 		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:  "v1",
+		Version:  constants.VERSION,
 		Uptime:   uptime.GetUptime(),
 		//AverageSystemLoad: loadAvg + " in the last minute",
 		TotalMemoryUsage: memUsage + "%",
