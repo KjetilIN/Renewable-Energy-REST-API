@@ -1,36 +1,21 @@
 package handlers
 
 import (
+	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
+	"assignment-2/internal/webserver/mock"
 	"assignment-2/internal/webserver/structs"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
-	"runtime"
 	"strconv"
 	"testing"
 )
 
 const ORIGINAL_LENGTH = 1
 const SHORTER = 2
-
-// dirChanger Changes the directory to project root.
-func dirChanger() error {
-	// Gets the filepath of history_test.go.
-	_, filename, _, _ := runtime.Caller(0)
-	// Jumps back 3 folders.
-	dir := path.Join(path.Dir(filename), "..", "..", "..")
-	// Changes to the new dir structure.
-	err := os.Chdir(dir)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 // getBody a function which decodes body into a template.
 func getBody(response *http.Response, template interface{}) error {
@@ -45,33 +30,79 @@ func getBody(response *http.Response, template interface{}) error {
 // TestHandlerHistory_NoParams Testing the base return from history endpoint.
 func TestHandlerHistory_NoParams(t *testing.T) {
 	// Changes the working directory to the project directory.
-	changeErr := dirChanger()
-	if changeErr != nil {
-		t.Fatal(changeErr.Error())
-	}
-	// Creates a test server on handler history.
-	server := httptest.NewServer(http.HandlerFunc(HandlerHistory))
-	resp, getReqErr := http.Get(server.URL)
-	if getReqErr != nil {
-		t.Fatal("Error when requesting: " + getReqErr.Error())
-	}
-	var testList []structs.RenewableShareEnergyElement
-	err := getBody(resp, &testList)
+	err := utility.DirChanger(3)
 	if err != nil {
-		t.Fatal("Error when getting body: " + err.Error())
+		return
 	}
-	// Waits for the body to close.
-	defer resp.Body.Close()
+
+	// Creates a new HTTP request
+	req, err := http.NewRequest("GET", constants.MOCK_HISTORY_API_URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Creates a new response recorder to record the response from the server
+	rr := httptest.NewRecorder()
+
+	// Creates a stub HTTP handler
+	handler := http.HandlerFunc(mock.StubHandlerHistory)
+
+	// Sends the request to the server and records the response
+	handler.ServeHTTP(rr, req)
+
 	// Checks if the request is of status ok.
-	assert.Equal(t, http.StatusOK, resp.StatusCode, "Handler returned wrong status code.")
+	assert.Equal(t, http.StatusOK, rr.Code, "Handler returned wrong status code.")
+
 	// Checks if json from body contains anything.
+	var testList []structs.RenewableShareEnergyElement
+	err = json.Unmarshal(rr.Body.Bytes(), &testList)
+	if err != nil {
+		t.Fatal("Error when unmarshalling body: " + err.Error())
+	}
 	assert.NotEmpty(t, testList, "JSON list from body is empty.")
+}
+
+// TestHistoryMockHandler tests GET and POST requests on the History mock handler
+func TestHistoryMockHandler(t *testing.T) {
+	// Changes the working directory to the project directory.
+	err := utility.DirChanger(3)
+	if err != nil {
+		return
+	}
+
+	// Testing a get request on local host
+	getRequest, _ := http.NewRequest("GET", constants.MOCK_HISTORY_API_URL, nil)
+	response := httptest.NewRecorder()
+	//Executing the handler
+	mock.StubHandlerHistory(response, getRequest)
+	resultGet := response.Result()
+	defer resultGet.Body.Close()
+
+	//Error if not implemented or not correct
+	if resultGet.StatusCode != http.StatusOK {
+		t.Error("Test case on GET failed, should be 200")
+	}
+	expected1 := "application/json"
+	resultGetHeader := resultGet.Header.Get("content-type")
+	if resultGetHeader != expected1 {
+		t.Errorf("Test case failed on GET: wrong header information")
+	}
+
+	// Test case 2: POST request
+	postRequest, _ := http.NewRequest("POST", constants.MOCK_HISTORY_API_URL, nil)
+	postResponse := httptest.NewRecorder()
+	mock.StubHandlerHistory(postResponse, postRequest)
+	resultPost := postResponse.Result()
+	defer resultPost.Body.Close()
+	if resultPost.StatusCode != http.StatusNotImplemented {
+		t.Errorf("Test case POST failed: Not marked as not implemented")
+	}
 }
 
 // prepareList Function which prepares the lists for testing.
 func prepareList(setting int) ([]structs.RenewableShareEnergyElement, error) {
 	// Changes the working directory to the project directory.
-	changeErr := dirChanger()
+	changeErr := utility.DirChanger(2)
 	if changeErr != nil {
 		return nil, changeErr
 	}
