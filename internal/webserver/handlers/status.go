@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"assignment-2/internal/constants"
+	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
 	"encoding/json"
@@ -9,6 +10,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Webhooks DB
@@ -29,8 +31,18 @@ var client = &http.Client{}
 
 // HandlerStatus is a handler for the /status endpoint.
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
+	// Query for printing information about endpoint.
+	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n"))
+		if writeErr != nil {
+			return
+		}
+		utility.Encoder(w, constants.STATUS_QUERIES)
+		return
+	}
+
 	// Set the content-type header to indicate that the response contains JSON data
-	w.Header().Add("content-type", "application/json")
+	w.Header().Set("content-type", "application/json")
 
 	// Return an error if the HTTP method is not GET.
 	if r.Method != http.MethodGet {
@@ -69,19 +81,6 @@ func getStatus() (structs.Status, error) {
 
 	countriesApiStatus := res.StatusCode
 
-	/*
-		// Check the status of the notification db.
-		url = constants.NOTIFICATIONDB_URL
-		notificationDBRequest, _ := http.NewRequest(http.MethodHead, url, nil)
-
-		res, err = client.Do(notificationDBRequest)
-		if err != nil {
-			return structs.Status{}, err
-		}
-
-		notificationDBStatus := res.StatusCode
-	*/
-
 	var memUsage string
 	defer func() {
 		if r := recover(); r != nil {
@@ -95,20 +94,6 @@ func getStatus() (structs.Status, error) {
 		panic(err)
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
-
-	/*var loadAvg string
-	// Get the average system load for the last minute.
-	defer func() {
-		if r := recover(); r != nil {
-			loadAvg = "N/A"
-		}
-	}()
-
-	avg, err := load.Avg()
-	if err != nil {
-		panic(err)
-	}
-	loadAvg = strconv.Itoa(int(avg.Load1))*/
 
 	// get number of registered webhooks
 	numWebhooks := GetNumberOfWebhooks()

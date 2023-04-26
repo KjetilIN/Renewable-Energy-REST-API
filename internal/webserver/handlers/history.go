@@ -20,15 +20,15 @@ const DESCENDING = 2
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	// Query for printing information about endpoint.
 	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
-		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n" +
-			"Queries may also be used in tandem, such as /countryCode?begin=2020&mean=true.\n"))
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n"))
 		if writeErr != nil {
 			return
 		}
-		utility.Encoder(w, constants.HistoryEndpointInformation())
+		utility.Encoder(w, constants.HISTORY_QUERIES)
 		return
 	}
 
+	// Set the content-type header to indicate that the response contains JSON data
 	w.Header().Set("content-type", "application/json")
 	// Boolean if all countries are to be shown.
 	allCountries := true
