@@ -11,8 +11,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -103,56 +101,45 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request){
 	// Logging that a new webhook has been
 	log.Println("Request for adding webhook with url: " + formattedWebhook.Url)
 
-	// Encode the Response object to JSON format, and handle any errors 
+	// Response object to JSON format, and handle any errors 
 	resp := structs.IdResponse{ID: formattedWebhook.ID}
-    jsonResponse, err := json.Marshal(&resp)
-    if err != nil {
-		log.Println("Error on marshal response: " + err.Error())
-        http.Error(w, "Something went wrong when returning the webhook ID", http.StatusInternalServerError)
-        return
-    }
 
 	// Set the output to be correct
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(jsonResponse)
+	
+	utility.Encoder(w, resp)
 }
 
 // Function for handling the get request 
 func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
-	// Get any parameter received
-	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
-	givenParameters = strings.ReplaceAll(givenParameters, " ", "")
-	urlParts := strings.Split(givenParameters, "/")
 
-	// Remove empty strings from urlParts slice
-	var params []string
-	for _, part := range urlParts {
-		if part != "" {
-			params = append(params, part)
-		}
-	}
-
-	//Should always be one parameter left.
-	if(len(params) != 1){
-		log.Println("Error on params, should have been 1 was: " + strconv.Itoa(len(params)))
+	// Get the id of from the path, and check if its done correctly 
+	id , urlError := utility.GetOneFirstComponentOnly(constants.NOTIFICATIONS_PATH, r.URL.Path)
+	if urlError != nil{
+		log.Println("Utility function error for getting one component: " + urlError.Error())
 		http.Error(w, "Bad request, please add a single ID", http.StatusBadRequest)
-		return
+		return 
+	} 
+
+	// No id was given
+	if id == ""{
+		//Tell the endpoint was not correctly used 
+		log.Println("No id was given")
+		http.Error(w, "Error: no id was given. See readme for usage...", http.StatusBadRequest)
+		return 
 	}
-
-	//Deleting the webhook with the given ID, or not doing anything. 
-	givenID := params[0]
 	
-	deletedError := db.DeleteWebhook(givenID, constants.FIRESTORE_COLLECTION)
-
-	if(deletedError == nil){
-		//Tell the end user that the webhook was deleted
-		http.Error(w, "Webhook with ID: " + givenID + " has been deleted", http.StatusOK)
+	// Delete the webhook using the firebase methods
+	deletedError := db.DeleteWebhook(id, constants.FIRESTORE_COLLECTION)
+	if deletedError == nil{
+		//Tell the end user that the process of deletion attempt did not lead to any errors. 
+		http.Error(w, "Webhook has been deleted successfully", http.StatusOK)
 		return 
 	}else{
 		//No webhook was found
 		log.Print("Error on deletion of webhook: " + deletedError.Error())
-		http.Error(w, "Webhook was not deleted. Internal error...", http.StatusInternalServerError)
+		http.Error(w, "Internal error on attempt for deleting the deleting the webhook....", http.StatusInternalServerError)
 		return 
 	}
 
