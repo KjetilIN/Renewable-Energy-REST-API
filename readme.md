@@ -705,6 +705,32 @@ Description: Extend the history for all countries with a time constraint. Where 
 Description: Additional optional parameter {?sortByValue=bool?} to support sorting of output by percentage
 value (e.g., ?sortByValue=true).
 
+## Country searching ##
+Both current and history endpoint has the functionality of searching by country code and also name, which is an advanced
+functionality. We have implemented another bonus functionality, which searches the API if it does not find a country
+in the csv file. It will use the API: http://129.241.150.113:8080/v3.1/name/. 
+It will then search for any type of name in country body, which could be common, official and nativeName.
+This allows for searches of `/history/Kongeriket Norge`, which will return information about norway.
+
+### Drawbacks ###
+This feature will increase the amount of calls to API, which is sometimes unnecessary. If a user writes gibberish into
+our API, it will search the country API. However, using the API a user may even search the countries native name and receive
+the correct country. 
+
+### Examples ###
+Request: `/current/España`
+Response:
+```json
+[
+  {
+        "name": "Spain",
+        "isoCode": "ESP",
+        "year": 2021,
+        "percentage": 22.341663
+  }
+]
+```
+
 ## Wiki
 We have also created a [wiki](https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2023-workspace/marhjoh/assignment-2/-/wikis/home)
 for this project which includes more information about the assignment, like for example an overview of the
