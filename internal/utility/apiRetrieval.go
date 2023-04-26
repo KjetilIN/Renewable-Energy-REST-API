@@ -34,3 +34,31 @@ func GetCountryFromAPI(countryIdentifier string, countryCode bool) (structs.Coun
 	// Only one country returned, therefore first index is the correct country.
 	return countryFromAPI[0], nil
 }
+
+// MockGetCountryFromAPI Function which gets data as byte slice based on country code search parameter.
+func MockGetCountryFromAPI(countryIdentifier string, countryCode bool) (structs.Country, error) {
+	// Declare variables used.
+	var client http.Client
+	var countryFromAPI []structs.Country
+	var resp *http.Response
+	var getError error
+
+	// One method to retrieve based on country name and code.
+	if !countryCode {
+		resp, getError = client.Get(constants.MOCK_API_URL)
+	} else {
+		resp, getError = client.Get(constants.MOCK_API_URL)
+	}
+	// Performs a get request to country api using country code search parameter.
+	if getError != nil {
+		return structs.Country{}, getError
+	}
+	defer resp.Body.Close() //Waits for the body to return, then closes the request.
+	// Decodes body into countryFromAPI struct.
+	err := json.NewDecoder(resp.Body).Decode(&countryFromAPI)
+	if err != nil {
+		return structs.Country{}, err
+	}
+	// Only one country returned, therefore first index is the correct country.
+	return countryFromAPI[0], nil
+}
