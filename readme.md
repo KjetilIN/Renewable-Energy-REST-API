@@ -225,14 +225,14 @@ Provide the following details to get notifications to the given url. The standar
     PATH: "/energy/v1/notification" 
     BODY: 
     {
-        "url": <The given url for the webhook to call>,
-        "country": <Alpha code of the country>,
-        "calls": <Number of calls for notification>
+        "url": "The given url for the webhook to call",
+        "country": "Alpha code of the country",
+        "calls": "Number of calls for notification"
     }
 ```
 
 The response should be **201 Created** if all went well. See the error message for more details. <br> 
-You should also the the webhook ID in the body of the response. This ID is important, so save it for either deletion or retrieving details about it. Here is an example response: <br>
+You should also the webhook ID in the body of the response. This ID is important, so save it for either deletion or retrieving details about it. Here is an example response: <br>
 
 ```json
     {
@@ -249,7 +249,7 @@ PATH: /energy/v1/notifications/{webhook_id}
 ```
 <br>
 Look at the status code for how the request for deletion went. If the status was: <br>
--  400: Please make sure that you added a id the the url. <br>
+-  400: Please make sure that you added an ID the url. <br>
 -  200: Webhook was either found and deleted, or not found (so nothing happend) <br>
 -  500: Internal error while trying to delete the webhook. See the status endpoint to check if all services are running
 <br><br>
@@ -268,12 +268,12 @@ If there is a webhook with the given ID, the response could look like this:
 
 ```json
 {
-    "webhook_id": <ID_of_the_webhook>,
-    "url": <Url_of_the_registration>,
-    "country": <Alpha_code_of_the_country>,
-    "calls": <The_amount_of_calls_that_needs_to_be_for_invoking>,
-    "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
-    "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
+    "webhook_id": "ID_of_the_webhook",
+    "url": "Url_of_the_registration",
+    "country": "Alpha_code_of_the_country",
+    "calls": "The_amount_of_calls_that_needs_to_be_for_invoking",
+    "created_timestamp": "Server_timestamp_when_the_webhook_was_created",
+    "invocations": "The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked"
 }
 ```
 
@@ -291,12 +291,12 @@ Should return a list of all webhooks. Could also be empty if non are registered 
 ```json
 [
     {
-        "webhook_id": <ID_of_the_webhook>,
-        "url": <Url_of_the_registration>,
-        "country": <Alpha_code_of_the_country>,
-        "calls": <The_amount_of_calls_that_needs_to_be_for_invoking>,
-        "created_timestamp": <Server_timestamp_when_the_webhook_was_created>,
-        "invocations": <The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked>
+        "webhook_id": "ID_of_the_webhook",
+        "url": "Url_of_the_registration",
+        "country": "Alpha_code_of_the_country",
+        "calls": "The_amount_of_calls_that_needs_to_be_for_invoking",
+        "created_timestamp": "Server_timestamp_when_the_webhook_was_created",
+        "invocations": "The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked"
     },
     ...
 ]
@@ -356,7 +356,7 @@ Here is an example of the JSON response you will receive when a notification is 
         "country": "USA",
         "calls": 100,
         "invocations": 1000,
-        "message": "Notification triggered: 1000 invocations made to USA endpoint."
+        "message": "Notification triggered: 1000 invocations made to the USA endpoint."
     }
 ```    
 
@@ -448,16 +448,16 @@ Response:
 
 ```
 {
-   "countries_api": "<http status code for restcountries API>",
-   "notification_db": "<http status code for notification DB in Firebase>",
-   "webhooks": "<amount of registered webhooks>",
+   "countries_api": "http status code for restcountries API",
+   "notification_db": "http status code for notification DB in Firebase",
+   "webhooks": "amount of registered webhooks",
    "version": "v1",
-   "uptime": <time elapsed from the last service restart>
-   "total_memory_usage": <"percent of total memory usage on the user's computer">
+   "uptime": "time elapsed from the last service restart"
+   "total_memory_usage": "percent of total memory usage on the user's computer"
 }
 ```
 
-Note: `<some value>` indicates placeholders for values to be populated by the service.
+Note: `"some value"` indicates placeholders for values to be populated by the service.
 An example response is provided underneath.
 
 Example response:
@@ -523,7 +523,7 @@ The service can be access with:
 http://10.212.169.162:8000/energy/v1/status/
 ```
 
-**Note:** In the case of self hosting, use the floating IP. 
+**Note:** In the case of self-hosting, use the floating IP.
 
 ## Docker and its purpose 
 Docker is a set of platform as a service (PaaS) products that use OS-level virtualization to deliver software in packages called containers. [This project used this docs for setting up docker on the OpenStack server.](https://docs.docker.com/engine/install/ubuntu/#set-up-the-repository)
@@ -549,9 +549,9 @@ The following steps are
     - Ingress at port 8000 (For accessing the service)
 4. Create and add SSH key to the Instance
     - Store the `.pem` file for logging in to the server
-5. Login the the server using the floating IP and the `.pem` file with:
+5. Login the server using the floating IP and the `.pem` file with:
     ```terminal
-    ssh -i ./name-of-ssh-key.pem ubuntu@<YOUR_FLOATING_IP>
+    ssh -i ./name-of-ssh-key.pem ubuntu@"YOUR_FLOATING_IP"
     ```
     - **Common errors:** Not correct permissions to the `.pem`file or that the ssh key has not been set to the instance
     - Other errors is due to not correctly deploying an instance, see [OpenStack introduction docs here](https://www.ntnu.no/wiki/display/skyhigh/Using+the+webinterface)
@@ -610,4 +610,3 @@ In this way the REST-principles are met.
 These are further improvements we did not have time to resolve.
 * Use a middleware to set the content-type header for all response.
 * Implement Gorilla Mux to define URL routes and extract variables from them instead of doing it manually.
-
