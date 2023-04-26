@@ -82,4 +82,44 @@ var STATUS_QUERIES = []structs.Information{
 
 var NOTIFICATION_QUERIES = []structs.Information{}
 
-var CURRENT_QUERIES = []structs.Information{}
+var CURRENT_QUERIES = []structs.Information{
+	{
+		Title:   "No parameters",
+		Example: "Use: /energy/v1/renewables/current",
+		Description: "When you use endpoint with no parameters or queries, it will print all countries of the " +
+			"year=2021, to the client. The year found is based on the highest year found in the csv file.",
+	},
+
+	{
+		Title:       "Country code/name",
+		Example:     "Use: /energy/v1/renewables/current/nor or /norway",
+		Description: "When adding another slash and a country code or name, all data from that country will be printed.",
+	},
+
+	{
+		Title:   "Neighbour parameter",
+		Example: "Use: /energy/v1/renewables/current?neighbours=bool?",
+		Description: "It is an optional query parameter which will print information about the neighbouring " +
+			"countries of the country passed. It therefore, dependent on the optional parameter: country.",
+	},
+
+	{
+		Title:       "Information query",
+		Example:     "Use: /energy/v1/renewables/current?information=true",
+		Description: "Will present information about endpoint.",
+	},
+
+	{
+		Title:   "Sort by value query",
+		Example: "Use: /energy/v1/renewables/current?sortbyvalue=true",
+		Description: "Will sort data ascending by percentage. An additional parameter &descending may also be used to sort" +
+			"it descending.",
+	},
+
+	{
+		Title:   "Sort alphabetically query",
+		Example: "Use: /energy/v1/renewables/current?sortalphabetically=true",
+		Description: "Will sort data ascending alphabetically. An additional parameter &descending may also be used to sort" +
+			"it descending.",
+	},
+}
