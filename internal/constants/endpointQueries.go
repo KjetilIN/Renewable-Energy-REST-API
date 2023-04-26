@@ -85,7 +85,41 @@ var STATUS_QUERIES = []structs.Information{
 	},
 }
 
-var NOTIFICATION_QUERIES = []structs.Information{}
+var NOTIFICATION_QUERIES = []structs.Information{
+	{
+		Title:   "No parameters",
+		Example: "Use: /energy/v1/notification",
+		Description: "When you use endpoint with no parameters or queries, with a GET request, it will print a list " +
+			"of all webhooks. Could also be empty if non are registered yet.",
+	},
+
+	{
+		Title:       "Information query",
+		Example:     "Use: /energy/v1/notification?information=true",
+		Description: "Will present information about endpoint.",
+	},
+
+	{
+		Title:   "Add Notification",
+		Example: "Use: /energy/v1/notification",
+		Description: "When you use endpoint with no parameters or queries, with a POST request and correct body, " +
+			"it will add a notification to the database.",
+	},
+
+	{
+		Title:   "Delete notification",
+		Example: "Use: /energy/v1/notifications/{webhook_id}",
+		Description: "When you use endpoint with this optional parameter, with a DELETE request and including the ID " +
+			"of the webhook in the url it delete the notification.",
+	},
+
+	{
+		Title:   "Get notification",
+		Example: "Use: /energy/v1/notifications/{webhook_id}",
+		Description: "When you use endpoint with this optional parameter, with a GET request and including the ID " +
+			"of the webhook in the url it return the body of the notification.",
+	},
+}
 
 var CURRENT_QUERIES = []structs.Information{
 	{
