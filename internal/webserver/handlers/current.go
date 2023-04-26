@@ -10,10 +10,23 @@ import (
 
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
-	// Runs initialise method for handler.
-	originalList, initError := InitHandler(w, r)
-	if initError != nil {
+	// Query for printing information about endpoint.
+	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n"))
+		if writeErr != nil {
+			return
+		}
+		utility.Encoder(w, constants.CURRENT_QUERIES)
 		return
+	}
+
+	// Set the content-type header to indicate that the response contains JSON data
+	w.Header().Set("content-type", "application/json")
+
+	// Collects the CSV list into JSON.
+	originalList, err := utility.RSEToJSON()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	// Retrieves the list of current year records.
 	currentList := getCurrentList(originalList)

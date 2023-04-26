@@ -1,12 +1,9 @@
 package handlers
 
 import (
-	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"log"
+	"assignment-2/internal/constants"
+	"assignment-2/internal/utility"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 )
 

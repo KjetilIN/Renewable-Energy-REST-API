@@ -4,12 +4,11 @@ import "time"
 
 // Status This file defines structs to work with data.
 type Status struct {
-	CountriesApi   int    `json:"countries_api"`
-	NotificationDB int    `json:"notification_db"`
-	Webhooks       int    `json:"webhooks"`
-	Version        string `json:"version"`
-	Uptime         string `json:"uptime"`
-	//AverageSystemLoad string `json:"average_system_load"`
+	CountriesApi     int    `json:"countries_api"`
+	NotificationDB   int    `json:"notification_db"`
+	Webhooks         int    `json:"webhooks"`
+	Version          string `json:"version"`
+	Uptime           string `json:"uptime"`
 	TotalMemoryUsage string `json:"total_memory_usage"`
 }
 
@@ -53,4 +52,11 @@ type Country struct {
 
 type IdResponse struct {
 	ID string `json:"webhook_id"`
+}
+
+// Information A struct to encode information.
+type Information struct {
+	Title       string
+	Example     string
+	Description string
 }
