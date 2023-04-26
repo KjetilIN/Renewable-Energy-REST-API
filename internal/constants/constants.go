@@ -18,10 +18,10 @@ const (
 
 	FIRESTORE_COLLECTION      = "webhooks"        // Name of the main collection for the webhooks
 	FIRESTORE_COLLECTION_TEST = "test_collection" // Name of the collection which the test make use of
-
-	FIREBASE_CREDENTIALS_FILE_PATH           = "./cloud-assignment-2.json"  // Name of the credential file, see readme for how to use and where to place
-	FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS = "../cloud-assignment-2.json" // Same credentials but different locations
-	MAX_WEBHOOK_COUNT                        = 40                           //
+	FIREBASE_FILE_NAME = "cloud-assignment-2.json" // Name of the firebase credentials file 
+	FIREBASE_CREDENTIALS_FILE_PATH = "./" + FIREBASE_FILE_NAME  // Path of credentials in the root folder
+	FIREBASE_CREDENTIALS_FILE_PATH_FOR_DB_TESTS = "../" + FIREBASE_FILE_NAME // Same credentials but different locations
+	MAX_WEBHOOK_COUNT = 40 // The max amount of webhooks allowed
 
 	// COUNTRIES_API_URL Used to send head request.
 	COUNTRIES_API_URL = "http://129.241.150.113:8080/v3.1/"
@@ -37,7 +37,7 @@ const (
 	DESCENDING = 2
 )
 
-// The different events types
+// The different events types. See readme for more details
 const (
 	COUNTRY_API_EVENT = "COUNTRY_DOWN" // Event: country api is down
 	CALLS_EVENT       = "CALLS"        // Event: based on invocations
