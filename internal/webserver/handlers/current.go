@@ -10,7 +10,7 @@ import (
 
 // HandlerCurrent is a handler for the /current endpoint.
 func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
-	// Runs initialise method for handler.
+	// Runs initialize method for handler.
 	originalList, initError := InitHandler(w, r)
 	if initError != nil {
 		return

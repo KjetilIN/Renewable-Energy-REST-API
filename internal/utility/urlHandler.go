@@ -12,6 +12,7 @@ func ReplaceSpaces(url string) string {
 }
 
 // GetParams Returns a string slice of parameters.
+// Includes spaces 
 func GetParams(url string, endpoint string) string {
 	// Checks if url or endpoint is empty. Returns an empty string if so.
 	if url == "/" || url == "" || endpoint == "" {
@@ -20,8 +21,12 @@ func GetParams(url string, endpoint string) string {
 
 	basisParams := strings.Split(endpoint, "/")
 	params := strings.Split(url, "/") //Used to split the / in path to collect search parameters.
-	var param string
 
+	if len(params) != len(basisParams) + 1{
+
+	}
+	
+	var param string
 	for i, v := range basisParams {
 		if strings.Contains(strings.ToLower(v), strings.ToLower(params[i])) {
 			// If basisParams correspond, it will continue.
