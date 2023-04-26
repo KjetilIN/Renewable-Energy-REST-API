@@ -6,5 +6,6 @@ services:
     volumes:
       - ./cloud-assignment-2.json:/go/src/app/cloud-assignment-2.json
       - ./internal/res:/go/src/app/internal/res
+      - ./template/:/go/src/app/internal/res
     ports:
       - "8000:8080"
