@@ -162,3 +162,17 @@ var CURRENT_QUERIES = []structs.Information{
 			"it descending.",
 	},
 }
+
+var DEFAULT_QUERIES = []structs.Information{
+	{
+		Title:       "No parameters",
+		Example:     "Use: /energy/",
+		Description: "Will provide an overview of the functionality of the web application",
+	},
+
+	{
+		Title:       "Information query",
+		Example:     "Use: /energy/?information=true",
+		Description: "Will present information about endpoint.",
+	},
+}
