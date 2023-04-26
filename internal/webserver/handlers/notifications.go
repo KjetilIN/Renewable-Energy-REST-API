@@ -3,6 +3,7 @@ package handlers
 import (
 	"assignment-2/db"
 	"assignment-2/internal/constants"
+	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -18,57 +19,46 @@ import (
 // Function for handling get request for the  notification endpoint
 func handleGetRequest(w http.ResponseWriter, r *http.Request){
 	// Get any parameter received
-	givenParameters := strings.TrimPrefix(r.URL.Path, constants.NOTIFICATIONS_PATH)
-	givenParameters = strings.ReplaceAll(givenParameters, " ", "")
-	urlParts := strings.Split(givenParameters, "/")
-
-	// Remove empty strings from urlParts slice
-	var params []string
-	for _, part := range urlParts {
-		if part != "" {
-			params = append(params, part)
-		}
-	}
+	component, urlError := utility.GetOneFirstComponentOnly(constants.NOTIFICATIONS_PATH, r.URL.Path)
+	if urlError != nil{
+		log.Println("Utility function error for getting one component: " + urlError.Error())
+		http.Error(w, "Bad request: Endpoint was not correctly used. See readme...", http.StatusBadRequest)
+		return 
+	} 
 	
-	//Should only be given max one parameters 
-	if (len(params) > 1){
-		log.Println("Error on get method for notification endpoint")
-		http.Error(w, "Not correct usage of getting webhook information", http.StatusBadRequest)
-		return;
-	}else if (len(params) != 0 ){
+	
+	// Check if there was given a component 
+	if component != "" {
 		//Fetch only the webhook with 
-		fetchedWebhook, err := db.FetchWebhookWithID(params[0], constants.FIRESTORE_COLLECTION)
+		fetchedWebhook, err := db.FetchWebhookWithID(component, constants.FIRESTORE_COLLECTION)
 		
 		//Error on fetching the webhook with the id
-		if(err != nil){
+		if err != nil{
 			log.Println("Error on fetching webhook with id: " + err.Error())
-			http.Error(w, "No existing webhook with the ID: " + params[0], http.StatusNotFound)
+			http.Error(w, "No existing webhook with the ID: " + component, http.StatusNotFound)
 			return
 		}
 
 		//Encode the result
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		encodeError := json.NewEncoder(w).Encode(&fetchedWebhook)
-		if(encodeError != nil){
-			log.Println("Error on encoding fetched webhook with ID", encodeError.Error())
-			http.Error(w, "Error on encoding struct", http.StatusInternalServerError)
-			return 
-		}
+
+		// Use encoder for the result 
+		utility.Encoder(w, fetchedWebhook)
 			
 	}else{
 		// Fetch all webhooks 
 		allWebHooks, fetchError := db.FetchAllWebhooks(constants.FIRESTORE_COLLECTION);
 
 		//Handle error 
-		if(fetchError != nil){
+		if fetchError != nil{
 			log.Println("Error on fetching all webhooks: ", fetchError.Error())
 			http.Error(w, "Could not fetch all webhooks. \nSee status endpoint to the status of webhook database...", http.StatusInternalServerError)
 			return 
 		}
 
 		//Return message if there are no webhooks created yet
-		if(len(allWebHooks) == 0){
+		if len(allWebHooks) == 0 {
 			log.Println("No content in webhooks")
 			http.Error(w, "No webhooks in storage", http.StatusNoContent)
 			return
@@ -78,12 +68,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		//Encode the result
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		encodeError := json.NewEncoder(w).Encode(&allWebHooks)
-		if(encodeError != nil){
-			log.Println("Error on encoding fetched webhooks", encodeError.Error())
-			http.Error(w, "Error on encoding struct", http.StatusInternalServerError)
-			return 
-		}
+		utility.Encoder(w, allWebHooks)
 		
 	}
 
