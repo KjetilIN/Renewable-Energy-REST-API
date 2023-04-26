@@ -577,20 +577,33 @@ The following steps are
 
 # Advanced functionality
 This assignment introduced the following advanced tasks:
-* Cache: Implement purging of cached information for requests older than a given number of hours/days.
-* Event types: Consider supporting other event types you can think of.
-* Current endpoint: Extend {?country} to support country name (e.g., norway) as input.
-* History endpoint: 
-  * Selective use of only begin or end as single parameter (e.g., ?begin=1980 only consider data from 
-  1980 onwards; ?end=1980, values from the first time entry until 1980 only). 
-  * Extend the history for all countries with a time constraint. Where {?begin=year&end=year?} is specified 
-  (e.g., ?begin=1960&end=1970), only calculate mean values for these years (not for all years). 
-  * Additional optional parameter {?sortByValue=bool?} to support sorting of output by percentage value 
-  (e.g., ?sortByValue=true).
 
 ## Cache
-When searching for a country/ies, the country/ies will be cached for a set period of time. This is done to ensure an 
+Description: Implement purging of cached information for requests older than a given number of hours/days.
+
+When searching for a country/ies, the country/ies will be cached for a set period of time. This is done to ensure an
 updated cache. This result in less frequent requests for the API and shorter response time.
+
+## Event types
+Description: Consider supporting other event types you can think of.
+
+## Current endpoint
+Description: Extend {?country} to support country name (e.g., norway) as input.
+
+## History endpoint
+Description: Selective use of only begin or end as single parameter (e.g., ?begin=1980 only consider data from 1980
+onwards; ?end=1980, values from the first time entry until 1980 only).
+
+Description: Extend the history for all countries with a time constraint. Where {?begin=year&end=year?} is specified
+(e.g., ?begin=1960&end=1970), only calculate mean values for these years (not for all years).
+
+Description: Additional optional parameter {?sortByValue=bool?} to support sorting of output by percentage
+value (e.g., ?sortByValue=true).
+
+## Wiki
+We have also created a [wiki](https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2023-workspace/marhjoh/assignment-2/-/wikis/home)
+for this project which includes more information about the assignment, like for example an overview of the
+applications' use-case examples and the group dynamic during the assignment.
 
 # Design
 Throughout the implementation of this application, the focus points on the design has been loose coupling, high 
