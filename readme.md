@@ -13,13 +13,20 @@
 
 ---
 
-API which allows for searching of reports on percentage of renewable energy in different countries' energy mix over time.
-```
-/energy/v1/renewables/current 
-/energy/v1/renewables/history/
-/energy/v1/notifications/ 
-/energy/v1/status/
-```
+This project is related to the course Cloud Technologies Course (PROG2005), Spring Semester 2023, taught at NTNU, Gjøvik.
+The project consists of a REST web application in Golang that provides the client with the ability to retrieve
+information about developments related to renewable energy production for and across countries. The application uses
+an existing webservice and an own data-centric webservice to gather and expose data via endpoints. The service allows
+for notification registration using webhooks, and it is dockerized and deployed using an IaaS system.
+
+REST Web Services
+The REST web service used for this purpose are:
+* REST Countries API (instance hosted for this course)
+    * Endpoint: [http://129.241.150.113:8080/v3.1](http://129.241.150.113:8080/v3.1)
+    * Documentation: [http://129.241.150.113:8080/](http://129.241.150.113:8080/)
+* [Renewable Energy Dataset](https://drive.google.com/file/d/18G470pU2NRniDfAYJ27XgHyrWOThP__p/view?usp=sharing)
+(Authors: Hannah Ritchie, Max Roser and Pablo Rosado (2022) - "Energy". Published online at OurWorldInData.org.
+Retrieved from: [https://ourworldindata.org/energy](https://ourworldindata.org/energy)
 
 ---
 
@@ -74,6 +81,16 @@ API which allows for searching of reports on percentage of renewable energy in d
 
 ---
 
+# Endpoints
+
+These are the endpoints for our REST web application:
+
+```
+/energy/v1/renewables/current
+/energy/v1/renewables/history/
+/energy/v1/notifications/
+/energy/v1/status/
+```
 
 ## Current endpoint ##
 This endpoint retrieves the elements of the latest year currently available. The newest data in renewable-share-energy
@@ -833,7 +850,6 @@ The time writing this, the test coverage lies around 70% of the lines in the tes
 some packages are not tested yet. For example, we could have implemented another test for a stubbed countryAPI.
 However, we didn't meet the time requirement to implement this. On the other hand the main functionality of all
 packages is tested in varying degrees.
-
 
 ## Other
 * Use a middleware to set the content-type header for all response.
