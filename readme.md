@@ -562,6 +562,17 @@ PATH: /energy/
 
 <br>
 
+# Testing
+We strive to maintain a high level of quality in our tests to ensure the reliability and stability of our application.
+We use a combination of inbuilt Go testing and the testing framework, Testify, to ensure that our code is reliable
+and bug-free. Testify provides several convenient assertion functions that allow us to test our code with ease. We
+also use the built-in testing package of Go, which provides a robust testing infrastructure.
+
+## Coverage
+To ensure that our tests cover as much of our codebase as possible, we make use of coverage tools such as:
+`go test -cover`, which shows us the percentage of code covered by our tests. By maintaining a high level of code
+coverage, we can be confident in the quality of our codebase, and we can easily catch any bugs that may arise
+during development.
 
 ## Endpoint Tests ##
 To run all endpoint tests write the following command in root folder: 
@@ -811,6 +822,11 @@ have certain privileges to data related to the server health, examples are provi
 This could be solved through making requests with a HEAD field including a passphrase or password. A user without
 the credentials in the HEAD field would not be able to access the endpoint that offers the privileged functionality since
 the user would not be authenticated.
+
+## Restructure files
+We could have put Go files into folders to increase cohesion and make the structure more clean, however the structure
+we have now has a relatively high cohesion as the handler folders only works with handler functions. While the utility
+folder only works with helper functions used in the handlers.
 
 ## Other
 * Use a middleware to set the content-type header for all response.
