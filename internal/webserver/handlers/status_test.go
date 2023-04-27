@@ -119,6 +119,7 @@ func TestHandlerStatus_GetStatusSuccess(t *testing.T) {
 	}
 }
 
+// TestGetStatus_GetTotalMemoryUsageSuccess checks if the total memory usage returns the correct value
 func TestGetStatus_GetTotalMemoryUsageSuccess(t *testing.T) {
 	// Create a new request and response body.
 	req := httptest.NewRequest(http.MethodGet, constants.STATUS_PATH, nil)
@@ -145,5 +146,5 @@ func TestGetStatus_GetTotalMemoryUsageSuccess(t *testing.T) {
 	}
 
 	// Compare the response body struct with the expected struct.
-	assert.NotEqual(t, actual, *expected)
+	assert.NotEqual(t, *expected, actual, "the actual and expected struct appears to be equal")
 }
