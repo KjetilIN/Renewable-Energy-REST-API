@@ -4,12 +4,11 @@ import "time"
 
 // Status This file defines structs to work with data.
 type Status struct {
-	CountriesApi   int    `json:"countries_api"`
-	NotificationDB int    `json:"notification_db"`
-	Webhooks       int    `json:"webhooks"`
-	Version        string `json:"version"`
-	Uptime         string `json:"uptime"`
-	//AverageSystemLoad string `json:"average_system_load"`
+	CountriesApi     int    `json:"countries_api"`
+	NotificationDB   int    `json:"notification_db"`
+	Webhooks         int    `json:"webhooks"`
+	Version          string `json:"version"`
+	Uptime           string `json:"uptime"`
 	TotalMemoryUsage string `json:"total_memory_usage"`
 }
 
@@ -17,6 +16,7 @@ type Webhook struct {
 	Url     string `json:"url"`
 	Country string `json:"country"`
 	Calls   int    `json:"calls"`
+	Event string `json:"event"`
 }
 
 type WebhookID struct {
@@ -24,6 +24,14 @@ type WebhookID struct {
 	Webhook
 	Created     time.Time `json:"created_timestamp"`
 	Invocations int       `json:"invocations"`
+}
+
+// The call response for any given webhook 
+type WebhookCallResponse struct{
+	ID string `json:"webhook_id"`
+	Webhook
+	Invocations int `json:"invocations"`
+	Message string `json:"message"`
 }
 
 // RenewableShareEnergyElement Struct to parse historical data into.
@@ -44,4 +52,11 @@ type Country struct {
 
 type IdResponse struct {
 	ID string `json:"webhook_id"`
+}
+
+// Information A struct to encode information.
+type Information struct {
+	Title       string
+	Example     string
+	Description string
 }

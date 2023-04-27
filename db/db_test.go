@@ -50,7 +50,7 @@ func TestCheckFirestoreConnection(t *testing.T) {
 	}
 }
 
-func TestAddWebhook(t *testing.T) {
+func TestAddWebhook_Correctly(t *testing.T) {
 	// Create a new webhook with some default values
 	webhook := structs.WebhookID{
 		ID: "TEST_ID" + time.Now().Local().String(),
@@ -58,6 +58,7 @@ func TestAddWebhook(t *testing.T) {
 			Url:     "TEST_URL",
 			Country: "TEST_COUNTRY",
 			Calls:   5,
+			Event: constants.CALLS_EVENT,
 		},
 		Created: time.Now(),
 	}
@@ -99,6 +100,85 @@ func TestAddWebhook(t *testing.T) {
 
 }
 
+func TestAddWebhook_NOT_ALLOWED_EVENT(t *testing.T) {
+	// Create a new webhook with some default values
+	webhook := structs.WebhookID{
+		ID: "TEST_ID" + time.Now().Local().String(),
+		Webhook: structs.Webhook{
+			Url:     "TEST_URL",
+			Country: "TEST_COUNTRY",
+			Calls:   5,
+			Event: "THIS_NOT_A_REAL_EVENT",
+		},
+		Created: time.Now(),
+	}
+
+	// Get the Firestore client
+	client, err := getFirestoreClient()
+	if err != nil {
+		t.Fatalf("Failed to get Firestore client: %v", err)
+		return 
+	}
+	defer client.Close()
+
+	// Clear the collection before the test
+	clearFirestoreCollection(t, client)
+
+	// Add the webhook to Firestore test collection
+	err = AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
+	if err == nil {
+		t.Fatalf("Expected fail! Did not fail")
+		return 
+	}
+
+	//Check that the error is correct
+	if err.Error() != "WRONG_EVENT"{
+		t.Fatalf("Expected error to be WRONG_EVENT, was %s", err.Error() )
+		return 
+	}
+}
+
+
+func TestAddWebhook_CALLS_WAS_0(t *testing.T) {
+	// Create a new webhook with some default values
+	webhook := structs.WebhookID{
+		ID: "TEST_ID" + time.Now().Local().String(),
+		Webhook: structs.Webhook{
+			Url:     "TEST_URL",
+			Country: "TEST_COUNTRY",
+			Calls:   0,
+			Event: "calls",
+		},
+		Created: time.Now(),
+	}
+
+	// Get the Firestore client
+	client, err := getFirestoreClient()
+	if err != nil {
+		t.Fatalf("Failed to get Firestore client: %v", err)
+		return 
+	}
+	defer client.Close()
+
+	// Clear the collection before the test
+	clearFirestoreCollection(t, client)
+
+	// Add the webhook to Firestore test collection
+	err = AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
+	if err == nil {
+		t.Fatalf("Expected fail! Did not fail")
+		return 
+	}
+
+	//Check that the error is correct
+	if err.Error() != "CALLS_NOT_DEFINED"{
+		t.Fatalf("Expected error to be CALLS_NOT_DEFINED, was %s", err.Error() )
+		return 
+	}
+}
+
+
+
 func TestGetNumberOfWebhooks(t *testing.T) {
 	// Get the Firestore client
 	client, err := getFirestoreClient()
@@ -114,13 +194,19 @@ func TestGetNumberOfWebhooks(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		webhook := structs.WebhookID{
 			ID:      fmt.Sprintf("test-%d", i),
-			Webhook: structs.Webhook{},
+			Webhook: structs.Webhook{
+				Url: "http://localhost.com/asd",
+				Country: "NOR",
+				Calls: 3,
+				Event: "CALLS",
+			},
 			Created: time.Now(),
 		}
 		err = AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
 		if err != nil {
 			t.Error("AddWebHook test failure caused GetNumberOfWebhooks to fail....")
 			t.Fatalf("Error adding test webhook: %v", err)
+			return
 		}
 	}
 
@@ -148,7 +234,12 @@ func TestFetchWebhookWithID(t *testing.T) {
 	// Add a webhook to Firestore
 	testWebhook := structs.WebhookID{
 		ID:      "test-webhook-id",
-		Webhook: structs.Webhook{},
+		Webhook: structs.Webhook{
+			Url: "THIS IS URL",
+			Country: "NOR",
+			Calls: 0,
+			Event: constants.COUNTRY_API_EVENT,
+		},
 		Created: time.Now(),
 	}
 	err = AddWebhook(testWebhook, constants.FIRESTORE_COLLECTION_TEST)
@@ -329,7 +420,12 @@ func TestPurgeWebhooks(t *testing.T) {
 	for i := 0; i < maxWebhookCount+1; i++ {
 		webhook := structs.WebhookID{
 			ID:      "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i),
-			Webhook: structs.Webhook{},
+			Webhook: structs.Webhook{
+				Url: "http://localhost.com/hh",
+				Country: "COUNTRY",
+				Calls: 4,
+				Event: "CALLS",
+			},
 			Created: time.Now(),
 		}
 		err := AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
@@ -373,12 +469,18 @@ func TestPurgeWebhooks(t *testing.T) {
 	for i := 0; i < maxWebhookCount-1; i++ {
 		webhook := structs.WebhookID{
 			ID:      "ID_OF_WEBHOOK_NR_" + strconv.Itoa(i),
-			Webhook: structs.Webhook{},
+			Webhook: structs.Webhook{
+				Url: "http://localhost.com/hh",
+				Country: "COUNTRY",
+				Calls: 4,
+				Event: "CALLS",
+			},
 			Created: time.Now(),
 		}
 		err := AddWebhook(webhook, constants.FIRESTORE_COLLECTION_TEST)
 		if err != nil {
 			t.Errorf("Error adding webhook to test collection: %s", err)
+			return
 		}
 	}
 
@@ -386,6 +488,7 @@ func TestPurgeWebhooks(t *testing.T) {
 	err = PurgeWebhooks(constants.FIRESTORE_COLLECTION_TEST, maxWebhookCount)
 	if err != nil {
 		t.Errorf("Error purging webhooks from test collection: %s", err)
+		return 
 	}
 
 	// Do 10 attempts at getting the amount, same as before
@@ -429,6 +532,7 @@ func TestInvocate(t *testing.T) {
 					Url:     "https://exsample.no",
 					Country: country, // add webhook to one of three countries
 					Calls:   1,
+					Event: "CALLS",
 				},
 				Created:     time.Now(),
 				Invocations: 0,
@@ -484,7 +588,7 @@ func TestInvocate(t *testing.T) {
 
 func TestCallUrl(t *testing.T) {
 	// Create a mock server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		// Respond with a 200 status code and a message
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "This is a test response")

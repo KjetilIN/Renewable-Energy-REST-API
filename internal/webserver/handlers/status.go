@@ -1,36 +1,35 @@
 package handlers
 
 import (
+	"assignment-2/db"
 	"assignment-2/internal/constants"
+	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
-	"encoding/json"
 	"errors"
 	"github.com/shirou/gopsutil/mem"
 	"net/http"
 	"strconv"
+	"strings"
 )
-
-// Webhooks DB
-var webhooks []structs.WebhookID
-
-// Init empty list of webhooks
-func InitWebhookRegistrations() {
-	webhooks = []structs.WebhookID{}
-}
-
-// Get number of webhooks
-func GetNumberOfWebhooks() int {
-	return len(webhooks)
-}
 
 // HTTP client
 var client = &http.Client{}
 
 // HandlerStatus is a handler for the /status endpoint.
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
+	// Query for printing information about endpoint.
+	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n"))
+		if writeErr != nil {
+			return
+		}
+		utility.Encoder(w, constants.STATUS_QUERIES)
+		return
+	}
+
 	// Set the content-type header to indicate that the response contains JSON data
-	w.Header().Add("content-type", "application/json")
+	w.Header().Set("content-type", "application/json")
 
 	// Return an error if the HTTP method is not GET.
 	if r.Method != http.MethodGet {
@@ -46,12 +45,7 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Encode the status information as JSON and send it in the response.
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(status)
-	if err != nil {
-		http.Error(w, errors.New("there were an error during encoding").Error(), http.StatusInternalServerError)
-		return
-	}
+	utility.Encoder(w, status)
 }
 
 func getStatus() (structs.Status, error) {
@@ -60,27 +54,24 @@ func getStatus() (structs.Status, error) {
 	countryApiRequest, _ := http.NewRequest(http.MethodHead, url, nil)
 
 	// Set the content-type header to indicate that the response contains JSON data
-	countryApiRequest.Header.Add("content-type", "application/json")
+	countryApiRequest.Header.Set("content-type", "application/json")
 
 	res, err := client.Do(countryApiRequest)
 	if err != nil {
 		return structs.Status{}, err
 	}
 
+	// Status code of the country API
 	countriesApiStatus := res.StatusCode
 
-	/*
-		// Check the status of the notification db.
-		url = constants.NOTIFICATIONDB_URL
-		notificationDBRequest, _ := http.NewRequest(http.MethodHead, url, nil)
+	// If the status code is not 200, notify all subscribers to that event
+	if countriesApiStatus != 200 {
+		// Start a go routine for notifying all subscribers that they have been notified for the country api is down.
+		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
+	}
 
-		res, err = client.Do(notificationDBRequest)
-		if err != nil {
-			return structs.Status{}, err
-		}
-
-		notificationDBStatus := res.StatusCode
-	*/
+	// Firebase status
+	dbStatus := db.CheckFirestoreConnection()
 
 	var memUsage string
 	defer func() {
@@ -96,31 +87,13 @@ func getStatus() (structs.Status, error) {
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-	/*var loadAvg string
-	// Get the average system load for the last minute.
-	defer func() {
-		if r := recover(); r != nil {
-			loadAvg = "N/A"
-		}
-	}()
-
-	avg, err := load.Avg()
-	if err != nil {
-		panic(err)
-	}
-	loadAvg = strconv.Itoa(int(avg.Load1))*/
-
-	// get number of registered webhooks
-	numWebhooks := GetNumberOfWebhooks()
-
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi: countriesApiStatus,
-		//NotificationDB: 	notificationDBStatus,
-		Webhooks: numWebhooks,
-		Version:  "v1",
-		Uptime:   uptime.GetUptime(),
-		//AverageSystemLoad: loadAvg + " in the last minute",
+		CountriesApi:     countriesApiStatus,
+		NotificationDB:   dbStatus,
+		Webhooks:         db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:          constants.VERSION,
+		Uptime:           uptime.GetUptime(),
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
 }

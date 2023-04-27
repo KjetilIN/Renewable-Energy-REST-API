@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"assignment-2/db"
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
@@ -12,55 +11,36 @@ import (
 
 // HandlerHistory is a handler for the /history endpoint.
 func HandlerHistory(w http.ResponseWriter, r *http.Request) {
-	// Checks the request type.
-	if !utility.CheckRequest(r, http.MethodGet) {
-		http.Error(w, "Request not supported.", http.StatusNotImplemented)
+	// Query for printing information about endpoint.
+	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n"))
+		if writeErr != nil {
+			return
+		}
+		utility.Encoder(w, constants.HISTORY_QUERIES)
 		return
 	}
-	// Sets the content type of client to be json format.
-	w.Header().Set("content-type", "application/json")
+
+	// Runs initialise method for handler.
+	listOfRSE, initError := InitHandler(w, r)
+	if initError != nil {
+		return
+	}
+
 	// Boolean if all countries are to be shown.
 	allCountries := true
 
-	// Reads from csv and returns json list.
-	listOfRSE, jsonError := utility.RSEToJSON()
-	if jsonError != nil {
-		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Collects parameter from url path.
+	// Collects parameter from url path. If empty, an empty string is returned.
 	countryIdentifier := utility.GetParams(r.URL.Path, constants.HISTORY_PATH)
-	// Checks if country identifier exists.
 	if countryIdentifier != "" {
-		var filteredList []structs.RenewableShareEnergyElement
-		filteredList = countryCodeLimiter(listOfRSE, countryIdentifier)
+		var filterErr error
 
-		// If list is empty, could not find country by country code.
-		if len(filteredList) == 0 {
-			// Checks if country searched for is a full common name.
-			country, countryConversionErr := utility.GetCountry(countryIdentifier, false)
-			if countryConversionErr != nil {
-				http.Error(w, "Did not find country based on search parameters: "+countryConversionErr.Error(), http.StatusBadRequest)
-				return
-			}
-			// Checks if country code is empty.
-			if country.CountryCode != "" {
-				filteredList = countryCodeLimiter(listOfRSE, country.CountryCode)
-				// Assigns the country identifier to be the country code.
-				countryIdentifier = country.CountryCode
-			}
-		}
-		// The new list is a filtered list based on country code.
-		listOfRSE = filteredList
-		// No longer printing all countries.
-		allCountries = false
-		// Increment the invocations for the given country code
-		dbErr := db.IncrementInvocations(strings.ToUpper(countryIdentifier), constants.FIRESTORE_COLLECTION)
-		if dbErr != nil {
-			http.Error(w, "Error: "+dbErr.Error(), http.StatusBadRequest)
+		listOfRSE, filterErr = CountryFilterer(w, listOfRSE, countryIdentifier)
+		if filterErr != nil {
 			return
 		}
+		// It will not show all countries.
+		allCountries = false
 	}
 
 	// Checks for begin and end queries.
@@ -68,13 +48,20 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		var queryError error // Initialises a potential error.
 		beginQuery := r.URL.Query().Get("begin")
 		endQuery := r.URL.Query().Get("end")
-		// Calls function to include begin and end checking.
-		listOfRSE, queryError = beginEndLimiter(beginQuery, endQuery, listOfRSE)
-		if queryError != nil {
-			http.Error(w, "Error using queries: "+queryError.Error(), http.StatusBadRequest)
+		// Checks if queries is empty.
+		if beginQuery != "" || endQuery != "" {
+			// Calls function to include begin and end checking.
+			listOfRSE, queryError = beginEndLimiter(beginQuery, endQuery, listOfRSE)
+			if queryError != nil {
+				http.Error(w, "Begin or end query faulty. It should be of type number.", http.StatusBadRequest)
+				return
+			}
+			// Mean of each country should not be calculated.
+			allCountries = false
+		} else { // If year is empty, it tells user it is empty, but still allows for code to run.
+			http.Error(w, "Begin or end query should not be empty.", http.StatusLengthRequired)
+			return
 		}
-		// Mean of each country should not be calculated.
-		allCountries = false
 	}
 
 	// Year query, which returns a specific year.
@@ -84,36 +71,41 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		if year != "" {
 			listOfRSE, queryErr = beginEndLimiter(year, year, listOfRSE)
 			if queryErr != nil {
-				http.Error(w, "Error using queries: "+queryErr.Error(), http.StatusBadRequest)
+				http.Error(w, "Year query faulty, it should be a number.", http.StatusBadRequest)
+				return
 			}
-		}
-		// Mean of each country should not be calculated.
-		allCountries = false
-	}
-
-	// Overrides allCountries. Calculates the mean of grouped countries.
-	if r.URL.Query().Has("mean") && strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
-		listOfRSE = meanCalculation(listOfRSE)
-	}
-
-	// Checks if sortByValue query is passed.
-	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		// Sorts percentage descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = utility.SortRSEList(listOfRSE, false, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			listOfRSE = utility.SortRSEList(listOfRSE, false, constants.ASCENDING)
+			// Mean of each country should not be calculated.
+			allCountries = false
+		} else { // If year is empty, it tells user it is empty, but still allows for code to run.
+			http.Error(w, "Year query should not be empty.", http.StatusLengthRequired)
+			return
 		}
 	}
 
-	// Checks if sortAlphabetically query is passed.
-	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
-		// Sorts list descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
+	// Calculates the mean of grouped countries. Overrides allCountries=true.
+	if r.URL.Query().Has("mean") {
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("mean")), "true") {
+			listOfRSE = meanCalculation(listOfRSE)
 			listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
+		} else { // To inform the user that mean query must be true to use.
+			http.Error(w, "?mean=true, required to use mean.", http.StatusMethodNotAllowed)
+			return
 		}
+	}
+
+	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
+	if allCountries {
+		listOfRSE = meanCalculation(listOfRSE)
+		// Sorts alphabetically as meanCalculation uses maps, which randomizes entries.
+		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
+	}
+
+	// Handles sort query.
+	var sortErr error
+	listOfRSE, sortErr = SortQueryHandler(r, listOfRSE)
+	if sortErr != nil {
+		http.Error(w, sortErr.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// Checks if list is empty.
@@ -121,27 +113,11 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Nothing matching your search terms.", http.StatusBadRequest)
 		return
 	}
-	// If all countries is to be printed, it will calculate the mean first, then sort it alphabetically.
-	if allCountries {
-		listOfRSE = meanCalculation(listOfRSE)
-		listOfRSE = utility.SortRSEList(listOfRSE, true, constants.ASCENDING)
-	}
+
 	// Resets country identifier.
 	countryIdentifier = ""
 	// Encodes list and prints to console.
 	utility.Encoder(w, listOfRSE)
-}
-
-// countryCodeLimiter Method to limit a list based on country code.
-func countryCodeLimiter(listToIterate []structs.RenewableShareEnergyElement, countryCode string) []structs.RenewableShareEnergyElement {
-	var limitedList []structs.RenewableShareEnergyElement
-	for i, v := range listToIterate { // Iterates through input list.
-		if strings.Contains(strings.ToLower(listToIterate[i].IsoCode), strings.ToLower(countryCode)) { // If country code match it is
-			// appended to new list.
-			limitedList = append(limitedList, v)
-		}
-	}
-	return limitedList // Returns list containing all matching countries.
 }
 
 // beginEndLimiter Function to allow for searching to and from a year.
@@ -183,6 +159,8 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Renewable
 	// Returns mean of years between, as long as begin and end is not the same.
 	if toFromOr == 3 && convBegin != convEnd {
 		newList = meanCalculation(newList)
+		// Sorts newList, as mean calculation randomizes entries.
+		newList = utility.SortRSEList(newList, true, constants.ASCENDING)
 	}
 	return newList, nil
 }

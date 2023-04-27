@@ -35,5 +35,4 @@ func TestAddAndGetCache(t *testing.T) {
 		Cache:       time.Time{},
 	})
 	assert.Error(t, addToCacheErr, "Error was not sent.")
-
 }
