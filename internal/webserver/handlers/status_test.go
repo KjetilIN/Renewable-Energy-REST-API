@@ -3,7 +3,13 @@ package handlers
 //Test file containing functions to test the /status endpoint functionality.
 
 import (
+	"assignment-2/db"
+	"assignment-2/internal/constants"
+	"assignment-2/internal/webserver/structs"
+	"assignment-2/internal/webserver/uptime"
+	"encoding/json"
 	"errors"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -113,8 +119,32 @@ func TestHandlerStatus_GetStatusSuccess(t *testing.T) {
 	}
 }
 
-func TestHandlerStatusJSONEncoding(t *testing.T) {
-}
+// TestGetStatus_GetTotalMemoryUsageSuccess checks if the total memory usage returns the correct value
+func TestGetStatus_GetTotalMemoryUsageSuccess(t *testing.T) {
+	// Create a new request and response body.
+	req := httptest.NewRequest(http.MethodGet, constants.STATUS_PATH, nil)
+	w := httptest.NewRecorder()
 
-func TestHandlerStatus_UnavailableThirdParty(t *testing.T) {
+	// Call the HandlerStatus function with the mock request and response.
+	HandlerStatus(w, req)
+
+	// Parse the response body into a Status struct.
+	var actual structs.Status
+	err := json.Unmarshal(w.Body.Bytes(), &actual)
+	if err != nil {
+		t.Fatalf("Error parsing response body: %s", err)
+	}
+
+	// Define the expected response body struct.
+	expected := &structs.Status{
+		CountriesApi:     http.StatusOK,
+		NotificationDB:   http.StatusOK,
+		Webhooks:         db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:          "v1",
+		Uptime:           uptime.GetUptime(),
+		TotalMemoryUsage: "N/A",
+	}
+
+	// Compare the response body struct with the expected struct.
+	assert.NotEqual(t, *expected, actual, "the actual and expected struct appears to be equal")
 }

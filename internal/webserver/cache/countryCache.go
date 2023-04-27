@@ -40,8 +40,7 @@ func GetCountryByIsoCodeFromCache(isoCode string) (structs.Country, error) {
 
 // GetCountryFromCache Get a country by name.
 func GetCountryFromCache(cachedCountryName string) (structs.Country, error) {
-	cachedCountryName = strings.ToUpper(cachedCountryName)
-	return GetCachedCountryByName(cachedCountryName)
+	return GetCachedCountryByName(strings.ToUpper(cachedCountryName))
 }
 
 // GetCachedCountryByName  Retrieves a cached country from the cache by its common name.

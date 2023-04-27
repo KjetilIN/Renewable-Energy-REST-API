@@ -19,12 +19,20 @@ const (
 	FIRESTORE_COLLECTION      = "webhooks"        // Name of the main collection for the webhooks
 	FIRESTORE_COLLECTION_TEST = "test_collection" // Name of the collection which the test make use of
 
-	FIREBASE_CREDENTIALS_FILE_PATH           = "./cloud-assignment-2.json"  // Name of the credential file, see readme for how to use and where to place
-	FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS = "../cloud-assignment-2.json" // Same credentials but different locations
-	MAX_WEBHOOK_COUNT                        = 40                           //
+	FIREBASE_CREDENTIALS_FILE_PATH                       = "./cloud-assignment-2.json"        // Name of the credential file, see readme for how to use and where to place
+	FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS             = "../cloud-assignment-2.json"       // Same credentials but different locations
+	FIREBASE_CREDENTIALS_FILE_PATH_FOR_NOTIFICATION_TEST = "../../../cloud-assignment-2.json" // Test path for the notifications endpoint
+	MAX_WEBHOOK_COUNT                                    = 40                                 // Max amount of notifications added
 
 	// COUNTRIES_API_URL Used to send head request.
 	COUNTRIES_API_URL = "http://129.241.150.113:8080/v3.1/"
+
+	// MOCK_HISTORY_API_URL URL for mock history.
+	MOCK_HISTORY_API_URL = "http://localhost:8080/mock/history"
+	// MOCK_CURRENT_API_URL URL for mock current.
+	MOCK_CURRENT_API_URL = "http://localhost:8080/mock/current"
+	// MOCK_API_URL URL for api stub.
+	MOCK_API_URL = "http://localhost:8080/mock/api"
 
 	// COUNTRYCODE_API_ADDRESS URL for GET request of country code.
 	COUNTRYCODE_API_ADDRESS = "http://129.241.150.113:8080/v3.1/alpha/"

@@ -68,7 +68,7 @@ func getStatus() (structs.Status, error) {
 	countryApiRequest, _ := http.NewRequest(http.MethodHead, url, nil)
 
 	// Set the content-type header to indicate that the response contains JSON data
-	countryApiRequest.Header.Add("content-type", "application/json")
+	countryApiRequest.Header.Set("content-type", "application/json")
 
 	res, err := client.Do(countryApiRequest)
 	if err != nil {
@@ -103,12 +103,11 @@ func getStatus() (structs.Status, error) {
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi:   countriesApiStatus,
-		NotificationDB: dbStatus,
-		Webhooks:       db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:        "v1",
-		Uptime:         uptime.GetUptime(),
-		//AverageSystemLoad: loadAvg + " in the last minute",
+		CountriesApi:     countriesApiStatus,
+		NotificationDB:   dbStatus,
+		Webhooks:         db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:          "v1",
+		Uptime:           uptime.GetUptime(),
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
 }
