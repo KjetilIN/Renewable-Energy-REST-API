@@ -33,7 +33,7 @@ func InitHandler(w http.ResponseWriter, r *http.Request) ([]structs.RenewableSha
 func SortQueryHandler(r *http.Request, list []structs.RenewableShareEnergyElement) ([]structs.RenewableShareEnergyElement, error) {
 	// Check if the request is done with descending but without any sort query
 	if r.URL.Query().Has("descending") && !(r.URL.Query().Has("sortbyvalue") || r.URL.Query().Has("sortalphabetically")) {
-		return list, errors.New("sorting queries required to use descending")
+		return list, errors.New("sorting queries required to use descending query")
 	}
 
 	// Checks if sortByValue query is passed. If so it sorts it by percentage.
@@ -43,7 +43,7 @@ func SortQueryHandler(r *http.Request, list []structs.RenewableShareEnergyElemen
 			if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
 				list = utility.SortRSEList(list, false, constants.DESCENDING)
 				// Checks if descending is present, but not true.
-			} else if !strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			} else if r.URL.Query().Has("descending") {
 				return list, errors.New("faulty parameter variable, descending=true only works")
 			} else { // Sorting standard is ascending if nothing else is passed.
 				list = utility.SortRSEList(list, false, constants.ASCENDING)
@@ -60,7 +60,7 @@ func SortQueryHandler(r *http.Request, list []structs.RenewableShareEnergyElemen
 			if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
 				list = utility.SortRSEList(list, true, constants.DESCENDING)
 				// Checks if descending is present, but not true.
-			} else if !strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+			} else if r.URL.Query().Has("descending") {
 				return list, errors.New("faulty parameter variable, descending=true only works")
 			} else { // Sorting standard is ascending if nothing else is passed.
 				list = utility.SortRSEList(list, true, constants.ASCENDING)

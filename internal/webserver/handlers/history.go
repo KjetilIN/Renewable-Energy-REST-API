@@ -94,6 +94,7 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	listOfRSE, sortErr = SortQueryHandler(r, listOfRSE)
 	if sortErr != nil {
 		http.Error(w, sortErr.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// Checks if list is empty.

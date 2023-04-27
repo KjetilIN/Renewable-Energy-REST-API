@@ -59,6 +59,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	currentList, sortErr = SortQueryHandler(r, currentList)
 	if sortErr != nil {
 		http.Error(w, sortErr.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// If list is empty, error is passed.
