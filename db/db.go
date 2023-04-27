@@ -52,8 +52,14 @@ func getFirestoreClient(path ...string) (*firestore.Client, error) {
 		log.Println("Credentials file: '" + credentialsPath + "' lead to an error. Trying with the test path...." )
 
 		if path == nil{
-			// If the path is null, try again with the test path for database test, else return the error
-			client , err := getFirestoreClient(constants.FIREBASE_CREDENTIALS_FILE_PATH_FOR_DB_TESTS)
+			client , err := getFirestoreClient(constants.FIREBASE_CREDENTIALS_FILE_PATH_FOR_TESTS)
+
+			// Check if there are an error, if there is, the end user need the notifications path for the test 
+			if err != nil{
+				client, err := getFirestoreClient(constants.FIREBASE_CREDENTIALS_FILE_PATH_FOR_NOTIFICATION_TEST)
+				return client, err
+			}
+
 			return client, err
 		}else{
 			return nil, err 
@@ -97,6 +103,7 @@ func AddWebhook(webhook structs.WebhookID, collection string) error {
 	client, clientErr := getFirestoreClient()
 	defer client.Close()
 	if clientErr != nil {
+		log.Println("Error on getting the firestore client: " + clientErr.Error())
 		return clientErr
 	}
 
@@ -114,6 +121,7 @@ func AddWebhook(webhook structs.WebhookID, collection string) error {
 	// Create a new doc in the
 	_, err := client.Collection(collection).Doc(webhook.ID).Set(context.Background(), webhook)
 	if err != nil {
+		log.Println("Error on creating a new document in firestore: " + err.Error())
 		return err
 	}
 
@@ -129,6 +137,7 @@ func GetNumberOfWebhooks(collection string) int {
 	client, err := getFirestoreClient()
 	defer client.Close()
 	if err != nil {
+		log.Println("Error on firestore client: " + err.Error())
 		return 0
 	}
 
@@ -152,6 +161,7 @@ func FetchWebhookWithID(id string, collection string) (structs.WebhookID, error)
 	client, err := getFirestoreClient()
 	defer client.Close()
 	if err != nil {
+		log.Println("Error on getting the firestore client: " + err.Error())
 		return structs.WebhookID{}, err
 	}
 
@@ -194,6 +204,7 @@ func FetchAllWebhooks(collection string) ([]structs.WebhookID, error) {
 	client, err := getFirestoreClient()
 	defer client.Close()
 	if err != nil {
+		log.Println("Error on getting the firestore client: " + err.Error())
 		return nil, err
 	}
 
@@ -237,12 +248,14 @@ func DeleteWebhook(webhookID string, collection string) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
 	if clientError != nil {
+		log.Println("Error on getting the firestore client: " + clientError.Error())
 		return clientError
 	}
 
 	// Delete the document based on the id given
 	_, err := client.Collection(collection).Doc(webhookID).Delete(context.Background())
 	if err != nil {
+		log.Println("Error on deleting the document with id '" + webhookID +"' :" + err.Error())
 		return err
 	}
 	// No error and we return nil
@@ -256,6 +269,7 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
 	if clientError != nil {
+		log.Println("Error on getting the firestore client: " + clientError.Error())
 		return clientError
 	}
 
@@ -272,6 +286,7 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error {
 
 	// Check if we need to purge
 	if numberOfWebhooks <= webhookLimit {
+		log.Println("Purging was attempted, but was under the limit of max webhooks...")
 		return nil
 	}
 
@@ -284,6 +299,7 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error {
 	// Get all the webhooks
 	querySnapshot, err := client.Collection(collection).Documents(context.Background()).GetAll()
 	if err != nil {
+		log.Println("Error on creating getting all the webhooks: " + err.Error())
 		return err
 	}
 
@@ -292,6 +308,7 @@ func PurgeWebhooks(collection string, maxWebhookCount ...int) error {
 	for _, doc := range querySnapshot {
 		var webhook structs.WebhookID
 		if err := doc.DataTo(&webhook); err != nil {
+			log.Println("Error on doc to data for document '" + doc.Ref.ID + "'" )
 			return err
 		}
 		webhooks = append(webhooks, &webhook)
@@ -320,6 +337,7 @@ func IncrementInvocations(alphaCode string, collection string) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
 	if clientError != nil {
+		log.Println("Error on getting the firestore client: " + clientError.Error())
 		return clientError
 	}
 
@@ -435,6 +453,7 @@ func NotifyForEvent(event string, collection string) error {
 	// Get the client
 	client, clientError := getFirestoreClient()
 	if clientError != nil {
+		log.Println("Error on getting the firestore client: " + clientError.Error())
 		return clientError
 	}
 

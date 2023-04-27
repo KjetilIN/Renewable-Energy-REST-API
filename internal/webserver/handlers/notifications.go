@@ -15,7 +15,7 @@ import (
 )
 
 // Function for handling get request for the  notification endpoint
-func handleGetRequest(w http.ResponseWriter, r *http.Request){
+func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 	// Get any parameter received
 	component, urlError := utility.GetOneFirstComponentOnly(constants.NOTIFICATIONS_PATH, r.URL.Path)
 	if urlError != nil{
@@ -52,7 +52,7 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		if fetchError != nil{
 			log.Println("Error on fetching all webhooks: ", fetchError.Error())
 			http.Error(w, "Could not fetch all webhooks. \nSee status endpoint to the status of webhook database...", http.StatusInternalServerError)
-			return 
+			return
 		}
 
 		//Return message if there are no webhooks created yet
@@ -62,7 +62,6 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 			return
 		}
 
-
 		//Encode the result
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -70,34 +69,35 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request){
 		
 	}
 
+	}
 }
 
-// Create a random webhook id based on the content and time of the creation 
-func createWebhookID(webhook structs.Webhook) string{
+// Create a random webhook id based on the content and time of the creation
+func createWebhookID(webhook structs.Webhook) string {
 	// Secret that the hash generation is based on
-	secret := []byte(time.Now().Local().String());
+	secret := []byte(time.Now().Local().String())
 	hashContent := []byte(webhook.Url + webhook.Country)
 	hash := hmac.New(sha256.New, secret)
-	hash.Write(hashContent);
-	return hex.EncodeToString(hash.Sum(nil));
+	hash.Write(hashContent)
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func handlePostRequest(w http.ResponseWriter, r *http.Request){
-	// Expects incoming body to be in correct format, so we encode it directly to a struct 
+func handlePostRequest(w http.ResponseWriter, r *http.Request) {
+	// Expects incoming body to be in correct format, so we encode it directly to a struct
 	givenHook := structs.Webhook{}
 	err := json.NewDecoder(r.Body).Decode(&givenHook)
 	if err != nil {
 		// Was not in the correct format
-		log.Print("Something went wrong: "+err.Error())
+		log.Print("Something went wrong: " + err.Error())
 		http.Error(w, "Error: given body does not fit the schema", http.StatusBadRequest)
 		return
 	}
 
-	// Format the webhook for the firestore and add it to the database as a new document 
+	// Format the webhook for the firestore and add it to the database as a new document
 	id := createWebhookID(givenHook)
 	formattedWebhook := structs.WebhookID{ID: id, Webhook: givenHook, Created: time.Now()}
 	db.AddWebhook(formattedWebhook, constants.FIRESTORE_COLLECTION)
-	
+
 	// Logging that a new webhook has been
 	log.Println("Request for adding webhook with url: " + formattedWebhook.Url)
 
@@ -143,28 +143,37 @@ func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
 		return 
 	}
 
-
 }
 
 // HandlerNotifications is a handler for the /notifications endpoint.
 func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
-	//Handle request based on the methods. 
-	switch r.Method{
-		case http.MethodPost:
-			//Creating a new webhook
-			handlePostRequest(w,r)
-			break
-		case http.MethodDelete:
-			//Deleting a webhook with the given ID
-			handleDeleteRequest(w,r)
-			break
-		case http.MethodGet:
-			//Handle get request to the endpoint based on given parameters 
-			handleGetRequest(w,r)
-			break
-		default:
-			// Only allowed methods
-			http.Error(w, "Method " + r.Method + "not supported", http.StatusMethodNotAllowed)
-			break
+	// Query for printing information about endpoint.
+	if r.URL.Query().Has("information") && strings.Contains(strings.ToLower(r.URL.Query().Get("information")), "true") {
+		_, writeErr := w.Write([]byte("To use API, remove ?information=true, from the URL.\n"))
+		if writeErr != nil {
+			return
+		}
+		utility.Encoder(w, constants.NOTIFICATION_QUERIES)
+		return
+	}
+
+	//Handle request based on the methods.
+	switch r.Method {
+	case http.MethodPost:
+		//Creating a new webhook
+		handlePostRequest(w, r)
+		break
+	case http.MethodDelete:
+		//Deleting a webhook with the given ID
+		handleDeleteRequest(w, r)
+		break
+	case http.MethodGet:
+		//Handle get request to the endpoint based on given parameters
+		handleGetRequest(w, r)
+		break
+	default:
+		// Only allowed methods
+		http.Error(w, "Method "+r.Method+"not supported", http.StatusMethodNotAllowed)
+		break
 	}
 }
