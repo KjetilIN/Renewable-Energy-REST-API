@@ -1,0 +1,5 @@
+# Ignored files
+*.iml
+.idea/
+cloud-assignment-2.json
+.vscode/
