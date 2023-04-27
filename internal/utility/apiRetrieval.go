@@ -4,6 +4,7 @@ import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/webserver/structs"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -14,7 +15,7 @@ func GetCountryFromAPI(countryIdentifier string, countryCode bool) (structs.Coun
 	var countryFromAPI []structs.Country
 	var resp *http.Response
 	var getError error
-
+	log.Println("Using API")
 	// One method to retrieve based on country name and code.
 	if !countryCode {
 		resp, getError = client.Get(constants.COUNTRYNAME_API_ADDRESS + countryIdentifier)
