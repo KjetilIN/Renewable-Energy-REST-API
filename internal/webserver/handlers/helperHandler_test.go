@@ -91,10 +91,12 @@ func TestSortQueryHandler(t *testing.T) {
 	// Check for any errors returned by the handler.
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
+		return
 	}
 	// Checks if list is sorted by percentage.
 	for i := 1; i < len(sortedList); i++ {
 		assert.GreaterOrEqualf(t, sortedList[i-1].Percentage, sortedList[i].Percentage, "List is not sorted.")
+		return
 	}
 
 	req, getErr = http.NewRequest("GET", constants.HISTORY_PATH+"?sortbyvalue=true", nil)
