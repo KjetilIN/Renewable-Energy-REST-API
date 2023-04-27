@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -69,7 +70,6 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 		
 	}
 
-	}
 }
 
 // Create a random webhook id based on the content and time of the creation

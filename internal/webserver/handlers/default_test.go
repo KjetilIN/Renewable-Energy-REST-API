@@ -2,13 +2,15 @@ package handlers
 
 import (
 	"assignment-2/internal/constants"
+	"assignment-2/internal/utility"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // Define file paths
@@ -17,7 +19,7 @@ var cssFilePath = "templates/style.css"
 
 func TestLoadFile(t *testing.T) {
 	// Changes the working directory to the project directory.
-	changeErr := dirChanger()
+	changeErr := utility.DirChanger(2)
 	if changeErr != nil {
 		t.Fatal(changeErr.Error())
 	}
@@ -42,7 +44,7 @@ func TestLoadFile(t *testing.T) {
 
 func TestHandlerDefault(t *testing.T) {
 	// Changes the working directory to the project directory.
-	changeErr := dirChanger()
+	changeErr := utility.DirChanger(2)
 	if changeErr != nil {
 		t.Fatal(changeErr.Error())
 	}
