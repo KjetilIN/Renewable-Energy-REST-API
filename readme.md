@@ -64,9 +64,9 @@ Retrieved from: [https://ourworldindata.org/energy](https://ourworldindata.org/e
   * [Endpoint Tests](#endpoint-tests)
     + [Current Tests](#current-tests)
     + [History test](#history-test)
-  * [Notification endpoint and Firebase tests](#notification-endpoint-and-firebase-tests)
-  * [Status tests](#status-tests)
-  * [Default tests](#default-tests)
+    + [Notification endpoint and Firebase tests](#notification-endpoint-and-firebase-tests)
+    + [Status tests](#status-tests)
+    + [Default tests](#default-tests)
 - [Deployment](#deployment)
   * [Deployed Service](#deployed-service)
   * [OpenStack Configurations: Instance resources](#openstack-configurations--instance-resources)
@@ -635,7 +635,7 @@ go test .\internal\webserver\handlers\history_test.go
 
 <br>
 
-## Notification endpoint and Firebase tests
+### Notification endpoint and Firebase tests
 The notification test are highly coupled with the Firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the Firebase test should have no issue if Firestore is correctly setup. From this if: <br>
 
 1) **FIRESTORE && NOTIFICATION ENDPOINT TEST FAIL** -> Most likely just incorrectly setup the firestore
@@ -648,7 +648,7 @@ go test ./db
 
 <br>
 
-## Status tests
+### Status tests
 There is created a test class for the status endpoint.
 
 To use the test, print into command line when in root project folder:
@@ -658,7 +658,7 @@ go test .\internal\webserver\handlers\status_test.go
 
 <br>
 
-## Default tests
+### Default tests
 There is created a test class for the default endpoint.
 
 To use the test, print into command line when in root project folder:
