@@ -846,7 +846,7 @@ folder only works with helper functions used in the handlers.
 The time writing this, the test coverage lies around 70% of the lines in the tested packages. However,
 some packages are not tested yet. For example, we could have implemented another test for a stubbed countryAPI.
 However, we didn't meet the time requirement to implement this. On the other hand the main functionality of all
-packages is tested in varying degrees.
+packages is tested in varying degrees, and the other functionality is indirectly tested as well.
 
 ## Other
 * Use a middleware to set the content-type header for all response.
