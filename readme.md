@@ -797,8 +797,8 @@ value (e.g., ?sortByValue=true). Read more [here](#history-endpoint)
 
 ## Country searching ##
 Both current and history endpoint has the functionality of searching by country code and also name, which is an advanced
-functionality. We have implemented another bonus functionality, which searches the API if it does not find a country
-in the csv file. It will use the API: http://129.241.150.113:8080/v3.1/name/. 
+functionality. We have implemented another bonus functionality, which searches the API and if it does not find a country
+in the csv file, it will use the API: http://129.241.150.113:8080/v3.1/name/. 
 It will then search for any type of name in country body, which could be common, official and nativeName.
 This allows for searches of `/history/Kongeriket Norge`, which will return information about norway.
 
