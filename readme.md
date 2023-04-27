@@ -125,10 +125,10 @@ Status codes:
 Body:
 ```
 {
-	"Name":       <country_name>,               (string)
-	"IsoCode":    <country_code>,               (string)
-	"Year"        <year_recorded>,              (int)
-	"Percentage": <percentage_of_renewables>    (float64)
+	"Name":       "country_name",               (string)
+	"IsoCode":    "country_code",               (string)
+	"Year"        "year_recorded",              (int)
+	"Percentage": "percentage_of_renewables"    (float64)
 }
 ```
 
@@ -241,10 +241,10 @@ Status codes:
 Body:
 ```
 {
-	"Name":       <country_name>,               (string)
-	"IsoCode":    <country_code>,               (string)
-	"Year"        <year_recorded>,              (int)
-	"Percentage": <percentage_of_renewables>    (float64)
+	"Name":       "country_name",               (string)
+	"IsoCode":    "country_code",               (string)
+	"Year"        "year_recorded",              (int)
+	"Percentage": "percentage_of_renewables"    (float64)
 }
 ```
 
