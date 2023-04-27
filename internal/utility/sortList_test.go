@@ -13,22 +13,22 @@ func TestSortRSEList(t *testing.T) {
 	// Sorts list by percentage, in ascending order.
 	listForTesting = SortRSEList(listForTesting, false, 1)
 	for i := 1; i < len(listForTesting); i++ {
-		assert.LessOrEqual(t, listForTesting[i].Percentage, listForTesting[i-1].Percentage, "List is not sorted.")
+		assert.GreaterOrEqual(t, listForTesting[i].Percentage, listForTesting[i-1].Percentage, "List is not sorted.")
 	}
 	// Sorts list by percentage, in descending order.
 	listForTesting = SortRSEList(listForTesting, false, 2) // Descending percentage
 	for i := 1; i < len(listForTesting); i++ {
-		assert.LessOrEqual(t, listForTesting[i-1].Percentage, listForTesting[i].Percentage, "List is not sorted.")
+		assert.GreaterOrEqual(t, listForTesting[i-1].Percentage, listForTesting[i].Percentage, "List is not sorted.")
 	}
 	// Sorts list alphabetically, in ascending order.
 	listForTesting = SortRSEList(listForTesting, true, 1)
 	for i := 1; i < len(listForTesting); i++ {
-		assert.GreaterOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
+		assert.LessOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
 	}
 	// Sorts list alphabetically, in descending order.
 	listForTesting = SortRSEList(listForTesting, true, 2)
 	for i := 1; i < len(listForTesting); i++ {
-		assert.LessOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
+		assert.GreaterOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
 	}
 }
 

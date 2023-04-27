@@ -114,7 +114,7 @@ func prepareList(setting int) ([]structs.RenewableShareEnergyElement, error) {
 	// Switch case for different settings of the list. For now only original and shorter setting.
 	switch setting {
 	case SHORTER: // Returns the first 100 elements from original list.
-		return list[0:100], nil
+		return list[0:57], nil
 	default:
 		return list, nil
 	}

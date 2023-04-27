@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -18,22 +19,21 @@ import (
 func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 	// Get any parameter received
 	component, urlError := utility.GetOneFirstComponentOnly(constants.NOTIFICATIONS_PATH, r.URL.Path)
-	if urlError != nil{
+	if urlError != nil {
 		log.Println("Utility function error for getting one component: " + urlError.Error())
 		http.Error(w, "Bad request: Endpoint was not correctly used. See readme...", http.StatusBadRequest)
-		return 
-	} 
-	
-	
-	// Check if there was given a component 
+		return
+	}
+
+	// Check if there was given a component
 	if component != "" {
-		//Fetch only the webhook with 
+		//Fetch only the webhook with
 		fetchedWebhook, err := db.FetchWebhookWithID(component, constants.FIRESTORE_COLLECTION)
-		
+
 		//Error on fetching the webhook with the id
-		if err != nil{
+		if err != nil {
 			log.Println("Error on fetching webhook with id: " + err.Error())
-			http.Error(w, "No existing webhook with the ID: " + component, http.StatusNotFound)
+			http.Error(w, "No existing webhook with the ID: "+component, http.StatusNotFound)
 			return
 		}
 
@@ -41,15 +41,15 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		// Use encoder for the result 
+		// Use encoder for the result
 		utility.Encoder(w, fetchedWebhook)
-			
-	}else{
-		// Fetch all webhooks 
-		allWebHooks, fetchError := db.FetchAllWebhooks(constants.FIRESTORE_COLLECTION);
 
-		//Handle error 
-		if fetchError != nil{
+	} else {
+		// Fetch all webhooks
+		allWebHooks, fetchError := db.FetchAllWebhooks(constants.FIRESTORE_COLLECTION)
+
+		//Handle error
+		if fetchError != nil {
 			log.Println("Error on fetching all webhooks: ", fetchError.Error())
 			http.Error(w, "Could not fetch all webhooks. \nSee status endpoint to the status of webhook database...", http.StatusInternalServerError)
 			return
@@ -66,8 +66,6 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		utility.Encoder(w, allWebHooks)
-		
-	}
 
 	}
 }
@@ -101,46 +99,46 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request) {
 	// Logging that a new webhook has been
 	log.Println("Request for adding webhook with url: " + formattedWebhook.Url)
 
-	// Response object to JSON format, and handle any errors 
+	// Response object to JSON format, and handle any errors
 	resp := structs.IdResponse{ID: formattedWebhook.ID}
 
 	// Set the output to be correct
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	
+
 	utility.Encoder(w, resp)
 }
 
-// Function for handling the get request 
-func handleDeleteRequest(w http.ResponseWriter, r *http.Request){
+// Function for handling the get request
+func handleDeleteRequest(w http.ResponseWriter, r *http.Request) {
 
-	// Get the id of from the path, and check if its done correctly 
-	id , urlError := utility.GetOneFirstComponentOnly(constants.NOTIFICATIONS_PATH, r.URL.Path)
-	if urlError != nil{
+	// Get the id of from the path, and check if its done correctly
+	id, urlError := utility.GetOneFirstComponentOnly(constants.NOTIFICATIONS_PATH, r.URL.Path)
+	if urlError != nil {
 		log.Println("Utility function error for getting one component: " + urlError.Error())
 		http.Error(w, "Bad request, please add a single ID", http.StatusBadRequest)
-		return 
-	} 
+		return
+	}
 
 	// No id was given
-	if id == ""{
-		//Tell the endpoint was not correctly used 
+	if id == "" {
+		//Tell the endpoint was not correctly used
 		log.Println("No id was given")
 		http.Error(w, "Error: no id was given. See readme for usage...", http.StatusBadRequest)
-		return 
+		return
 	}
-	
+
 	// Delete the webhook using the firebase methods
 	deletedError := db.DeleteWebhook(id, constants.FIRESTORE_COLLECTION)
-	if deletedError == nil{
-		//Tell the end user that the process of deletion attempt did not lead to any errors. 
+	if deletedError == nil {
+		//Tell the end user that the process of deletion attempt did not lead to any errors.
 		http.Error(w, "Webhook has been deleted successfully", http.StatusOK)
-		return 
-	}else{
+		return
+	} else {
 		//No webhook was found
 		log.Print("Error on deletion of webhook: " + deletedError.Error())
 		http.Error(w, "Internal error on attempt for deleting the deleting the webhook....", http.StatusInternalServerError)
-		return 
+		return
 	}
 
 }
