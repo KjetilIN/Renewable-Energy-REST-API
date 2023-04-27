@@ -828,6 +828,13 @@ We could have put Go files into folders to increase cohesion and make the struct
 we have now has a relatively high cohesion as the handler folders only works with handler functions. While the utility
 folder only works with helper functions used in the handlers.
 
+## Increase test coverage
+The time writing this, the test coverage lies around 70% of the lines in the tested packages. However,
+some packages are not tested yet. For example, we could have implemented another test for a stubbed countryAPI.
+However, we didn't meet the time requirement to implement this. On the other hand the main functionality of all
+packages is tested in varying degrees.
+
+
 ## Other
 * Use a middleware to set the content-type header for all response.
 * Implement Gorilla Mux to define URL routes and extract variables from them instead of doing it manually.
