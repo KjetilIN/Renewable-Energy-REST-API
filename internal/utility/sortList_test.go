@@ -23,12 +23,12 @@ func TestSortRSEList(t *testing.T) {
 	// Sorts list alphabetically, in ascending order.
 	listForTesting = SortRSEList(listForTesting, true, 1)
 	for i := 1; i < len(listForTesting); i++ {
-		assert.LessOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
+		assert.GreaterOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
 	}
 	// Sorts list alphabetically, in descending order.
 	listForTesting = SortRSEList(listForTesting, true, 2)
 	for i := 1; i < len(listForTesting); i++ {
-		assert.GreaterOrEqual(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
+		assert.LessOrEqualf(t, listForTesting[i].Name, listForTesting[i-1].Name, "List is not sorted.")
 	}
 }
 

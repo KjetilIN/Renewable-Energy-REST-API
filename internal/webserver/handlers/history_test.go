@@ -212,7 +212,7 @@ func TestSorted(t *testing.T) {
 	// Checks if list is sorted alphabetically.
 	sortedList = utility.SortRSEList(list, true, 1) // Ascending sorting.
 	for i := 1; i < len(sortedList); i++ {
-		if sortedList[i-1].Name < sortedList[i].Name {
+		if sortedList[i-1].Name > sortedList[i].Name {
 			t.Fatal("List is not sorted correctly.")
 		}
 	}
@@ -220,7 +220,7 @@ func TestSorted(t *testing.T) {
 	// Checks if list is sorted descending alphabetically.
 	sortedList = utility.SortRSEList(list, true, 2) // Descending sorting.
 	for i := 1; i < len(sortedList); i++ {
-		if sortedList[i-1].Name > sortedList[i].Name {
+		if sortedList[i-1].Name < sortedList[i].Name {
 			t.Fatal("List is not sorted correctly.")
 		}
 	}
