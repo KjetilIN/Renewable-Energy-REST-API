@@ -76,6 +76,7 @@ Retrieved from: [https://ourworldindata.org/energy](https://ourworldindata.org/e
   * [How to locally run the service?](#how-to-locally-run-the-service-)
 - [Advanced functionality](#advanced-functionality)
   * [Cache](#cache)
+  * [Information Queries](#information_queries)
   * [Different Event types](#different-event-types)
   * [Purging of notifications](#purging-of-notifications)
   * [Current endpoint](#current-endpoint-1)
@@ -773,6 +774,18 @@ The result is less frequent requests for the API and shorter response time. When
 the country/ies will be cached for a set period of time. This is done to ensure an updated cache. This result in less
 frequent requests for the API and shorter response time.
 
+## Information Queries
+
+With `?information=true` on any given endpoint, for more sample queries for the endpoint. Default handler will redirect with this option selected. Each query example follows the flowing structure: <br>
+
+```json
+{
+  Title:       "Title of the query",
+  Example:     "Use: PATH_TO_ENDPOINT",
+  Description: "Description of the query",
+}
+```
+
 ## Different Event types
 The notification supports different types of events. There are currently 3 types of events.
 Read more about them [here](#notification-event-types)
@@ -807,8 +820,9 @@ This feature will increase the amount of calls to API, which is sometimes unnece
 our API, it will search the country API. However, using the API a user may even search the countries native name and receive
 the correct country. 
 
-### Examples ###
+### Example ###
 Request: `/current/España`
+
 Response:
 ```json
 [
