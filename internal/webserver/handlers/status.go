@@ -19,7 +19,7 @@ var client = &http.Client{}
 // HandlerStatus is a handler for the /status endpoint.
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	// Set the content-type header to indicate that the response contains JSON data
-	w.Header().Add("content-type", "application/json")
+	w.Header().Set("content-type", "application/json")
 
 	// Return an error if the HTTP method is not GET.
 	if r.Method != http.MethodGet {
@@ -49,7 +49,7 @@ func getStatus() (structs.Status, error) {
 	countryApiRequest, _ := http.NewRequest(http.MethodHead, url, nil)
 
 	// Set the content-type header to indicate that the response contains JSON data
-	countryApiRequest.Header.Add("content-type", "application/json")
+	countryApiRequest.Header.Set("content-type", "application/json")
 
 	res, err := client.Do(countryApiRequest)
 	if err != nil {
@@ -60,8 +60,8 @@ func getStatus() (structs.Status, error) {
 	countriesApiStatus := res.StatusCode
 
 	// If the status code is not 200, notify all subscribers to that event
-	if countriesApiStatus != 200{
-		// Start a go routine for notifying all subscribers that they have been notified for the country api is down. 
+	if countriesApiStatus != 200 {
+		// Start a go routine for notifying all subscribers that they have been notified for the country api is down.
 		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
 	}
 
@@ -82,15 +82,13 @@ func getStatus() (structs.Status, error) {
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi: countriesApiStatus,
-		NotificationDB: dbStatus	,
-		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:  "v1",
-		Uptime:   uptime.GetUptime(),
-		//AverageSystemLoad: loadAvg + " in the last minute",
+		CountriesApi:     countriesApiStatus,
+		NotificationDB:   dbStatus,
+		Webhooks:         db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:          "v1",
+		Uptime:           uptime.GetUptime(),
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
 }
