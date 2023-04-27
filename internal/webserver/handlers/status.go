@@ -6,7 +6,6 @@ import (
 	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
-	"encoding/json"
 	"errors"
 	"github.com/shirou/gopsutil/mem"
 	"net/http"
@@ -54,12 +53,7 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Encode the status information as JSON and send it in the response.
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(status)
-	if err != nil {
-		http.Error(w, errors.New("there were an error during encoding").Error(), http.StatusInternalServerError)
-		return
-	}
+	utility.Encoder(w, status)
 }
 
 func getStatus() (structs.Status, error) {
@@ -103,11 +97,12 @@ func getStatus() (structs.Status, error) {
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi:     countriesApiStatus,
-		NotificationDB:   dbStatus,
-		Webhooks:         db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:          "v1",
-		Uptime:           uptime.GetUptime(),
+		CountriesApi:   countriesApiStatus,
+		NotificationDB: dbStatus,
+		Webhooks:       db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:        constants.VERSION,
+		Uptime:         uptime.GetUptime(),
+		//AverageSystemLoad: loadAvg + " in the last minute",
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
 }

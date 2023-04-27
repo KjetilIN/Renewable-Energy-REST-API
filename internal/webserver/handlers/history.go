@@ -101,7 +101,12 @@ func HandlerHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handles sort query.
-	listOfRSE = SortQueryHandler(r, listOfRSE)
+	var sortErr error
+	listOfRSE, sortErr = SortQueryHandler(r, listOfRSE)
+	if sortErr != nil {
+		http.Error(w, sortErr.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// Checks if list is empty.
 	if len(listOfRSE) == 0 {

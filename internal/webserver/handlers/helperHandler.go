@@ -30,28 +30,46 @@ func InitHandler(w http.ResponseWriter, r *http.Request) ([]structs.RenewableSha
 }
 
 // SortQueryHandler Handler duplicate queries from history and current endpoint.
-func SortQueryHandler(r *http.Request, list []structs.RenewableShareEnergyElement) []structs.RenewableShareEnergyElement {
+func SortQueryHandler(r *http.Request, list []structs.RenewableShareEnergyElement) ([]structs.RenewableShareEnergyElement, error) {
+	// Check if the request is done with descending but without any sort query
+	if r.URL.Query().Has("descending") && !(r.URL.Query().Has("sortbyvalue") || r.URL.Query().Has("sortalphabetically")) {
+		return list, errors.New("sorting queries required to use descending query")
+	}
 
 	// Checks if sortByValue query is passed. If so it sorts it by percentage.
-	if r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
-		// Sorts percentage descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			list = utility.SortRSEList(list, false, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			list = utility.SortRSEList(list, false, constants.ASCENDING)
+	if r.URL.Query().Has("sortbyvalue") {
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true") {
+			// Sorts percentage descending if descending query is true.
+			if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+				list = utility.SortRSEList(list, false, constants.DESCENDING)
+				// Checks if descending is present, but not true.
+			} else if r.URL.Query().Has("descending") {
+				return list, errors.New("faulty parameter variable, descending=true only works")
+			} else { // Sorting standard is ascending if nothing else is passed.
+				list = utility.SortRSEList(list, false, constants.ASCENDING)
+			}
+		} else {
+			return nil, errors.New("faulty parameter variable, sortbyvalue=true only works")
 		}
 	}
 
 	// Checks if sortAlphabetically query is passed.
-	if r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
-		// Sorts list descending if descending query is true.
-		if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
-			list = utility.SortRSEList(list, true, constants.DESCENDING)
-		} else { // Sorting standard is ascending if nothing else is passed.
-			list = utility.SortRSEList(list, true, constants.ASCENDING)
+	if r.URL.Query().Has("sortalphabetically") {
+		if strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true") {
+			// Sorts list descending if descending query is true.
+			if strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true") {
+				list = utility.SortRSEList(list, true, constants.DESCENDING)
+				// Checks if descending is present, but not true.
+			} else if r.URL.Query().Has("descending") {
+				return list, errors.New("faulty parameter variable, descending=true only works")
+			} else { // Sorting standard is ascending if nothing else is passed.
+				list = utility.SortRSEList(list, true, constants.ASCENDING)
+			}
+		} else {
+			return list, errors.New("faulty parameter variable, sortalphabetically=true only works")
 		}
 	}
-	return list
+	return list, nil
 }
 
 // CountryFilterer Filters list based on country code or name.
@@ -67,6 +85,11 @@ func CountryFilterer(w http.ResponseWriter, list []structs.RenewableShareEnergyE
 		} else {
 			// Checks for country name.
 			filteredList = countryNameLimiter(list, countryIdentifier)
+			// Checks if filtered list is 0.
+			if len(filteredList) != 0 {
+				// Sets country identifier to iso code if countries matching identifier is found.
+				countryIdentifier = filteredList[0].IsoCode
+			}
 		}
 
 		// Checks if filtered list is empty, it checks the API for it.

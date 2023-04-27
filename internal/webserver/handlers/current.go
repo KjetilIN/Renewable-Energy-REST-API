@@ -38,7 +38,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Checks if query neighbours is presented.
-		if (len(filteredList) > 0 && filteredList == nil) && r.URL.Query().Has("neighbours") {
+		if r.URL.Query().Has("neighbours") && len(filteredList) > 0 {
 			if strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
 				// Collects iso code from filtered list. Filtered list is never nil or empty.
 				countryIdentifier = filteredList[0].IsoCode
@@ -66,7 +66,12 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handles sorting queries.
-	currentList = SortQueryHandler(r, currentList)
+	var sortErr error
+	currentList, sortErr = SortQueryHandler(r, currentList)
+	if sortErr != nil {
+		http.Error(w, sortErr.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// If list is empty, error is passed.
 	if len(currentList) == 0 {
