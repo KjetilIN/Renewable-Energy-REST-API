@@ -23,35 +23,54 @@ API which allows for searching of reports on percentage of renewable energy in d
 
 ---
 
-# Index #
-* [Current endpoint](#Current endpoint)
-  * [Current test](#current-test)
+
+# Table of content
+
+* [Current endpoint](#current-endpoint)
+  + [Request](#request)
+  + [Response](#response)
 * [History endpoint](#history-endpoint)
-  * [History test](#history-test)
-* [Notification endpoint](#notification-endpoint)
-  * [Setting up a new notification subscription](#setting-up-a-new-notification-subscription--br)
-  * [Deleting subscription](#deleting-a-notification-subscription--br)
-  * [Information about a subscription](#retrieving-information-about-a-notification-subscription--br)
-  * [Information about all subscriptions](#retrieving-information-about-all-notification-subscriptions-br)
+  + [Request](#request-1)
+  + [Response](#response-1)
+  + [Example request:](#example-request-)
+- [Notification Endpoint](#notification-endpoint)
+  * [Setting up a new notification subscription: <br>](#setting-up-a-new-notification-subscription---br-)
+  * [Deleting a notification subscription: <br>](#deleting-a-notification-subscription---br-)
+  * [Retrieving information about a notification subscription: <br>](#retrieving-information-about-a-notification-subscription---br-)
+  * [Retrieving information about all notification subscriptions <br>](#retrieving-information-about-all-notification-subscriptions--br-)
   * [Notification Event Types](#notification-event-types)
   * [Purging mechanism](#purging-mechanism)
-  * [Invocation incrementation](#when-is-invocations-incremented)
-  * [Storing notifications](#how-are-notifications-stored)
-  * [Notification tests](#notification-endpoint-and-firebase-tests)
-* [Status endpoint](#status-endpoint)
-    * [Status tests](#status-tests)
-* [Default endpoint](#default-endpoint)
-    * [Default tests](#default-tests)
-* [Deployment](#deployment)
-  * [OpenStack Configurations: Instance resources](#openstack-configurations-instance-resources)
-  * [OpenStack Configurations: Security and Access](#openstack-configurations-security-and-access)
-  * [About Docker](#docker-and-its-purpose)
-  * [Deploying with Docker](#how-to-deploy-the-docker-service)
-* [Advanced functionality](#advanced-functionality)
-    * [Cache](#cache)
-* [Design](#design)
-    * [Project structure](#project-structure)
-* [Further development](#further-development)
+  * [When is invocations incremented?](#when-is-invocations-incremented-)
+  * [How are notifications stored?](#how-are-notifications-stored-)
+- [Status endpoint](#status-endpoint)
+      - [Response](#response-2)
+      - [Example request and response](#example-request-and-response)
+- [Default endpoint](#default-endpoint)
+  * [Endpoint Tests](#endpoint-tests)
+    + [Current Tests](#current-tests)
+    + [History test](#history-test)
+  * [Notification endpoint and Firebase tests.](#notification-endpoint-and-firebase-tests)
+  * [Status tests](#status-tests)
+  * [Default tests](#default-tests)
+- [Deployment](#deployment)
+  * [OpenStack Configurations: Instance resources](#openstack-configurations--instance-resources)
+  * [OpenStack Configurations: Security and Access](#openstack-configurations--security-and-access)
+  * [Docker and its purpose](#docker-and-its-purpose)
+  * [How to deploy the docker service?](#how-to-deploy-the-docker-service-)
+- [Advanced functionality](#advanced-functionality)
+  * [Cache](#cache)
+  * [Event types](#event-types)
+  * [Current endpoint](#current-endpoint-1)
+  * [History endpoint](#history-endpoint-1)
+  * [Country searching](#country-searching)
+    + [Drawbacks](#drawbacks)
+    + [Examples](#examples)
+  * [Wiki](#wiki)
+- [Design](#design)
+    + [Project structure](#project-structure)
+- [Further development](#further-development)
+  * [Administrator user](#administrator-user)
+  * [Other](#other)
 
 ---
 
@@ -282,7 +301,8 @@ To get notified by a given amount of calls a country has, register a webhook wit
 To the body make sure to add: <br>
     - the url that should be invoked<br>
     - the alpha code of the country that you want to be notified by<br>
-    - the number of calls to be notified for. See _How are notifications sent?_ for more details <br>
+    - the number of calls to be notified if the event is for calls. <br>
+    - the type of event to be notified on. See [the notification types here.](#notification-event-types)
 <br>
 
 ## Setting up a new notification subscription: <br>
@@ -296,6 +316,7 @@ Provide the following details to get notifications to the given url. The standar
         "url": "The given url for the webhook to call",
         "country": "Alpha code of the country",
         "calls": "Number of calls for notification"
+        "event": "Type of event"
     }
 ```
 
@@ -318,7 +339,7 @@ PATH: /energy/v1/notifications/{webhook_id}
 <br>
 Look at the status code for how the request for deletion went. If the status was: <br>
 -  400: Please make sure that you added an ID the url. <br>
--  200: Webhook was either found and deleted, or not found (so nothing happend) <br>
+-  200: Webhook was either found and deleted, or not found (so nothing happened) <br>
 -  500: Internal error while trying to delete the webhook. See the status endpoint to check if all services are running
 <br><br>
 
@@ -340,6 +361,7 @@ If there is a webhook with the given ID, the response could look like this:
     "url": "Url_of_the_registration",
     "country": "Alpha_code_of_the_country",
     "calls": "The_amount_of_calls_that_needs_to_be_for_invoking",
+    "event" : "The event type of the notification",
     "created_timestamp": "Server_timestamp_when_the_webhook_was_created",
     "invocations": "The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked"
 }
@@ -363,6 +385,7 @@ Should return a list of all webhooks. Could also be empty if non are registered 
         "url": "Url_of_the_registration",
         "country": "Alpha_code_of_the_country",
         "calls": "The_amount_of_calls_that_needs_to_be_for_invoking",
+        "event": "The_type_of_event",
         "created_timestamp": "Server_timestamp_when_the_webhook_was_created",
         "invocations": "The_amount_of_times_the_country_with_the_given_alpha_code_has_been_invoked"
     },
@@ -412,7 +435,7 @@ This service offers three types of of events:
       BODY: 
       {
           "url": "https://webhook.site/url-stuff",
-          "calls": "country_down"
+          "event": "country_down"
       }
       ```
 
@@ -420,11 +443,13 @@ Here is an example of the JSON response you will receive when a notification is 
 
 ```json
     {
-        "webhook_id": "OIdksUDwveiwe",
-        "country": "USA",
-        "calls": 100,
-        "invocations": 1000,
-        "message": "Notification triggered: 1000 invocations made to the USA endpoint."
+      "webhook_id": "32b184e5bc9e9bee7fdff1362dc2e05bc7174290a4cc3622cd39f5b1803c97e6",
+      "url": "https://webhook.site/sample_url",
+      "country": "NOR",
+      "calls": 2,
+      "event": "CALLS",
+      "invocations": 38,
+      "message": "Notification triggered: 38 invocations made to NOR endpoint."
     }
 ```    
 
@@ -604,6 +629,16 @@ go test .\internal\webserver\handlers\default_test.go
 
 This service is deployed with OpenStack. OpenStack is a IaaS where the user define what resources is needed. It vitalizes resources to serve all end users. More information here: [Openstack Link](https://www.ntnu.no/wiki/display/skyhigh) <br>
 
+## Deployed Service 
+
+The service is deployed with openstack. <br>
+Access it with this floating IP:
+
+http://10.212.169.162:8000/energy/v1/status/
+
+
+**Note:** In the case of self-hosting, use the floating IP of the instance.
+
 ## OpenStack Configurations: Instance resources
 This service has the following resources predefined: 
 
@@ -620,15 +655,6 @@ Security group prevents all communication with the server, but this is allowed:
 3) Http (Port 8000)
 
 To access our service you need be connected to the NTNU network. This could also use the Cisco VPN to connect to the campus network. [More information about the VPN here!](https://i.ntnu.no/wiki/-/wiki/Norsk/Cisco+AnyConnect+VPN)
-
-The service can be access with: 
-
-<br>
-```http
-http://10.212.169.162:8000/energy/v1/status/
-```
-
-**Note:** In the case of self-hosting, use the floating IP.
 
 ## Docker and its purpose 
 Docker is a set of platform as a service (PaaS) products that use OS-level virtualization to deliver software in packages called containers. [This project used this docs for setting up docker on the OpenStack server.](https://docs.docker.com/engine/install/ubuntu/#set-up-the-repository)
@@ -680,6 +706,20 @@ The following steps are
     docker ps -a 
     ```
 
+## How to locally run the service?
+
+1. Have go installed on the local machine. See [download versions here (use go.1.18)](https://go.dev/dl/)
+2. Clone the repo.
+3. Run the project by cd into the project folder, then run:
+```terminal
+  go run ./cmd/main.go
+```
+4. See logs for the port of running service. (Usually port 8080)
+5. Access the service with local host here:
+```
+  http://localhost:PORT_NUMBER/energy/v1/status/
+```
+
 # Advanced functionality
 This assignment introduced the following advanced tasks:
 
@@ -689,8 +729,11 @@ Description: Implement purging of cached information for requests older than a g
 When searching for a country/ies, the country/ies will be cached for a set period of time. This is done to ensure an
 updated cache. This result in less frequent requests for the API and shorter response time.
 
-## Event types
-Description: Consider supporting other event types you can think of.
+## Different Event types
+The notification supports different types of events. There are currently 3 types of events. Read more about them [here](#notification-event-types)
+
+## Purging of notifications
+When the number of notifications are over the max limit defined, webhook will be deleted. Read more [here](#purging-of-notifications)
 
 ## Current endpoint
 Description: Extend {?country} to support country name (e.g., norway) as input.
