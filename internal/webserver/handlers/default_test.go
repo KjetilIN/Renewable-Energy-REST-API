@@ -4,12 +4,13 @@ import (
 	"assignment-2/internal/constants"
 	"assignment-2/internal/utility"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // Define file paths
