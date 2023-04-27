@@ -27,7 +27,7 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Checks if query neighbours is presented.
-		if (len(filteredList) > 0 && filteredList == nil) && r.URL.Query().Has("neighbours") {
+		if r.URL.Query().Has("neighbours") && len(filteredList) > 0 {
 			if strings.ToLower(r.URL.Query().Get("neighbours")) == "true" {
 				// Collects iso code from filtered list. Filtered list is never nil or empty.
 				countryIdentifier = filteredList[0].IsoCode
