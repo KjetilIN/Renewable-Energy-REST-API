@@ -726,8 +726,13 @@ This assignment introduced the following advanced tasks:
 ## Cache
 Description: Implement purging of cached information for requests older than a given number of hours/days.
 
-When searching for a country/ies, the country/ies will be cached for a set period of time. This is done to ensure an
-updated cache. This result in less frequent requests for the API and shorter response time.
+We have implemented a solution that functions using maps which stores countries which have been collected from the
+countryAPI earlier. The key is the name of the country and its value is country structs. It is mostly used for the
+neighbour query in the current endpoint. When searching for a country/ies, the country/ies will be cached for a set
+period of time, which we have set to 600 hours (equal to 25 days). This is done to ensure an updated cache.
+The result is less frequent requests for the API and shorter response time. When searching for a country/ies,
+the country/ies will be cached for a set period of time. This is done to ensure an updated cache. This result in less
+frequent requests for the API and shorter response time.
 
 ## Different Event types
 The notification supports different types of events. There are currently 3 types of events. Read more about them [here](#notification-event-types)
