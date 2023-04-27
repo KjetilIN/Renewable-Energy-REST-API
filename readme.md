@@ -92,7 +92,7 @@ These are the endpoints for our REST web application:
 /energy/v1/status/
 ```
 
-## Current endpoint ##
+## Current endpoint
 This endpoint retrieves the elements of the latest year currently available. The newest data in renewable-share-energy
 is from 2021, and is therefore the current year of this project.
 
@@ -105,7 +105,7 @@ is from 2021, and is therefore the current year of this project.
 The endpoint uses a file: "renewable-share-energy.csv" and REST Countries API, which is retrieved from: http://129.241.150.113:8080/v3.1.
 The file contains historical data from each countries' share of renewable sources.
 
-### Request ###
+### Request
 ```
 Method: GET
 Path: /energy/v1/renewables/current/{country?}{?neighbours=bool?}{sortbyvalue/sortalphabetically=bool?, descending=bool?}
@@ -129,7 +129,7 @@ The endpoint only supports GET requests.
 
 <br>
 
-### Response ###
+### Response
 Content type: `application/json`
 
 Status codes:
@@ -151,7 +151,7 @@ Body:
 
 <br>
 
-**Example Requests & Responses:**
+### Example request & response
 
 Request sent: `/energy/v1/renewables/current/swe`
 Response:
@@ -197,7 +197,7 @@ Response:
 
 <br>
 
-## History endpoint ##
+## History endpoint
 
 This endpoint retrieves all elements from renewable-share-energy. When no query is passed it will return the mean of all
 data based on each country. 
@@ -213,7 +213,7 @@ The file contains historical data from each countries' share of renewable source
 
 <br>
 
-### Request ###
+### Request
 ```
 REQUEST: GET
 PATH: /energy/v1/renewables/history/{country?}{?begin=year?}{?end=year?}{?mean=bool?}{?sortbyvalue=bool?}
@@ -243,7 +243,7 @@ The endpoint only supports GET requests.
 
 <br>
 
-### Response ###
+### Response
 Content type: `application/json`
 
 Status codes:
@@ -265,7 +265,7 @@ Body:
 }
 ```
 
-### Example request: ###
+### Example request & response
 
 Request sent: `/energy/v1/renewables/history/sverige?mean=true`
 Response:
@@ -312,7 +312,7 @@ Response:
 
 <br>
 
-# Notification Endpoint #
+## Notification Endpoint
 
 To get notified by a given amount of calls a country has, register a webhook with this service.
 To the body make sure to add: <br>
@@ -322,7 +322,7 @@ To the body make sure to add: <br>
     - the type of event to be notified on. See [the notification types here.](#notification-event-types)
 <br>
 
-## Setting up a new notification subscription: <br>
+### Setting up a new notification subscription: <br>
 Provide the following details to get notifications to the given url. The standard way is that the user will receive a GET request for the given url in the body. Here is how you register a notification: 
 
 ```
@@ -346,7 +346,7 @@ You should also the webhook ID in the body of the response. This ID is important
     }
 ```
 
-## Deleting a notification subscription: <br>
+### Deleting a notification subscription: <br>
 To delete a webhook, send a DELETE request to the following endpoint, including the ID of the webhook in the URL:
 
 ```
@@ -360,7 +360,7 @@ Look at the status code for how the request for deletion went. If the status was
 -  500: Internal error while trying to delete the webhook. See the status endpoint to check if all services are running
 <br><br>
 
-## Retrieving information about a notification subscription: <br>
+### Retrieving information about a notification subscription: <br>
 
 To get only information for a single given notification, use the id in the request: 
 
@@ -384,7 +384,7 @@ If there is a webhook with the given ID, the response could look like this:
 }
 ```
 
-## Retrieving information about all notification subscriptions <br>
+### Retrieving information about all notification subscriptions <br>
 
 To get all the notifications that are stored in the register: 
 
@@ -410,7 +410,7 @@ Should return a list of all webhooks. Could also be empty if non are registered 
 ]
 ```
 
-## Notification Event Types
+### Notification Event Types
 
 This service offers three types of of events:
 
@@ -470,7 +470,7 @@ Here is an example of the JSON response you will receive when a notification is 
     }
 ```    
 
-## Purging mechanism
+### Purging mechanism
 
 When the user adds a notification, a method called PurgeWebhooks is called. It checks if the amount of webhooks is now over the limit. If it is, then it starts removing the oldest notifications. It only removes enough webhooks so that the total amount of notifications are stored is under the limit. By default, the total amount of webhooks allowed is **40**. This could also be changed in the `constants` file. 
 
@@ -506,7 +506,7 @@ const (
 
 <br>
 
-# Status endpoint #
+## Status endpoint
 The status endpoint provides the availability of all individual services this service depends on.
 The reporting occurs based on status codes returned by the dependent services. The status interface
 further provides information about the number of registered webhooks, and the uptime of the service.
@@ -517,7 +517,7 @@ Method: GET
 Path: /energy/v1/status/
 ```
 
-#### Response
+### Response
 Content type: `application/json`
 
 Status codes
@@ -532,7 +532,7 @@ Status content
 * version: set to "v1".
 * uptime: the time since the last service restart.
 
-#### Example request and response
+### Example request & response
 
 Request: `/status`
 
@@ -566,7 +566,7 @@ Example response:
 
 <br>
 
-# Default endpoint
+## Default endpoint
 This endpoint is the server's root path level. It does not provide any functionality, but assists the user to navigate
 in the server. The HTML file in linked up with a css file in order to provide a more clean look to the page, with the 
 endpoints being displayed in an organized and easy-to-use format. It is possible to press the different endpoints to 
@@ -591,14 +591,14 @@ To ensure that our tests cover as much of our codebase as possible, we make use 
 coverage, we can be confident in the quality of our codebase, and we can easily catch any bugs that may arise
 during development.
 
-## Endpoint Tests ##
+## Endpoint Tests
 To run all endpoint tests write the following command in root folder: 
 ```
 go test .\internal\webserver\handlers
 ```
 
 
-### Current Tests ###
+### Current Tests
 There is created a test class for the current endpoint.
 
 To use the test, print into command line when in root project folder: 
@@ -608,8 +608,7 @@ go test .\internal\webserver\handlers\current_test.go
 
 <br>
 
-### History test ###
-
+### History test
 There is a test class for the history endpoint, which covers most of the history endpoints' functions.
 
 To use the test, print into command line when in root project folder:
@@ -619,8 +618,7 @@ go test .\internal\webserver\handlers\history_test.go
 
 <br>
 
-## Notification endpoint and Firebase tests.
-
+## Notification endpoint and Firebase tests
 The notification test are highly coupled with the Firebase test. Therefore are the notification test only to check that the endpoint works as it is supposed to. This means that it may be lacking. However, the Firebase test should have no issue if Firestore is correctly setup. From this if: <br>
 
 1) **FIRESTORE && NOTIFICATION ENDPOINT TEST FAIL** -> Most likely just incorrectly setup the firestore
@@ -633,7 +631,7 @@ go test ./db
 
 <br>
 
-## Status tests ##
+## Status tests
 There is created a test class for the status endpoint.
 
 To use the test, print into command line when in root project folder:
@@ -643,7 +641,7 @@ go test .\internal\webserver\handlers\status_test.go
 
 <br>
 
-## Default tests ##
+## Default tests
 There is created a test class for the default endpoint.
 
 To use the test, print into command line when in root project folder:
@@ -653,12 +651,10 @@ go test .\internal\webserver\handlers\default_test.go
 
 <br>
 
-# Deployment 
-
+# Deployment
 This service is deployed with OpenStack. OpenStack is a IaaS where the user define what resources is needed. It vitalizes resources to serve all end users. More information here: [Openstack Link](https://www.ntnu.no/wiki/display/skyhigh) <br>
 
-## Deployed Service 
-
+## Deployed Service
 The service is deployed with openstack. <br>
 Access it with this floating IP:
 
@@ -675,7 +671,6 @@ This service has the following resources predefined:
 
 
 ## OpenStack Configurations: Security and Access
-
 Security group prevents all communication with the server, but this is allowed: 
 
 1) Allows to any ICMP package (Ping is allowed)
@@ -735,7 +730,6 @@ The following steps are
     ```
 
 ## How to locally run the service?
-
 1. Have go installed on the local machine. See [download versions here (use go.1.18)](https://go.dev/dl/)
 2. Clone the repo.
 3. Run the project by cd into the project folder, then run:
@@ -763,23 +757,26 @@ the country/ies will be cached for a set period of time. This is done to ensure 
 frequent requests for the API and shorter response time.
 
 ## Different Event types
-The notification supports different types of events. There are currently 3 types of events. Read more about them [here](#notification-event-types)
+The notification supports different types of events. There are currently 3 types of events.
+Read more about them [here](#notification-event-types)
 
 ## Purging of notifications
-When the number of notifications are over the max limit defined, webhook will be deleted. Read more [here](#purging-of-notifications)
+When the number of notifications are over the max limit defined, webhook will be deleted.
+Read more [here](#purging-of-notifications)
 
 ## Current endpoint
-Description: Extend {?country} to support country name (e.g., norway) as input.
+Description: Extend {?country} to support country name (e.g., norway) as input. Read more [here](#current-endpoint)
 
 ## History endpoint
 Description: Selective use of only begin or end as single parameter (e.g., ?begin=1980 only consider data from 1980
-onwards; ?end=1980, values from the first time entry until 1980 only).
+onwards; ?end=1980, values from the first time entry until 1980 only). Read more [here](#history-endpoint)
 
 Description: Extend the history for all countries with a time constraint. Where {?begin=year&end=year?} is specified
-(e.g., ?begin=1960&end=1970), only calculate mean values for these years (not for all years).
+(e.g., ?begin=1960&end=1970), only calculate mean values for these years (not for all years). Read more
+[here](#history-endpoint)
 
 Description: Additional optional parameter {?sortByValue=bool?} to support sorting of output by percentage
-value (e.g., ?sortByValue=true).
+value (e.g., ?sortByValue=true). Read more [here](#history-endpoint)
 
 ## Country searching ##
 Both current and history endpoint has the functionality of searching by country code and also name, which is an advanced
