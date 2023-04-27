@@ -14,10 +14,12 @@
 ---
 
 This project is related to the course Cloud Technologies Course (PROG2005), Spring Semester 2023, taught at NTNU, Gjøvik.
-The project consists of a REST web application in Golang that provides the client with the ability to retrieve
+The project consists of a REST application in Golang that provides the client with the ability to retrieve
 information about developments related to renewable energy production for and across countries. The application uses
-an existing webservice and an own data-centric webservice to gather and expose data via endpoints. The service allows
+an existing service and an own data-centric service to gather and expose data via endpoints. The service allows
 for notification registration using webhooks, and it is dockerized and deployed using an IaaS system.
+
+**NOTE:** Firebase must be uploaded. [Read more here](#firebase-setup-not-optional)
 
 REST Web Services
 The REST web service used for this purpose are:
@@ -30,43 +32,49 @@ Retrieved from: [https://ourworldindata.org/energy](https://ourworldindata.org/e
 
 ---
 
+# Table of content 
 
-# Table of content
-
-* [Current endpoint](#current-endpoint)
-  + [Request](#request)
-  + [Response](#response)
-* [History endpoint](#history-endpoint)
-  + [Request](#request-1)
-  + [Response](#response-1)
-  + [Example request:](#example-request-)
-- [Notification Endpoint](#notification-endpoint)
-  * [Setting up a new notification subscription: <br>](#setting-up-a-new-notification-subscription---br-)
-  * [Deleting a notification subscription: <br>](#deleting-a-notification-subscription---br-)
-  * [Retrieving information about a notification subscription: <br>](#retrieving-information-about-a-notification-subscription---br-)
-  * [Retrieving information about all notification subscriptions <br>](#retrieving-information-about-all-notification-subscriptions--br-)
-  * [Notification Event Types](#notification-event-types)
-  * [Purging mechanism](#purging-mechanism)
+- [Endpoints](#endpoints)
+  * [Current endpoint](#current-endpoint)
+    + [Request](#request)
+    + [Response](#response)
+    + [Example request & response](#example-request---response)
+  * [History endpoint](#history-endpoint)
+    + [Request](#request-1)
+    + [Response](#response-1)
+    + [Example request & response](#example-request---response-1)
+  * [Notification Endpoint](#notification-endpoint)
+    + [Setting up a new notification subscription: <br>](#setting-up-a-new-notification-subscription---br-)
+    + [Deleting a notification subscription: <br>](#deleting-a-notification-subscription---br-)
+    + [Retrieving information about a notification subscription: <br>](#retrieving-information-about-a-notification-subscription---br-)
+    + [Retrieving information about all notification subscriptions <br>](#retrieving-information-about-all-notification-subscriptions--br-)
+    + [Notification Event Types](#notification-event-types)
+    + [Purging mechanism](#purging-mechanism)
   * [When is invocations incremented?](#when-is-invocations-incremented-)
-  * [How are notifications stored?](#how-are-notifications-stored-)
-- [Status endpoint](#status-endpoint)
-      - [Response](#response-2)
-      - [Example request and response](#example-request-and-response)
-- [Default endpoint](#default-endpoint)
+  * [Firebase setup (NOT OPTIONAL)](#firebase-setup--not-optional-)
+  * [Status endpoint](#status-endpoint)
+    + [Response](#response-2)
+    + [Example request & response](#example-request---response-2)
+  * [Default endpoint](#default-endpoint)
+- [Testing](#testing)
+  * [Coverage](#coverage)
   * [Endpoint Tests](#endpoint-tests)
     + [Current Tests](#current-tests)
     + [History test](#history-test)
-  * [Notification endpoint and Firebase tests.](#notification-endpoint-and-firebase-tests)
+  * [Notification endpoint and Firebase tests](#notification-endpoint-and-firebase-tests)
   * [Status tests](#status-tests)
   * [Default tests](#default-tests)
 - [Deployment](#deployment)
+  * [Deployed Service](#deployed-service)
   * [OpenStack Configurations: Instance resources](#openstack-configurations--instance-resources)
   * [OpenStack Configurations: Security and Access](#openstack-configurations--security-and-access)
   * [Docker and its purpose](#docker-and-its-purpose)
   * [How to deploy the docker service?](#how-to-deploy-the-docker-service-)
+  * [How to locally run the service?](#how-to-locally-run-the-service-)
 - [Advanced functionality](#advanced-functionality)
   * [Cache](#cache)
-  * [Event types](#event-types)
+  * [Different Event types](#different-event-types)
+  * [Purging of notifications](#purging-of-notifications)
   * [Current endpoint](#current-endpoint-1)
   * [History endpoint](#history-endpoint-1)
   * [Country searching](#country-searching)
@@ -77,7 +85,11 @@ Retrieved from: [https://ourworldindata.org/energy](https://ourworldindata.org/e
     + [Project structure](#project-structure)
 - [Further development](#further-development)
   * [Administrator user](#administrator-user)
+  * [Restructure files](#restructure-files)
+  * [Increase test coverage](#increase-test-coverage)
   * [Other](#other)
+
+
 
 ---
 
@@ -315,6 +327,7 @@ Response:
 ## Notification Endpoint
 
 To get notified by a given amount of calls a country has, register a webhook with this service.
+Note that firebase must be setup! [Read this section!](#firebase-setup-not-optional)
 To the body make sure to add: <br>
     - the url that should be invoked<br>
     - the alpha code of the country that you want to be notified by<br>
@@ -481,7 +494,7 @@ When the user adds a notification, a method called PurgeWebhooks is called. It c
 
 Whenever there is a request to the third party api, `restcounties`, we increment all the webhooks for that country with one. In the same function we notify the user, if the condition of being notified is met.  
 
-## How are notifications stored?
+## Firebase setup (NOT OPTIONAL)
 
 Using the firebase cloud storage called: [Firestore](https://firebase.google.com/docs/firestore). The application uses firestore to store webhooks in form of documents. See document databases for more information on how this works. The technical aspects for getting this to work is; <br>
 
