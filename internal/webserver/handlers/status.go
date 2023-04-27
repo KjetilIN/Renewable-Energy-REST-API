@@ -13,14 +13,6 @@ import (
 	"strings"
 )
 
-// Webhooks DB
-var webhooks []structs.WebhookID
-
-// Init empty list of webhooks
-func InitWebhookRegistrations() {
-	webhooks = []structs.WebhookID{}
-}
-
 // HTTP client
 var client = &http.Client{}
 
@@ -97,12 +89,11 @@ func getStatus() (structs.Status, error) {
 
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi:   countriesApiStatus,
-		NotificationDB: dbStatus,
-		Webhooks:       db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:        constants.VERSION,
-		Uptime:         uptime.GetUptime(),
-		//AverageSystemLoad: loadAvg + " in the last minute",
+		CountriesApi:     countriesApiStatus,
+		NotificationDB:   dbStatus,
+		Webhooks:         db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:          constants.VERSION,
+		Uptime:           uptime.GetUptime(),
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
 }
