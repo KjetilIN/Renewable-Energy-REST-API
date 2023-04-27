@@ -3,9 +3,9 @@ package handlers
 import (
 	"assignment-2/db"
 	"assignment-2/internal/constants"
+	"assignment-2/internal/utility"
 	"assignment-2/internal/webserver/structs"
 	"assignment-2/internal/webserver/uptime"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -35,12 +35,7 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Encode the status information as JSON and send it in the response.
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(status)
-	if err != nil {
-		http.Error(w, errors.New("there were an error during encoding").Error(), http.StatusInternalServerError)
-		return
-	}
+	utility.Encoder(w, status)
 }
 
 func getStatus() (structs.Status, error) {
@@ -60,8 +55,8 @@ func getStatus() (structs.Status, error) {
 	countriesApiStatus := res.StatusCode
 
 	// If the status code is not 200, notify all subscribers to that event
-	if countriesApiStatus != 200{
-		// Start a go routine for notifying all subscribers that they have been notified for the country api is down. 
+	if countriesApiStatus != 200 {
+		// Start a go routine for notifying all subscribers that they have been notified for the country api is down.
 		go db.NotifyForEvent(constants.COUNTRY_API_EVENT, constants.FIRESTORE_COLLECTION)
 	}
 
@@ -82,14 +77,13 @@ func getStatus() (structs.Status, error) {
 	}
 	memUsage = strconv.Itoa(int(memory.UsedPercent))
 
-
 	// Return a status struct containing information about the uptime and status of the notificationDB and countries APIs.
 	return structs.Status{
-		CountriesApi: countriesApiStatus,
-		NotificationDB: dbStatus	,
-		Webhooks: db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
-		Version:  constants.VERSION,
-		Uptime:   uptime.GetUptime(),
+		CountriesApi:   countriesApiStatus,
+		NotificationDB: dbStatus,
+		Webhooks:       db.GetNumberOfWebhooks(constants.FIRESTORE_COLLECTION),
+		Version:        constants.VERSION,
+		Uptime:         uptime.GetUptime(),
 		//AverageSystemLoad: loadAvg + " in the last minute",
 		TotalMemoryUsage: memUsage + "%",
 	}, nil
