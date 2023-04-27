@@ -112,7 +112,26 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request) {
 	// Format the webhook for the firestore and add it to the database as a new document
 	id := createWebhookID(givenHook)
 	formattedWebhook := structs.WebhookID{ID: id, Webhook: givenHook, Created: time.Now()}
-	db.AddWebhook(formattedWebhook, constants.FIRESTORE_COLLECTION)
+	addError := db.AddWebhook(formattedWebhook, constants.FIRESTORE_COLLECTION)
+	if addError != nil{
+		log.Println("Error on adding the webhook to firebase: " + addError.Error())
+
+		switch (addError.Error()){
+			case "WRONG_EVENT":
+				http.Error(w, "Error: event given not allowed. See readme for allowed events...", http.StatusBadRequest)
+				return 
+			case "CALLS_NOT_DEFINED":
+				http.Error(w, "Error: calls must me more than zero in case of calls event type...", http.StatusBadRequest)
+				return 
+			default:
+				// Firestore error
+				http.Error(w,"Error during adding the webhook", http.StatusInternalServerError)
+				return 
+
+
+		}
+		
+	}
 
 	// Logging that a new webhook has been
 	log.Println("Request for adding webhook with url: " + formattedWebhook.Url)
