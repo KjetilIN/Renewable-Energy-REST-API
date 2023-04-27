@@ -85,6 +85,11 @@ func CountryFilterer(w http.ResponseWriter, list []structs.RenewableShareEnergyE
 		} else {
 			// Checks for country name.
 			filteredList = countryNameLimiter(list, countryIdentifier)
+			// Checks if filtered list is 0.
+			if len(filteredList) != 0 {
+				// Sets country identifier to iso code if countries matching identifier is found.
+				countryIdentifier = filteredList[0].IsoCode
+			}
 		}
 
 		// Checks if filtered list is empty, it checks the API for it.
