@@ -28,6 +28,7 @@ func TestInitHandler(t *testing.T) {
 	assert.NotEmpty(t, list, "List is empty.")
 }
 
+// TestCountryFilterer Tests country filtering method used in current and history endpoints.
 func TestCountryFilterer(t *testing.T) {
 	rr := httptest.NewRecorder()
 	err := utility.DirChanger(2)
@@ -71,6 +72,7 @@ func TestCountryNameLimiter(t *testing.T) {
 	}
 }
 
+// TestSortQueryHandler Tests sorting used in current and history endpoint.
 func TestSortQueryHandler(t *testing.T) {
 	// Prepare a list for testing.
 	list, jsonErr := prepareList(1)
@@ -105,36 +107,37 @@ func TestSortQueryHandler(t *testing.T) {
 	}
 	for i := 1; i < len(sortedList); i++ {
 		assert.LessOrEqual(t, sortedList[i-1].Percentage, sortedList[i].Percentage, "List is not sorted correctly.")
-	}
 
-	req, getErr = http.NewRequest("GET", constants.HISTORY_PATH+"?sortalphabetically=true", nil)
-	if getErr != nil {
-		t.Fatal(err)
-	}
-
-	// Checks if list is sorted alphabetically.
-	sortedList, sortErr = SortQueryHandler(req, list) // Ascending sorting.
-	if sortErr != nil {
-		t.Fatal(sortErr)
-	}
-	for i := 1; i < len(sortedList); i++ {
-		if sortedList[i-1].Name < sortedList[i].Name {
-			t.Fatal("List is not sorted correctly.")
+		req, getErr = http.NewRequest("GET", constants.HISTORY_PATH+"?sortalphabetically=true", nil)
+		if getErr != nil {
+			t.Fatal(err)
 		}
-	}
-	req, getErr = http.NewRequest("GET", constants.HISTORY_PATH+"?sortalphabetically=true&descending=true", nil)
-	if getErr != nil {
-		t.Fatal(err)
-	}
 
-	// Checks if list is sorted alphabetically.
-	sortedList, sortErr = SortQueryHandler(req, list) // Ascending sorting.
-	if sortErr != nil {
-		t.Fatal(sortErr)
-	}
-	for i := 1; i < len(sortedList); i++ {
-		if sortedList[i-1].Name > sortedList[i].Name {
-			t.Fatal("List is not sorted correctly.")
+		// Checks if list is sorted alphabetically.
+		sortedList, sortErr = SortQueryHandler(req, list) // Ascending sorting.
+		if sortErr != nil {
+			t.Fatal(sortErr)
+		}
+		for i := 1; i < len(sortedList); i++ {
+			if sortedList[i-1].Name < sortedList[i].Name {
+				t.Fatal("List is not sorted correctly.")
+			}
+		}
+		// Checks if list is sorted alphabetically descending.
+		req, getErr = http.NewRequest("GET", constants.HISTORY_PATH+"?sortalphabetically=true&descending=true", nil)
+		if getErr != nil {
+			t.Fatal(err)
+		}
+
+		// Checks if list is sorted alphabetically.
+		sortedList, sortErr = SortQueryHandler(req, list) // Ascending sorting.
+		if sortErr != nil {
+			t.Fatal(sortErr)
+		}
+		for i := 1; i < len(sortedList); i++ {
+			if sortedList[i-1].Name > sortedList[i].Name {
+				t.Fatal("List is not sorted correctly.")
+			}
 		}
 	}
 }
