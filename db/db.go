@@ -95,6 +95,16 @@ func CheckFirestoreConnection() int {
 	return http.StatusOK
 }
 
+
+//Function for checking if the event is allowed
+// Returns true if the event is allowed
+func isAllowedEvent(event string) bool{
+	if event == constants.CALLS_EVENT || event == constants.COUNTRY_API_EVENT || event == constants.PURGE_EVENT{
+		return true
+	}
+	return false
+}
+
 // Function that adds a webhook to the firestore, using the given webhook struct and a generated ID.
 // Takes the webhook struct and the collection name as parameters.
 // Return an error if it could not add the webhook, returns nil if everything went okay .
@@ -107,13 +117,18 @@ func AddWebhook(webhook structs.WebhookID, collection string) error {
 		return clientErr
 	}
 
-	// Set default event
-	if webhook.Event == ""{
-		webhook.Event = constants.CALLS_EVENT
-	}
-	
 	// Turn it into upper case 
 	webhook.Event = strings.ToUpper(webhook.Event)
+
+	// Check if the given event is not allowed
+	if !isAllowedEvent(webhook.Event){
+		return errors.New("WRONG_EVENT")
+	}
+
+	// Calls must be more than zero for a event type for 
+	if webhook.Calls == 0 && webhook.Event == constants.CALLS_EVENT{
+		return errors.New("CALLS_NOT_DEFINED")
+	}
 
 	// Purge webhooks if needed
 	go PurgeWebhooks(collection)
