@@ -54,6 +54,16 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Check if the request is done with descending but without any sort query 
+	hasSortByValue := r.URL.Query().Has("sortbyvalue") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortbyvalue")), "true")
+	hasSortAlphabetically := r.URL.Query().Has("sortalphabetically") && strings.Contains(strings.ToLower(r.URL.Query().Get("sortalphabetically")), "true")
+	hasDescending := r.URL.Query().Has("descending") && strings.Contains(strings.ToLower(r.URL.Query().Get("descending")), "true")
+	
+	if ((!hasSortAlphabetically || !hasSortByValue) && hasDescending){
+		http.Error(w, "Bad request: descending query can only be using with sort by value or sort alphabetically query", http.StatusBadRequest)
+		return 
+	}
+
 	// Handles sorting queries.
 	currentList = SortQueryHandler(r, currentList)
 
