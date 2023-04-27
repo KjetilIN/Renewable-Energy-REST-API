@@ -159,6 +159,8 @@ func beginEndLimiter(begin string, end string, listToIterate []structs.Renewable
 	// Returns mean of years between, as long as begin and end is not the same.
 	if toFromOr == 3 && convBegin != convEnd {
 		newList = meanCalculation(newList)
+		// Sorts newList, as mean calculation randomizes entries.
+		newList = utility.SortRSEList(newList, true, constants.ASCENDING)
 	}
 	return newList, nil
 }

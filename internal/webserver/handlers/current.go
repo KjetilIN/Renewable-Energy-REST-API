@@ -54,10 +54,9 @@ func HandlerCurrent(w http.ResponseWriter, r *http.Request) {
 				for _, v := range neighbourList {
 					currentList = append(currentList, v)
 				}
-			} else { // Neighbours query is not correctly prompted, but will continue anyway.
+			} else { // Neighbours query is not correctly prompted.
 				http.Error(w, "Neighbour query must be =true to work.", http.StatusBadRequest)
-				// The country passed will be encoded to user.
-				currentList = filteredList
+				return
 			}
 		} else {
 			// If neighbours is not passed, the filtered list is the one to be shown.

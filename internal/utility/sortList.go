@@ -23,12 +23,12 @@ func SortRSEList(listToIterate []structs.RenewableShareEnergyElement, alphabetic
 	// Sorts alphabetically, ascending.
 	case sortingMethod == constants.ASCENDING && alphabetical:
 		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[i].Name > listToIterate[j].Name
+			return listToIterate[i].Name < listToIterate[j].Name
 		})
 	// Sorts alphabetically, descending.
 	case sortingMethod == constants.DESCENDING && alphabetical:
 		sort.Slice(listToIterate, func(i, j int) bool {
-			return listToIterate[j].Name > listToIterate[i].Name
+			return listToIterate[j].Name < listToIterate[i].Name
 		})
 	}
 	return listToIterate
